@@ -1,0 +1,16 @@
+[Unit]
+Description=AI Search Scanner API
+After=network.target
+
+[Service]
+Type=simple
+User=jens
+WorkingDirectory=/mnt/storage/newweb/backend
+Environment=PATH=/mnt/storage/newweb/backend/venv/bin
+EnvironmentFile=/mnt/storage/newweb/.env
+ExecStart=/mnt/storage/newweb/backend/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8010
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
