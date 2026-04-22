@@ -39,7 +39,7 @@ export function ReportCard({ card }: Props) {
       {open && (
         <div className="px-5 pb-5 space-y-4">
           {card.details && card.details.length > 0 && (
-            <div className="bg-white/60 rounded-lg p-4 border border-black/5">
+            <div className="bg-frame/70 rounded-lg p-4 border border-border/50">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Vad vi hittade</h4>
               <ul className="space-y-1">
                 {card.details.map((d, i) => (
@@ -54,7 +54,7 @@ export function ReportCard({ card }: Props) {
           )}
 
           {card.why && (
-            <div className="bg-white/60 rounded-lg p-4 border border-black/5">
+            <div className="bg-frame/70 rounded-lg p-4 border border-border/50">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Varför det spelar roll</h4>
               <p className="text-sm text-gray-700 leading-relaxed">{card.why}</p>
             </div>
@@ -74,9 +74,9 @@ export function ReportCard({ card }: Props) {
           )}
 
           {card.fix && (
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="bg-frame rounded-lg p-4 border border-border">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-accent mb-2">Så fixar du det</h4>
-              <pre className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 rounded p-3 overflow-x-auto">
+              <pre className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-mono bg-base rounded p-3 overflow-x-auto">
                 {card.fix}
               </pre>
             </div>

@@ -1,14 +1,16 @@
 [Unit]
-Description=AI Search Scanner API
+Description=AI Search Scanner — Next.js App
 After=network.target
 
 [Service]
 Type=simple
 User=jens
-WorkingDirectory=/mnt/storage/newweb/backend
-Environment=PATH=/mnt/storage/newweb/backend/venv/bin
-EnvironmentFile=/mnt/storage/newweb/.env
-ExecStart=/mnt/storage/newweb/backend/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8010
+WorkingDirectory=/mnt/storage/aiscanner
+Environment=PATH=/home/jens/.nvm/versions/node/v22.22.0/bin:/usr/bin:/usr/local/bin
+EnvironmentFile=/mnt/storage/aiscanner/.env
+Environment=PORT=8010
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/home/jens/.nvm/versions/node/v22.22.0/bin/node .next/standalone/server.js
 Restart=on-failure
 RestartSec=5
 

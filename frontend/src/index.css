@@ -5,8 +5,8 @@
 @tailwind utilities;
 
 body {
-  background-color: #f8fafc;
-  color: #1e293b;
+  background-color: #EDE8E0;
+  color: #1A1714;
 }
 
 @keyframes fadeSlideIn {
@@ -30,9 +30,9 @@ body {
 }
 
 @keyframes citePulse {
-  0%   { box-shadow: 0 0 0 0 rgba(79,70,229,0.5); }
-  60%  { box-shadow: 0 0 0 6px rgba(79,70,229,0); }
-  100% { box-shadow: 0 0 0 0 rgba(79,70,229,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(196,85,26,0.5); }
+  60%  { box-shadow: 0 0 0 6px rgba(196,85,26,0); }
+  100% { box-shadow: 0 0 0 0 rgba(196,85,26,0); }
 }
 
 .anim-fade-slide {

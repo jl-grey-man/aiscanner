@@ -11,12 +11,11 @@ interface Props {
   state: AnalysisState
   error: string | null
   currentStep: string
-  currentStepDesc: string
   progressPct: number
   onReset: () => void
 }
 
-export function Report({ url, cards, summary, state, error, currentStep, currentStepDesc, progressPct, onReset }: Props) {
+export function Report({ url, cards, summary, state, error, currentStep, progressPct, onReset }: Props) {
   return (
     <div className="pt-4">
       {/* URL + Score header */}
@@ -35,7 +34,6 @@ export function Report({ url, cards, summary, state, error, currentStep, current
       {state === 'scanning' && (
         <Progress
           currentStep={currentStep}
-          currentStepDesc={currentStepDesc}
           progressPct={progressPct}
         />
       )}

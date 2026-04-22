@@ -1,14 +1,16 @@
-import { useState, useRef, useEffect } from 'react'
-import { UrlInput } from './components/UrlInput'
-import { SeoSplit } from './components/SeoSplit'
-import { Progress } from './components/Progress'
-import { FreeReport } from './components/FreeReport'
-import { FullScanButton } from './components/FullScanButton'
-import { FullReport } from './components/FullReport'
-import { AnalysisLogView } from './components/AnalysisLogView'
-import { useAnalysis } from './hooks/useAnalysis'
+'use client'
 
-export default function App() {
+import { useState, useRef, useEffect } from 'react'
+import { UrlInput } from '@/app/components/UrlInput'
+import { SeoSplit } from '@/app/components/SeoSplit'
+import { Progress } from '@/app/components/Progress'
+import { FreeReport } from '@/app/components/FreeReport'
+import { FullScanButton } from '@/app/components/FullScanButton'
+import { FullReport } from '@/app/components/FullReport'
+import { AnalysisLogView } from '@/app/components/AnalysisLogView'
+import { useAnalysis } from '@/app/hooks/useAnalysis'
+
+export default function Home() {
   const [url, setUrl] = useState('')
   const [inputKey, setInputKey] = useState(0)
   const {

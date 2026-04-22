@@ -1,4 +1,25 @@
+# Python
 backend/venv/
 __pycache__/
 *.pyc
 .env
+
+# Node.js / Next.js
+node_modules/
+.next/
+out/
+dist/
+*.log
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+._*
