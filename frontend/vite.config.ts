@@ -8,5 +8,5 @@ export default defineConfig({
       '/api': 'http://localhost:8010',
     },
   },
-  base: '/aiscanner/',
+  base: '/',
 })

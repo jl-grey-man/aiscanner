@@ -38,6 +38,25 @@ Svara med JSON:
   "recommendation": "konkret förbättring"
 }}"""
 
+def review_themes_prompt(reviews_text: str) -> str:
+    return f"""{SYSTEM}
+
+Analysera dessa kundrecensioner och identifiera de vanligaste temana.
+
+Recensioner:
+{reviews_text[:3000]}
+
+Svara ENDAST med JSON (ingen förklaring utanför JSON-blocket):
+{{
+  "positive": ["tema1", "tema2", "tema3"],
+  "negative": ["tema1", "tema2"],
+  "summary": "En mening om vad kunderna generellt tycker"
+}}
+
+Håll varje tema kort (2-5 ord). Max 3 positiva och 3 negativa teman.
+Om recensionerna är övervägande positiva kan negative-listan vara tom."""
+
+
 def fix_recommendation_prompt(check_name: str, finding: str) -> str:
     return f"""{SYSTEM}
 

@@ -1,11 +1,15 @@
+import os
 import time
 from collections import defaultdict
 
 _requests: dict[str, list[float]] = defaultdict(list)
 LIMIT = 3
 WINDOW = 3600  # 1 hour
+ENABLED = os.getenv("RATE_LIMIT_ENABLED", "false").lower() == "true"
 
 def is_rate_limited(ip: str) -> bool:
+    if not ENABLED:
+        return False
     now = time.time()
     _requests[ip] = [t for t in _requests[ip] if now - t < WINDOW]
     if len(_requests[ip]) >= LIMIT:

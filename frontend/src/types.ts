@@ -5,6 +5,9 @@ export interface ReportCard {
   title: string
   status: CardStatus
   finding: string
+  details: string[]
+  why: string
+  impact: string
   fix: string
 }
 
