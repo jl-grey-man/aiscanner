@@ -9,16 +9,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-22)
 
 ## Current Phase
 
-None — project initialization in progress.
+Project initialized. Ready for planning.
 
 ## Next Action
 
-Run `gsd-plan-phase 1` after requirements and roadmap are defined.
+Run `gsd-plan-phase 1` to plan Phase 1: Critical Fixes & Missing Checks.
 
 ## Active Decisions
 
 - Brownfield project with existing codebase (backend + frontend deployed)
 - Skipped codebase mapping — CLAUDE.md provides sufficient architecture context
+- 2-phase v1 roadmap defined (13 requirements across 6 plans)
 
 ## Blockers
 
