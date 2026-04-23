@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { FreeReportData, Check } from '../hooks/useAnalysis'
 
 interface Props {
@@ -12,78 +11,67 @@ function ScoreColor({ score }: { score: number }) {
   return 'text-red-600'
 }
 
+function StatusIcon({ status }: { status: string }) {
+  if (status === 'good') return <span className="text-emerald-500 text-lg">●</span>
+  if (status === 'warning') return <span className="text-amber-500 text-lg">●</span>
+  return <span className="text-red-500 text-lg">●</span>
+}
+
 function SeverityBadge({ severity }: { severity: string }) {
   const styles = {
-    high: 'bg-red-100 text-red-700 border-red-200',
-    medium: 'bg-amber-100 text-amber-700 border-amber-200',
-    low: 'bg-blue-100 text-blue-700 border-blue-200',
+    high: 'bg-red-100 text-red-700',
+    medium: 'bg-amber-100 text-amber-700',
+    low: 'bg-blue-100 text-blue-700',
   }
   return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${styles[severity as keyof typeof styles] || styles.low}`}>
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${styles[severity as keyof typeof styles] || styles.low}`}>
       {severity === 'high' ? 'Hög' : severity === 'medium' ? 'Medium' : 'Låg'}
     </span>
   )
 }
 
-function CheckCard({ check }: { check: Check }) {
-  const [open, setOpen] = useState(check.status !== 'good')
-  const hasDetails = check.fix && check.fix.trim().length > 0
-
-  const borderColor =
-    check.status === 'good' ? 'border-l-emerald-500' :
-    check.status === 'warning' ? 'border-l-amber-500' :
-    'border-l-red-500'
-
-  const bgColor =
-    check.status === 'good' ? 'bg-white' :
-    check.status === 'warning' ? 'bg-amber-50' :
-    'bg-red-50'
-
+function CheckRow({ check }: { check: Check }) {
   const isProblem = check.status === 'bad' || check.status === 'warning'
+  const hasFix = check.fix && check.fix.trim().length > 0
 
   return (
-    <div className={`border border-gray-200 ${borderColor} border-l-4 rounded-r-lg shadow-sm ${bgColor}`}>
-      <div
-        className={`p-4 ${hasDetails ? 'cursor-pointer' : ''}`}
-        onClick={() => hasDetails ? setOpen(o => !o) : undefined}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="font-semibold text-gray-900">{check.title}</span>
-              {check.status === 'good' && <span className="text-emerald-600 text-sm">✅</span>}
-              {check.status === 'warning' && <span className="text-amber-600 text-sm">⚠️</span>}
-              {check.status === 'bad' && <span className="text-red-600 text-sm">❌</span>}
-            </div>
-            <p className="text-sm text-gray-700 leading-relaxed font-medium">{check.finding}</p>
-
-            {/* Why it matters for problems */}
-            {isProblem && check.why && (
-              <div className="mt-3">
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  <span className="font-bold text-gray-700">Varför det spelar roll:</span> {check.why}
-                </p>
-              </div>
-            )}
-          </div>
-          {hasDetails && (
-            <span className="text-gray-400 text-sm ml-2 shrink-0 mt-0.5">
-              {open ? '▲' : '▼'}
+    <div className="py-4 border-b border-gray-100 last:border-b-0">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 shrink-0">
+          <StatusIcon status={check.status} />
+        </div>
+        <div className="flex-1 min-w-0">
+          {/* Title + Finding */}
+          <div className="flex items-start justify-between gap-2">
+            <span className="font-semibold text-gray-900">{check.title}</span>
+            <span className={`text-xs font-medium shrink-0 ${
+              check.status === 'good' ? 'text-emerald-600' :
+              check.status === 'warning' ? 'text-amber-600' :
+              'text-red-600'
+            }`}>
+              {check.status === 'good' ? 'Godkänt' : check.status === 'warning' ? 'Kan förbättras' : 'Brist'}
             </span>
+          </div>
+          <p className="text-sm text-gray-600 mt-0.5">{check.finding}</p>
+
+          {/* What / Why — always show for context */}
+          {(check.what || check.why) && (
+            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+              {check.what && <span>{check.what}</span>}
+              {check.what && check.why && <span> · </span>}
+              {check.why && <span>{check.why}</span>}
+            </p>
+          )}
+
+          {/* Fix — inline, no box */}
+          {isProblem && hasFix && (
+            <div className="mt-2 text-sm text-gray-700">
+              <span className="font-semibold">Åtgärd:</span>{' '}
+              <span className="whitespace-pre-wrap">{check.fix}</span>
+            </div>
           )}
         </div>
       </div>
-
-      {open && hasDetails && (
-        <div className="px-4 pb-4">
-          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-accent mb-2">
-              {check.status === 'good' ? 'Bra jobbat' : 'Åtgärd'}
-            </h4>
-            <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{check.fix}</p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -101,7 +89,7 @@ export function FreeReport({ data, url }: Props) {
 
   return (
     <div className="space-y-10">
-      {/* Dark summary box */}
+      {/* Dark summary box — UNCHANGED */}
       <div className="bg-gray-900 text-white rounded-xl p-6 md:p-8 shadow-lg">
         {/* Badge */}
         <div className="text-center mb-5">
@@ -122,7 +110,7 @@ export function FreeReport({ data, url }: Props) {
           {data.summary}
         </p>
 
-        {/* Short Critical Issues + Quick Wins — inside dark box, side by side */}
+        {/* Short Critical Issues + Quick Wins */}
         {(data.criticalIssues?.length > 0 || data.quickWins?.length > 0) && (
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {data.criticalIssues && data.criticalIssues.length > 0 && (
@@ -168,7 +156,6 @@ export function FreeReport({ data, url }: Props) {
 
         {/* Numbers row */}
         <div className="flex flex-col md:flex-row md:items-center gap-6">
-          {/* Big score */}
           <div className="flex-shrink-0 text-center md:text-left">
             <div className={`text-4xl font-extrabold ${ScoreColor({ score: data.score })}`}>{data.score}</div>
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wide">Totalpoäng</div>
@@ -176,7 +163,6 @@ export function FreeReport({ data, url }: Props) {
 
           <div className="hidden md:block w-px h-16 bg-white/20" />
 
-          {/* Status counts */}
           <div className="flex-1 grid grid-cols-3 gap-3">
             <div className="text-center">
               <div className="text-2xl font-extrabold text-emerald-400">{goodCount}</div>
@@ -197,7 +183,6 @@ export function FreeReport({ data, url }: Props) {
 
           <div className="hidden md:block w-px h-16 bg-white/20" />
 
-          {/* Category scores */}
           <div className="flex-shrink-0 grid grid-cols-2 gap-x-4 gap-y-1">
             {Object.entries(data.categories).map(([key, cat]) => {
               const scorePct = cat.score * 10
@@ -212,7 +197,7 @@ export function FreeReport({ data, url }: Props) {
         </div>
       </div>
 
-      {/* Detailed Analysis — Phases */}
+      {/* Detailed Analysis — Phases (SIMPLIFIED) */}
       <div>
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-extrabold text-2xl text-gray-900">Detaljerad analys</h3>
@@ -222,44 +207,41 @@ export function FreeReport({ data, url }: Props) {
         </div>
 
         {data.phases && data.phases.length > 0 && (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {data.phases.map((phase) => {
               const phaseGood = phase.checks.filter(c => c.status === 'good').length
               const phaseWarn = phase.checks.filter(c => c.status === 'warning').length
               const phaseBad = phase.checks.filter(c => c.status === 'bad').length
 
               return (
-                <div key={phase.id} className="bg-white border-2 border-gray-200 rounded-xl shadow-md overflow-hidden">
-                  {/* Phase header */}
-                  <div className="px-6 py-5 bg-gray-50 border-b-2 border-gray-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-extrabold text-xl text-gray-900">{phase.label}</span>
-                      <div className="flex items-center gap-3 text-sm font-bold">
-                        {phaseGood > 0 && <span className="text-emerald-700 bg-emerald-100 px-2 py-1 rounded">{phaseGood} ✅</span>}
-                        {phaseWarn > 0 && <span className="text-amber-700 bg-amber-100 px-2 py-1 rounded">{phaseWarn} ⚠️</span>}
-                        {phaseBad > 0 && <span className="text-red-700 bg-red-100 px-2 py-1 rounded">{phaseBad} ❌</span>}
+                <div key={phase.id}>
+                  {/* Phase header — no box, just text + progress */}
+                  <div className="mb-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-lg text-gray-900">{phase.label}</h4>
+                      <div className="flex items-center gap-2 text-xs font-semibold">
+                        {phaseGood > 0 && <span className="text-emerald-600">{phaseGood} ✅</span>}
+                        {phaseWarn > 0 && <span className="text-amber-600">{phaseWarn} ⚠️</span>}
+                        {phaseBad > 0 && <span className="text-red-600">{phaseBad} ❌</span>}
                       </div>
                     </div>
-                    {/* Progress bar */}
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden flex">
+                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden flex mt-2">
                       <div className="h-full bg-emerald-500" style={{ width: `${(phaseGood / phase.checks.length) * 100}%` }} />
                       <div className="h-full bg-amber-500" style={{ width: `${(phaseWarn / phase.checks.length) * 100}%` }} />
                       <div className="h-full bg-red-500" style={{ width: `${(phaseBad / phase.checks.length) * 100}%` }} />
                     </div>
-                    <div className="text-sm text-gray-500 mt-2 font-semibold">
-                      {phaseGood} av {phase.checks.length} godkända
-                    </div>
+                    <p className="text-xs text-gray-400 mt-1">{phaseGood} av {phase.checks.length} godkända</p>
                   </div>
 
-                  {/* Checks */}
-                  <div className="p-5 space-y-4">
+                  {/* Checks — flat list, no boxes */}
+                  <div className="mt-2">
                     {[...phase.checks]
                       .sort((a, b) => {
                         const order = { bad: 0, warning: 1, good: 2 }
                         return order[a.status] - order[b.status]
                       })
                       .map((check, i) => (
-                        <CheckCard key={i} check={check} />
+                        <CheckRow key={i} check={check} />
                       ))}
                   </div>
                 </div>
@@ -269,23 +251,24 @@ export function FreeReport({ data, url }: Props) {
         )}
       </div>
 
-      {/* Critical Issues */}
+      {/* Critical Issues (SIMPLIFIED) */}
       {data.criticalIssues && data.criticalIssues.length > 0 && (
         <div>
-          <h3 className="font-extrabold text-2xl text-gray-900 mb-5">Kritiska brister</h3>
-          <div className="space-y-4">
+          <h3 className="font-extrabold text-2xl text-gray-900 mb-4">Kritiska brister</h3>
+          <div className="space-y-3">
             {data.criticalIssues.map((issue, i) => (
-              <div key={i} className="p-5 border-l-8 border-red-600 bg-red-50 rounded-r-xl shadow-md">
-                <div className="flex items-center gap-2 mb-2">
+              <div key={i} className="py-3 border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center gap-2 mb-1">
                   <SeverityBadge severity={issue.severity} />
-                  <span className="font-bold text-gray-900 text-lg">{issue.title}</span>
+                  <span className="font-bold text-gray-900">{issue.title}</span>
                 </div>
-                <div className="text-sm text-gray-800 mt-2 leading-relaxed">{issue.description}</div>
-                <div className="text-sm mt-3 font-semibold text-gray-900">
-                  Åtgärd: <span className="font-normal">{issue.fix}</span>
-                </div>
+                <p className="text-sm text-gray-600">{issue.description}</p>
+                <p className="text-sm text-gray-700 mt-1">
+                  <span className="font-semibold">Åtgärd:</span>{' '}
+                  <span className="font-normal">{issue.fix}</span>
+                </p>
                 {issue.codeExample && issue.codeExample !== 'null' && (
-                  <pre className="mt-4 p-4 bg-gray-900 text-green-400 text-sm overflow-auto rounded-lg border-2 border-gray-700">
+                  <pre className="mt-3 p-3 bg-gray-900 text-green-400 text-xs overflow-auto rounded-lg">
                     {issue.codeExample}
                   </pre>
                 )}
@@ -295,15 +278,15 @@ export function FreeReport({ data, url }: Props) {
         </div>
       )}
 
-      {/* Quick Wins */}
+      {/* Quick Wins (SIMPLIFIED) */}
       {data.quickWins && data.quickWins.length > 0 && (
         <div>
-          <h3 className="font-extrabold text-2xl text-gray-900 mb-5">Quick Wins</h3>
+          <h3 className="font-extrabold text-2xl text-gray-900 mb-4">Quick Wins</h3>
           <div className="space-y-3">
             {data.quickWins.map((win, i) => (
-              <div key={i} className="p-5 bg-emerald-50 border-l-8 border-emerald-500 rounded-r-xl shadow-md">
-                <div className="font-bold text-gray-900 text-lg">{win.title}</div>
-                <div className="text-sm text-gray-800 mt-1 leading-relaxed">{win.fix}</div>
+              <div key={i} className="py-3 border-b border-gray-100 last:border-b-0">
+                <div className="font-bold text-gray-900">{win.title}</div>
+                <p className="text-sm text-gray-600 mt-0.5">{win.fix}</p>
               </div>
             ))}
           </div>
