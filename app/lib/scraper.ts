@@ -1,5 +1,15 @@
 import * as cheerio from 'cheerio'
 
+async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = 15000): Promise<Response> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export interface PageSummary {
   url: string
   title: string
@@ -186,21 +196,51 @@ export function extractSummary(html: string, url: string): PageSummary {
   }
 }
 
+function getFetchErrorMessage(err: any, url: string): string {
+  const msg = err?.message || String(err)
+  const causeMsg = err?.cause?.message || ''
+  const fullMsg = msg + ' ' + causeMsg
+
+  if (fullMsg.includes('ENOTFOUND') || fullMsg.includes('getaddrinfo') || fullMsg.includes('failed to resolve')) {
+    return `Kunde inte hitta servern för ${url} — kontrollera att domänen stämmer`
+  }
+  if (fullMsg.includes('ETIMEDOUT') || fullMsg.includes('timeout') || err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+    return `Servern svarade inte i tid (${url}) — prova igen om en stund`
+  }
+  if (fullMsg.includes('ECONNREFUSED')) {
+    return `Anslutningen nekades till ${url} — servern verkar vara nere`
+  }
+  if (fullMsg.includes('CERT_') || fullMsg.includes('certificate') || fullMsg.includes('SSL')) {
+    return `SSL-certifikatfel för ${url}`
+  }
+  if (fullMsg.includes('redirect') || fullMsg.includes('REDIRECT')) {
+    return `För många omdirigeringar från ${url}`
+  }
+  return `Kunde inte hämta ${url}: ${causeMsg || msg}`
+}
+
 export async function scrapeWebsite(url: string): Promise<ScrapedData> {
   // 1. Hämta förstasidan
-  const mainRes = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0' },
-    signal: AbortSignal.timeout(8000)
-  })
+  let mainRes: Response
+  try {
+    mainRes = await fetchWithTimeout(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    }, 15000)
+  } catch (err: any) {
+    throw new Error(getFetchErrorMessage(err, url))
+  }
+  if (!mainRes.ok) {
+    throw new Error(`Servern svarade med status ${mainRes.status} för ${url}`)
+  }
   const mainHtml = await mainRes.text()
 
   // 2. Hämta robots, sitemap, llms parallellt
   const base = new URL(url).origin
 
   const [robotsRes, sitemapRes, llmsRes] = await Promise.all([
-    fetch(`${base}/robots.txt`, { signal: AbortSignal.timeout(5000) }).catch(() => null),
-    fetch(`${base}/sitemap.xml`, { signal: AbortSignal.timeout(5000) }).catch(() => null),
-    fetch(`${base}/llms.txt`, { signal: AbortSignal.timeout(5000) }).catch(() => null),
+    fetchWithTimeout(`${base}/robots.txt`, {}, 8000).catch(() => null),
+    fetchWithTimeout(`${base}/sitemap.xml`, {}, 8000).catch(() => null),
+    fetchWithTimeout(`${base}/llms.txt`, {}, 8000).catch(() => null),
   ])
 
   const robotsTxt = robotsRes?.ok ? await robotsRes.text() : null
@@ -238,10 +278,9 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
   const extraPages = await Promise.all(
     extraUrls.map(async (pageUrl) => {
       try {
-        const res = await fetch(pageUrl, {
+        const res = await fetchWithTimeout(pageUrl, {
           headers: { 'User-Agent': 'Mozilla/5.0' },
-          signal: AbortSignal.timeout(8000)
-        })
+        }, 8000)
         if (!res.ok) return null
         const html = await res.text()
         return extractSummary(html, pageUrl)

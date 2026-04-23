@@ -17,9 +17,9 @@ export interface Check {
   title: string
   status: 'good' | 'warning' | 'bad'
   finding: string
-  what: string
-  why: string
-  fix: string
+  what?: string
+  why?: string
+  fix?: string
 }
 
 export interface Phase {
@@ -154,13 +154,13 @@ export function useAnalysis() {
     simulateSteps()
 
     try {
-      const res = await fetch('/api/analyze', {
+      const res = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Fel')
+      if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
       setFreeReport(json.data)
       setAnalysisLog(json.log || null)
       setStepIndex(STEP_MESSAGES.length - 1)
@@ -190,7 +190,7 @@ export function useAnalysis() {
         body: JSON.stringify({ url }),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Fel')
+      if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
       setPremiumReport(json.premium)
       setAnalysisLog((json.log || json.free_log) || null)
       setStepIndex(STEP_MESSAGES.length - 1)

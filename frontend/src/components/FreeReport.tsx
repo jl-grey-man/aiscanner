@@ -57,12 +57,9 @@ function CheckCard({ check }: { check: Check }) {
             </div>
             <p className="text-sm text-gray-700 leading-relaxed font-medium">{check.finding}</p>
 
-            {/* What & Why for problems */}
-            {isProblem && check.what && (
-              <div className="mt-3 space-y-1.5">
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  <span className="font-bold text-gray-700">Vad:</span> {check.what}
-                </p>
+            {/* Why it matters for problems */}
+            {isProblem && check.why && (
+              <div className="mt-3">
                 <p className="text-xs text-gray-600 leading-relaxed">
                   <span className="font-bold text-gray-700">Varför det spelar roll:</span> {check.why}
                 </p>
@@ -104,7 +101,7 @@ export function FreeReport({ data, url }: Props) {
 
   return (
     <div className="space-y-10">
-      {/* Single dark summary box — same bg-gray-900 as Progress header */}
+      {/* Dark summary box */}
       <div className="bg-gray-900 text-white rounded-xl p-6 md:p-8 shadow-lg">
         {/* Badge */}
         <div className="text-center mb-5">
@@ -124,6 +121,47 @@ export function FreeReport({ data, url }: Props) {
         <p className="text-center text-gray-300 leading-relaxed max-w-2xl mx-auto font-medium mb-8">
           {data.summary}
         </p>
+
+        {/* Short Critical Issues + Quick Wins — inside dark box, side by side */}
+        {(data.criticalIssues?.length > 0 || data.quickWins?.length > 0) && (
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {data.criticalIssues && data.criticalIssues.length > 0 && (
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wide text-red-400 mb-2">Kritiska brister</div>
+                <div className="space-y-2">
+                  {data.criticalIssues.map((issue, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${
+                        issue.severity === 'high' ? 'bg-red-400' : issue.severity === 'medium' ? 'bg-amber-400' : 'bg-blue-400'
+                      }`} />
+                      <div>
+                        <span className="text-sm font-semibold text-gray-200">{issue.title}</span>
+                        <p className="text-xs text-gray-400 leading-relaxed">{issue.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.quickWins && data.quickWins.length > 0 && (
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wide text-emerald-400 mb-2">Quick Wins</div>
+                <div className="space-y-2">
+                  {data.quickWins.map((win, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-sm font-semibold text-gray-200">{win.title}</span>
+                        <p className="text-xs text-gray-400 leading-relaxed">{win.fix}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Divider */}
         <div className="border-t border-white/20 mb-6" />
@@ -172,46 +210,6 @@ export function FreeReport({ data, url }: Props) {
             })}
           </div>
         </div>
-
-        {/* Compact Critical Issues */}
-        {data.criticalIssues && data.criticalIssues.length > 0 && (
-          <>
-            <div className="border-t border-white/20 mt-6 pt-5">
-              <div className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Kritiska brister</div>
-              <div className="flex flex-wrap gap-2">
-                {data.criticalIssues.map((issue, i) => (
-                  <span key={i} className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                    issue.severity === 'high'
-                      ? 'bg-red-500/20 text-red-300 border-red-500/30'
-                      : issue.severity === 'medium'
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                      : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                  }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    {issue.title}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Compact Quick Wins */}
-        {data.quickWins && data.quickWins.length > 0 && (
-          <>
-            <div className="border-t border-white/20 mt-4 pt-5">
-              <div className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Quick Wins</div>
-              <div className="flex flex-wrap gap-2">
-                {data.quickWins.map((win, i) => (
-                  <span key={i} className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    {win.title}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
       </div>
 
       {/* Detailed Analysis — Phases */}

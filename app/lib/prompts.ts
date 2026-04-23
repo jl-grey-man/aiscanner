@@ -41,6 +41,36 @@ Returnera exakt detta JSON-schema:
     "aireadiness": {"score": 0-10, "label": "AI-beredskap"},
     "content": {"score": 0-10, "label": "Innehåll"}
   },
+  "phases": [
+    {
+      "id": "technical",
+      "label": "Teknisk grund",
+      "checks": [
+        {"title": "Robots.txt", "status": "good|warning|bad", "finding": "1 mening", "what": "Vad", "why": "Varför", "fix": "Åtgärd"}
+      ]
+    },
+    {
+      "id": "local",
+      "label": "Lokal synlighet",
+      "checks": [
+        {"title": "NAP på hemsidan", "status": "good|warning|bad", "finding": "1 mening", "what": "Vad", "why": "Varför", "fix": "Åtgärd"}
+      ]
+    },
+    {
+      "id": "aireadiness",
+      "label": "AI-beredskap",
+      "checks": [
+        {"title": "Schema markup", "status": "good|warning|bad", "finding": "1 mening", "what": "Vad", "why": "Varför", "fix": "Åtgärd"}
+      ]
+    },
+    {
+      "id": "content",
+      "label": "Innehåll",
+      "checks": [
+        {"title": "H1-tagg", "status": "good|warning|bad", "finding": "1 mening", "what": "Vad", "why": "Varför", "fix": "Åtgärd"}
+      ]
+    }
+  ],
   "criticalIssues": [
     {
       "severity": "high|medium|low",
@@ -65,6 +95,15 @@ Returnera exakt detta JSON-schema:
     "pagesScanned": number
   }
 }
+
+Regler för phases:
+- Skapa EXAKT 4 phases: technical, local, aireadiness, content
+- Varje phase ska ha 3-5 checks baserat på vad du faktiskt hittat
+- status 'good' = detta är bra och behöver inte åtgärdas
+- status 'warning' = kan förbättras, inte kritisk
+- status 'bad' = allvarlig brist som påverkar AI-synlighet
+- finding ska vara max 1 mening om vad du hittade
+- what/why/fix är valfria, men ska vara korta och konkreta när de finns
 
 Regler:
 - Om flera språkversioner finns (t.ex. /en/ + svensk), bedöm om svenska sidor är tillräckliga

@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import type { FreeReportData, Check } from '@/app/hooks/useAnalysis'
 
@@ -57,12 +59,9 @@ function CheckCard({ check }: { check: Check }) {
             </div>
             <p className="text-sm text-gray-700 leading-relaxed font-medium">{check.finding}</p>
 
-            {/* What & Why for problems */}
-            {isProblem && check.what && (
-              <div className="mt-3 space-y-1.5">
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  <span className="font-bold text-gray-700">Vad:</span> {check.what}
-                </p>
+            {/* Why it matters for problems */}
+            {isProblem && check.why && (
+              <div className="mt-3">
                 <p className="text-xs text-gray-600 leading-relaxed">
                   <span className="font-bold text-gray-700">Varför det spelar roll:</span> {check.why}
                 </p>
@@ -104,7 +103,7 @@ export function FreeReport({ data, url }: Props) {
 
   return (
     <div className="space-y-10">
-      {/* Single dark summary box — same bg-gray-900 as Progress header */}
+      {/* Dark summary box */}
       <div className="bg-gray-900 text-white rounded-xl p-6 md:p-8 shadow-lg">
         {/* Badge */}
         <div className="text-center mb-5">
@@ -125,12 +124,12 @@ export function FreeReport({ data, url }: Props) {
           {data.summary}
         </p>
 
-        {/* Short Critical Issues + Quick Wins */}
+        {/* Short Critical Issues + Quick Wins — inside dark box, side by side */}
         {(data.criticalIssues?.length > 0 || data.quickWins?.length > 0) && (
-          <div className="space-y-4 mb-6">
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
             {data.criticalIssues && data.criticalIssues.length > 0 && (
               <div>
-                <div className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Kritiska brister</div>
+                <div className="text-xs font-bold uppercase tracking-wide text-red-400 mb-2">Kritiska brister</div>
                 <div className="space-y-2">
                   {data.criticalIssues.map((issue, i) => (
                     <div key={i} className="flex items-start gap-2">
@@ -149,7 +148,7 @@ export function FreeReport({ data, url }: Props) {
 
             {data.quickWins && data.quickWins.length > 0 && (
               <div>
-                <div className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Quick Wins</div>
+                <div className="text-xs font-bold uppercase tracking-wide text-emerald-400 mb-2">Quick Wins</div>
                 <div className="space-y-2">
                   {data.quickWins.map((win, i) => (
                     <div key={i} className="flex items-start gap-2">
@@ -272,7 +271,7 @@ export function FreeReport({ data, url }: Props) {
         )}
       </div>
 
-      {/* Critical Issues */}
+      {/* Full Critical Issues */}
       {data.criticalIssues && data.criticalIssues.length > 0 && (
         <div>
           <h3 className="font-extrabold text-2xl text-gray-900 mb-5">Kritiska brister</h3>
@@ -298,7 +297,7 @@ export function FreeReport({ data, url }: Props) {
         </div>
       )}
 
-      {/* Quick Wins */}
+      {/* Full Quick Wins */}
       {data.quickWins && data.quickWins.length > 0 && (
         <div>
           <h3 className="font-extrabold text-2xl text-gray-900 mb-5">Quick Wins</h3>

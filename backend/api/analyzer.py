@@ -85,6 +85,61 @@ _WHATWHY_DB = {
 }
 
 
+def _merge_phases(ai_phases: list, fallback_phases: list) -> list:
+    """Merge AI-generated phases with fallback phases.
+
+    For each phase, use AI's checks where available, but fill in any missing
+    checks from fallback. This ensures all expected checks are always present.
+    """
+    # Index AI checks by title for quick lookup
+    ai_checks_by_phase = {}
+    for phase in ai_phases:
+        phase_id = phase.get("id", "")
+        ai_checks_by_phase[phase_id] = {c["title"]: c for c in phase.get("checks", [])}
+
+    merged = []
+    for fb_phase in fallback_phases:
+        phase_id = fb_phase["id"]
+        ai_checks = ai_checks_by_phase.get(phase_id, {})
+
+        merged_checks = []
+        # Start with fallback checks, let AI override where it has data
+        for fb_check in fb_phase["checks"]:
+            title = fb_check["title"]
+            if title in ai_checks:
+                # AI provided this check — use AI's version but ensure what/why exist
+                ai_check = ai_checks[title]
+                merged_check = dict(fb_check)  # start with fallback as base
+                merged_check.update(ai_check)  # override with AI data
+                # Ensure what/why are populated
+                what, why = _what_why(title)
+                if not merged_check.get("what"):
+                    merged_check["what"] = what
+                if not merged_check.get("why"):
+                    merged_check["why"] = why
+                merged_checks.append(merged_check)
+            else:
+                # AI didn't provide this check — use fallback
+                merged_checks.append(fb_check)
+
+        # Add any extra checks AI provided that weren't in fallback
+        fb_titles = {c["title"] for c in fb_phase["checks"]}
+        for title, ai_check in ai_checks.items():
+            if title not in fb_titles:
+                what, why = _what_why(title)
+                ai_check.setdefault("what", what)
+                ai_check.setdefault("why", why)
+                merged_checks.append(ai_check)
+
+        merged.append({
+            "id": phase_id,
+            "label": fb_phase["label"],
+            "checks": merged_checks,
+        })
+
+    return merged
+
+
 def _what_why(title: str) -> tuple:
     """Return (what, why) for a given check title. Falls back to generic text."""
     return _WHATWHY_DB.get(title, (
@@ -376,10 +431,22 @@ async def run_free_analysis(url: str) -> dict:
     has_phases = bool(result.get("phases") and len(result.get("phases", [])) > 0)
     log.add("validate", f"AI-svar har phases: {has_phases}")
 
+    # Always build fallback phases as the complete baseline
+    fallback_phases = _build_fallback_phases(scraped, result)
+    fallback_check_count = sum(len(p['checks']) for p in fallback_phases)
+    log.add("fallback", f"Fallback byggd med {fallback_check_count} checks")
+
     if not has_phases:
-        log.add("fallback", "AI saknade phases — bygger fallback från scraping-data")
-        result["phases"] = _build_fallback_phases(scraped, result)
-        log.add("fallback", f"Fallback byggd med {sum(len(p['checks']) for p in result['phases'])} checks")
+        log.add("fallback", "AI saknade phases — använder fallback")
+        result["phases"] = fallback_phases
+    else:
+        # Merge AI phases with fallback: AI enriches checks it returned,
+        # fallback provides any missing checks
+        merged_phases = _merge_phases(result.get("phases", []), fallback_phases)
+        ai_check_count = sum(len(p['checks']) for p in result.get("phases", []))
+        merged_count = sum(len(p['checks']) for p in merged_phases)
+        log.add("merge", f"AI returnerade {ai_check_count} checks, merge ger {merged_count} checks")
+        result["phases"] = merged_phases
 
     # 6. Summary
     summary = log.summary()
