@@ -218,7 +218,7 @@ export function FreeReport({ data, url }: Props) {
                   {/* Phase header */}
                   <div className="mb-2">
                     <div className="flex items-center justify-between gap-4">
-                      <h4 className="font-bold text-xl text-gray-900">{phase.label}</h4>
+                      <h4 className="font-extrabold text-2xl text-gray-900">{phase.label}</h4>
                       <div className="flex items-center gap-2 text-sm font-bold">
                         {phaseGood > 0 && (
                           <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">
@@ -263,10 +263,25 @@ export function FreeReport({ data, url }: Props) {
         )}
       </div>
 
+      {/* Quick Wins */}
+      {data.quickWins && data.quickWins.length > 0 && (
+        <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-6">
+          <h3 className="font-extrabold text-3xl text-emerald-900 mb-4">⚡ Quick Wins</h3>
+          <div className="space-y-4">
+            {data.quickWins.map((win, i) => (
+              <div key={i} className="py-3 border-b border-emerald-200/50 last:border-b-0">
+                <div className="font-bold text-gray-900">{win.title}</div>
+                <p className="text-sm text-gray-700 mt-0.5">{win.fix}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Critical Issues */}
       {data.criticalIssues && data.criticalIssues.length > 0 && (
         <div className="bg-red-50/60 border border-red-200 rounded-xl p-6">
-          <h3 className="font-extrabold text-3xl text-red-900 mb-4">Kritiska brister</h3>
+          <h3 className="font-extrabold text-3xl text-red-900 mb-4">🚨 Kritiska brister</h3>
           <div className="space-y-4">
             {data.criticalIssues.map((issue, i) => (
               <div key={i} className="py-3 border-b border-red-200/50 last:border-b-0">
@@ -284,21 +299,6 @@ export function FreeReport({ data, url }: Props) {
                     {issue.codeExample}
                   </pre>
                 )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Wins */}
-      {data.quickWins && data.quickWins.length > 0 && (
-        <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-6">
-          <h3 className="font-extrabold text-3xl text-emerald-900 mb-4">Quick Wins</h3>
-          <div className="space-y-4">
-            {data.quickWins.map((win, i) => (
-              <div key={i} className="py-3 border-b border-emerald-200/50 last:border-b-0">
-                <div className="font-bold text-gray-900">{win.title}</div>
-                <p className="text-sm text-gray-700 mt-0.5">{win.fix}</p>
               </div>
             ))}
           </div>
