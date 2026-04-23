@@ -215,22 +215,34 @@ export function FreeReport({ data, url }: Props) {
 
               return (
                 <div key={phase.id}>
-                  {/* Phase header — no box, just text + progress */}
-                  <div className="mb-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-lg text-gray-900">{phase.label}</h4>
-                      <div className="flex items-center gap-2 text-xs font-semibold">
-                        {phaseGood > 0 && <span className="text-emerald-600">{phaseGood} ✅</span>}
-                        {phaseWarn > 0 && <span className="text-amber-600">{phaseWarn} ⚠️</span>}
-                        {phaseBad > 0 && <span className="text-red-600">{phaseBad} ❌</span>}
+                  {/* Phase header */}
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <h4 className="font-bold text-xl text-gray-900">{phase.label}</h4>
+                      <div className="flex items-center gap-2 text-sm font-bold">
+                        {phaseGood > 0 && (
+                          <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">
+                            {phaseGood} <span>✅</span>
+                          </span>
+                        )}
+                        {phaseWarn > 0 && (
+                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">
+                            {phaseWarn} <span>⚠️</span>
+                          </span>
+                        )}
+                        {phaseBad > 0 && (
+                          <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full">
+                            {phaseBad} <span>❌</span>
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden flex mt-2">
+                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden flex mt-3">
                       <div className="h-full bg-emerald-500" style={{ width: `${(phaseGood / phase.checks.length) * 100}%` }} />
                       <div className="h-full bg-amber-500" style={{ width: `${(phaseWarn / phase.checks.length) * 100}%` }} />
                       <div className="h-full bg-red-500" style={{ width: `${(phaseBad / phase.checks.length) * 100}%` }} />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{phaseGood} av {phase.checks.length} godkända</p>
+                    <p className="text-sm font-semibold text-gray-500 mt-2">{phaseGood} av {phase.checks.length} godkända</p>
                   </div>
 
                   {/* Checks — flat list, no boxes */}
