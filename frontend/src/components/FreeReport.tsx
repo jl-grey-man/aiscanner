@@ -200,7 +200,7 @@ export function FreeReport({ data, url }: Props) {
       {/* Detailed Analysis — Phases (SIMPLIFIED) */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-extrabold text-2xl text-gray-900">Detaljerad analys</h3>
+          <h3 className="font-extrabold text-3xl text-gray-900">Detaljerad analys</h3>
           <span className="text-sm text-gray-500 font-semibold bg-gray-100 px-3 py-1 rounded-full">
             {allChecks.length} kontroller
           </span>
@@ -251,19 +251,19 @@ export function FreeReport({ data, url }: Props) {
         )}
       </div>
 
-      {/* Critical Issues (SIMPLIFIED) */}
+      {/* Critical Issues */}
       {data.criticalIssues && data.criticalIssues.length > 0 && (
-        <div>
-          <h3 className="font-extrabold text-2xl text-gray-900 mb-4">Kritiska brister</h3>
-          <div className="space-y-3">
+        <div className="bg-red-50/60 border border-red-200 rounded-xl p-6">
+          <h3 className="font-extrabold text-3xl text-red-900 mb-4">Kritiska brister</h3>
+          <div className="space-y-4">
             {data.criticalIssues.map((issue, i) => (
-              <div key={i} className="py-3 border-b border-gray-100 last:border-b-0">
+              <div key={i} className="py-3 border-b border-red-200/50 last:border-b-0">
                 <div className="flex items-center gap-2 mb-1">
                   <SeverityBadge severity={issue.severity} />
                   <span className="font-bold text-gray-900">{issue.title}</span>
                 </div>
-                <p className="text-sm text-gray-600">{issue.description}</p>
-                <p className="text-sm text-gray-700 mt-1">
+                <p className="text-sm text-gray-700">{issue.description}</p>
+                <p className="text-sm text-gray-800 mt-1">
                   <span className="font-semibold">Åtgärd:</span>{' '}
                   <span className="font-normal">{issue.fix}</span>
                 </p>
@@ -278,15 +278,15 @@ export function FreeReport({ data, url }: Props) {
         </div>
       )}
 
-      {/* Quick Wins (SIMPLIFIED) */}
+      {/* Quick Wins */}
       {data.quickWins && data.quickWins.length > 0 && (
-        <div>
-          <h3 className="font-extrabold text-2xl text-gray-900 mb-4">Quick Wins</h3>
-          <div className="space-y-3">
+        <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-6">
+          <h3 className="font-extrabold text-3xl text-emerald-900 mb-4">Quick Wins</h3>
+          <div className="space-y-4">
             {data.quickWins.map((win, i) => (
-              <div key={i} className="py-3 border-b border-gray-100 last:border-b-0">
+              <div key={i} className="py-3 border-b border-emerald-200/50 last:border-b-0">
                 <div className="font-bold text-gray-900">{win.title}</div>
-                <p className="text-sm text-gray-600 mt-0.5">{win.fix}</p>
+                <p className="text-sm text-gray-700 mt-0.5">{win.fix}</p>
               </div>
             ))}
           </div>
