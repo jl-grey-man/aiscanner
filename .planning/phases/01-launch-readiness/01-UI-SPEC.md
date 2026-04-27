@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-27
+revised: 2026-04-27
 ---
 
 # Phase 1 — UI Design Contract
@@ -26,12 +27,12 @@ created: 2026-04-27
 | Preset | not applicable |
 | Component library | none (no Radix, no shadcn) |
 | Icon library | Inline SVG only — hand-drawn in JSX. No npm icon package. |
-| Display font | Syne — weights 400, 600, 700, 800 |
+| Display font | Syne — weights 400, 700, 800 |
 | Body font | DM Sans — weights 400, 500 |
 | Serif accent | Instrument Serif — weight 400, italic style (for `<em>` elements only) |
 | Mono font | JetBrains Mono — weight 400 (URL display, code snippets, footnotes) |
 
-**Font loading:** Google Fonts via `next/font/google` in `app/layout.tsx`. CSS variables: `--font-display`, `--font-body`, `--font-serif`, `--font-mono`. Apply as `className` on `<html>` element.
+**Font loading:** Google Fonts via `next/font/google` in `app/layout.tsx`. Load Syne with `weights: ['400', '700', '800']` — weight 600 is NOT loaded. CSS variables: `--font-display`, `--font-body`, `--font-serif`, `--font-mono`. Apply as `className` on `<html>` element.
 
 **Source:** handoff `v3.html` line 9 Google Fonts import; CSS vars `--f-display`, `--f-body`, `--f-serif`, `--f-mono`.
 
@@ -98,7 +99,7 @@ Add to `tailwind.config.ts` as `colors.v3-*` namespace alongside existing tokens
 1. Hero pill badge — border, text, and pulsing dot
 2. Hero h1 "AI" word — outlined stroke style (`-webkit-text-stroke: 2px #E84420; color: transparent`)
 3. Hero CTA button background ("Testa din sajt — gratis")
-4. ScanCTA submit button ("Analysera")
+4. ScanCTA submit button ("Analysera sajten")
 5. Section tag label + border on every section
 6. "Du" result badge in Förklararen left panel
 7. Checklist item numbers (`.v3-check-num` at 60% opacity)
@@ -157,10 +158,10 @@ All values multiples of 4.
 
 Exceptions:
 - Hero section: `min-height: 100vh` (full viewport)
-- TickerBreak: 14px vertical (intentionally slim — non-standard)
+- TickerBreak: 12px vertical (slim stripe separator)
 - All buttons: minimum 44px height (touch target)
-- Hero CTA button: `padding: 14px 28px` (non-grid, from handoff)
-- ScanCTA button: `padding: 14px 32px` (non-grid, from handoff)
+- Hero CTA button: `padding: 12px 28px`
+- ScanCTA button: `padding: 12px 32px`
 
 **Source:** `v3.html` section CSS classes — exact values extracted from `.v3-hero`, `.v3-changed`, `.v3-cta`, `.v3-report`, etc.
 
@@ -170,23 +171,29 @@ Exceptions:
 
 **Font assignment rule:** `h1, h2, h3, h4 { font-family: var(--f-display) }` and `em { font-family: var(--f-serif); font-style: italic }` — apply globally in `globals.css`.
 
-| Role | Size | Weight | Line Height | Letter Spacing | Font | Example element |
-|------|------|--------|-------------|---------------|------|-----------------|
-| Display h1 | clamp(48px, 9vw, 100px) | 800 | 0.95 | −0.04em | Syne | Hero headline only |
-| Hero subheading | clamp(32px, 5.5vw, 64px) | 400 italic | 1.1 | 0 | Instrument Serif | "Vad svarar den om dig?" |
-| Section h2 | clamp(30px, 5vw, 56px) | 800 | 1.05 | −0.03em | Syne | `.v3-h2` |
-| Sub-heading h3 | 24px | 700 | 1.2 | −0.02em | Syne | `.v3-h3` |
-| Body | 17px | 400 | 1.7 | 0 | DM Sans | `.v3-body` — section prose |
-| Body small | 15px | 400 | 1.7 | 0 | DM Sans | FAQ answers, checklist text, chatbox |
-| Hero body | 18px | 400 | 1.7 | 0 | DM Sans | Hero paragraph only |
-| Label / meta | 13px | 400–500 | 1.4 | 0 | DM Sans | Stat labels, finding text, fine print |
-| Label micro | 11–12px | 700 | 1.0 | +0.10–0.12em | Syne uppercase | Section tags, bar labels, badge text |
-| Stat number | clamp(36px, 5vw, 48px) | 800 | 1.0 | −0.03em | Syne | Animated counter displays |
-| Reason ordinal | 28px | 800 | 1.0 | 0 | Syne | "01", "02" in reason cards |
-| Mono | 11–13px | 400 | 1.0 | −0.01em | JetBrains Mono | URL display, hero footnote, report mono labels |
-| FAQ question | 17px | 600 | 1.3 | 0 | Syne | FAQ toggle buttons |
+**Four named size roles — max 4 sizes, max 2 weights per font context.**
 
-**Two weights for body context: 400 (regular) + 500 (medium).** Display context uses 700 + 800.
+| Role | Size | Weight | Line Height | Letter Spacing | Font | Maps to |
+|------|------|--------|-------------|---------------|------|---------|
+| Display | clamp(48px, 9vw, 100px) | 700 / 800 | 0.95–1.05 | −0.03 to −0.04em | Syne | Hero h1 (800), section h2 (800), stat numbers (800), reason ordinals (800), hero subheading via Instrument Serif (400 italic) |
+| Heading | clamp(30px, 5vw, 56px) | 800 | 1.05 | −0.03em | Syne | Section h2 (`.v3-h2`) |
+| Sub-heading | 24px | 700 | 1.2 | −0.02em | Syne | h3 (`.v3-h3`), FAQ question |
+| Body | 17px | 400 / 500 | 1.7 | 0 | DM Sans | Body prose (400), labels/meta (500), body small at 15px via line-height variation, label micro via letter-spacing + uppercase, mono at 11–13px via JetBrains Mono font face |
+
+**Weight contract per font context:**
+- **DM Sans (body context):** 400 (regular) + 500 (medium labels) — 2 weights
+- **Syne (display context):** 700 + 800 — 2 weights
+- **Instrument Serif:** 400 italic only
+- **JetBrains Mono:** 400 only
+
+**Notes on body-role size variations:** These are the same 17px body slot expressed through different font faces or minor size offsets, not separate scale entries:
+- Body small (FAQ answers, checklist text, chatbox): 15px — 400 DM Sans
+- Hero body: 18px — 400 DM Sans
+- Label / meta (stat labels, fine print): 13px — 400–500 DM Sans
+- Label micro (section tags, bar labels, badge text): 11–12px — 700 Syne, uppercase, +0.10–0.12em tracking
+- Mono (URL display, footnote, code): 11–13px — 400 JetBrains Mono
+
+**Removed:** weight 600 is not used anywhere. FAQ question was previously 600 — corrected to 700 (Sub-heading slot, Syne).
 
 **Source:** `v3.html` lines 67–115 (hero CSS), 112–116 (shared section CSS), 228–252 (checklist), 368–383 (FAQ), 184–185 (stats).
 
@@ -237,10 +244,10 @@ Exceptions:
 .rv.vis { opacity: 1; transform: none; }
 
 /* Ticker marquee */
-.ticker-wrap { overflow: hidden; background: #111; color: white; padding: 14px 0; }
+.ticker-wrap { overflow: hidden; background: #111; color: white; padding: 12px 0; }
 .ticker-track { display: flex; white-space: nowrap; animation: ticker-scroll linear infinite; }
 @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-.ticker-item { padding: 0 20px; font-family: var(--f-display); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.ticker-item { padding: 0 20px; font-family: var(--f-display); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .ticker-sep { color: #E84420; margin-left: 20px; font-size: 10px; }
 
 /* Text selection */
@@ -554,7 +561,7 @@ Language: Swedish throughout. All user-facing strings are Swedish.
 | Hero primary (scroll) | Testa din sajt — gratis |
 | Checklist soft CTA text | Hur många har din sajt? |
 | Checklist soft CTA link | Ta reda på det ↓ |
-| ScanCTA submit button | Analysera |
+| ScanCTA submit button | Analysera sajten |
 | ScanCTA fine print | Ingen e-post. Ingen registrering. Resultat direkt. |
 | PremiumCTA button | Beställ komplett analys |
 | PremiumCTA price tag | 499 kr |
@@ -719,6 +726,15 @@ No third-party component registries in this phase. All UI hand-implemented from 
 | PremiumCTA email → localStorage | CONTEXT.md + RESEARCH.md Pattern 4 | Locked |
 | Checklist 7 items (not 6) | REQUIREMENTS.md LAND-04 + proposal §Sektion 4 | Requirements |
 | Section tag "Checklista" — 7 items (not 6 from handoff) | Proposal overrides handoff | Requirements |
+
+---
+
+## Revision Log
+
+| Date | Change |
+|------|--------|
+| 2026-04-27 | Initial draft |
+| 2026-04-27 | BLOCK fixes: (1) Typography collapsed to 4 named roles, weight 600 removed, FAQ question corrected to 700; (2) Spacing 14px → 12px for TickerBreak, Hero CTA, ScanCTA buttons; (3) ScanCTA label "Analysera" → "Analysera sajten" |
 
 ---
 
