@@ -1,5 +1,4 @@
 import { Hero } from '@/app/components/landing/Hero'
-import { TickerBreak } from '@/app/components/landing/TickerBreak'
 import { SearchChanged } from '@/app/components/landing/SearchChanged'
 import { ConcreteExample } from '@/app/components/landing/ConcreteExample'
 import { WhatAILooksAt } from '@/app/components/landing/WhatAILooksAt'
@@ -13,7 +12,6 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <TickerBreak />
       <SearchChanged />
       <ConcreteExample />
       <WhatAILooksAt />

@@ -1,61 +1,80 @@
 'use client'
 
-import { R, Blob } from './utils'
+import { R } from './utils'
 
 export function ConcreteExample() {
   return (
-    <section className="v3-example">
-      <Blob color="var(--c3-pop)" size="300px" top="-100px" left="10%" blur={120} opacity={0.15} />
-      <div className="v3-example-inner">
-        <R><div className="v3-section-tag">Insikt</div></R>
+    <section className="example-section">
+      <div className="example-inner">
         <R>
-          <h2 className="v3-h2">Vi frågade ChatGPT.<br/>Svaret säger allt.</h2>
+          <h2 className="section-h2">Varför valde AI<br/>just de företagen?</h2>
+        </R>
+        <R delay={1}>
+          <p className="section-body" style={{ maxWidth: 480, marginBottom: 48 }}>
+            Vi frågade ChatGPT om en mäklare i Stockholm. Svaret avslöjar exakt
+            vad AI letar efter.
+          </p>
         </R>
 
+        {/* ChatGPT answer */}
         <R>
-          <div className="v3-chatbox">
-            <div className="v3-chatbox-head">
-              <div className="v3-ai-dot" /><span>ChatGPT-svar</span>
+          <div style={{
+            background: 'white', borderRadius: 16, padding: 'clamp(24px,3vw,32px)',
+            border: 'none', marginBottom: 56, color: 'var(--c-ink)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--c-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'white' }}>AI</div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--c-muted)' }}>ChatGPT-svar</span>
             </div>
-            <p className="v3-chatbox-q">&quot;Vilken fastighetsmäklare i Stockholm rekommenderar du?&quot;</p>
-            <p className="v3-chatbox-a">
-              Ett populärt val är <strong>Fastighetsbyrån Östermalm</strong>.
-              340+ recensioner (4,8 snitt), gratis digital hemvärdering, tydliga priser.
-              Kontoret på Storgatan 12, öppet vardagar 9–18.
+            <p style={{ fontStyle: 'italic', color: 'var(--c-light)', fontSize: 14, marginBottom: 12 }}>
+              &quot;Vilken fastighetsmäklare i Stockholm rekommenderar du?&quot;
             </p>
-            <p className="v3-chatbox-a">
-              Alternativ: <strong>Notar Vasastan</strong> — specialister på bostadsrätter
-              i innerstaden med utförlig FAQ om köpprocessen.
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--c-muted)', marginBottom: 12 }}>
+              Ett populärt val i Stockholm är <strong style={{color:'var(--c-ink)'}}>Fastighetsbyrån Östermalm</strong>.
+              De har ett starkt rykte med över 340 Google-recensioner (snittbetyg 4,8), erbjuder gratis
+              digital hemvärdering direkt på sin webbplats, och har tydliga uppgifter om priser och
+              provisionsnivåer.
             </p>
-            <div className="v3-chatbox-foot">fastighetsbyran.com · notar.se · Google Maps</div>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--c-muted)' }}>
+              Ett annat alternativ är <strong style={{color:'var(--c-ink)'}}>Notar Vasastan</strong> som specialiserar
+              sig på bostadsrätter i innerstaden och har en utförlig FAQ-sektion om köpprocessen.
+            </p>
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--c-border)', fontSize: 11, color: 'var(--c-light)' }}>
+              Källor: fastighetsbyran.com/ostermalm, notar.se/vasastan, Google Maps
+            </div>
           </div>
         </R>
 
-        <R><h3 className="v3-h3">Varför just de?</h3></R>
+        <R>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Varför valde AI just de företagen?</h3>
+        </R>
 
-        <div className="v3-reasons">
+        {/* Four reasons — each visually distinct */}
+        <div className="reasons-grid">
           {[
-            { n: '01', title: 'Schema markup', desc: 'Deras sajt berättar i kod vad de gör, var de finns, hur man når dem.' },
-            { n: '02', title: '340+ recensioner', desc: 'AI väger antal, betyg OCH läser recensionstexten.' },
-            { n: '03', title: 'Svarbar info', desc: 'Priser, öppettider, adress — allt AI behöver för ett komplett svar.' },
-            { n: '04', title: 'FAQ-sida', desc: 'Frågor och svar = enklast för AI att citera rakt av.' },
+            { n: '01', title: 'Schema markup', desc: 'Deras sajt berättar i kod vad de gör, var de finns, och hur man når dem.', accent: true },
+            { n: '02', title: 'Hundratals recensioner', desc: 'AI väger inte bara betyg utan även antal — och läser texten i dem.' },
+            { n: '03', title: 'Svarbar information', desc: 'Priser, öppettider, adress — allt AI behöver för ett fullständigt svar.' },
+            { n: '04', title: 'FAQ med kundfrågor', desc: 'Tydliga frågor och svar är det enklaste för AI att citera rakt av.' },
           ].map((r, i) => (
             <R key={i} delay={i}>
-              <div className="v3-reason">
-                <span className="v3-reason-n">{r.n}</span>
-                <div>
-                  <h4 className="v3-reason-t">{r.title}</h4>
-                  <p className="v3-reason-d">{r.desc}</p>
-                </div>
+              <div className={`reason-card ${r.accent ? 'reason-accent' : ''}`}>
+                <span className="reason-n">{r.n}</span>
+                <h3 className="reason-title">{r.title}</h3>
+                <p className="reason-desc">{r.desc}</p>
               </div>
             </R>
           ))}
         </div>
 
         <R>
-          <div className="v3-callout-card">
-            <p>Det är inte de <em>bästa</em> som nämns. Det är de som gör det <strong>enklast för AI</strong>.</p>
-            <p className="v3-callout-sub">Skillnaden är teknisk — och går att åtgärda.</p>
+          <div className="example-callout">
+            <p>
+              Det är inte de <em>bästa</em> mäklarna som nämns. Det är de som gör det{' '}
+              <strong>enklast för AI att hitta och förstå&nbsp;dem</strong>.
+            </p>
+            <p style={{marginTop: 8, opacity: 0.7, fontSize: '0.9em'}}>Skillnaden är teknisk — och går att åtgärda.</p>
           </div>
         </R>
       </div>

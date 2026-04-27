@@ -2,15 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-/* ── Reveal hook ── */
-function useReveal(threshold = 0.12) {
+/* ── Reveal hook — checks if already in viewport on mount ── */
+function useReveal(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    // Check if already in viewport
+    const rect = el.getBoundingClientRect()
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      el.classList.add('vis')
+      return
+    }
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { el.classList.add('vis'); obs.unobserve(el) } },
-      { threshold: 0.01, rootMargin: '20px 0px 0px 0px' }
+      { threshold, rootMargin: '0px 0px -60px 0px' }
     )
     obs.observe(el)
     return () => obs.disconnect()
@@ -55,7 +61,9 @@ export function AnimNum({ value, suffix = '' }: AnimNumProps) {
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !ran.current) {
         ran.current = true
-        const num = parseInt(value), t0 = performance.now(), dur = 1200
+        const num = parseInt(value)
+        const t0 = performance.now()
+        const dur = 1400
         const tick = (now: number) => {
           const p = Math.min((now - t0) / dur, 1)
           setN(Math.round((1 - Math.pow(1 - p, 3)) * num))
@@ -68,35 +76,4 @@ export function AnimNum({ value, suffix = '' }: AnimNumProps) {
     return () => obs.disconnect()
   }, [value])
   return <span ref={ref}>{n}{suffix}</span>
-}
-
-/* ── Blob — decorative blurred circle ── */
-interface BlobProps {
-  color: string
-  size: string
-  top?: string
-  left?: string
-  right?: string
-  bottom?: string
-  blur?: number
-  opacity?: number
-}
-
-export function Blob({ color, size, top, left, right, bottom, blur = 120, opacity = 0.5 }: BlobProps) {
-  return (
-    <div style={{
-      position: 'absolute',
-      width: size,
-      height: size,
-      borderRadius: '50%',
-      background: color,
-      filter: `blur(${blur}px)`,
-      opacity,
-      top,
-      left,
-      right,
-      bottom,
-      pointerEvents: 'none',
-    }} />
-  )
 }
