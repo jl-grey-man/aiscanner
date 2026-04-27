@@ -70,11 +70,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LAND-01 | Phase 1 | Pending |
-| LAND-02 | Phase 1 | Pending |
-| LAND-03 | Phase 1 | Pending |
-| LAND-04 | Phase 1 | Pending |
-| LAND-05 | Phase 1 | Pending |
+| LAND-01 | Phase 1 | In Progress (components built, integration in 01-02) |
+| LAND-02 | Phase 1 | In Progress (Hero component built, integration in 01-02) |
+| LAND-03 | Phase 1 | In Progress (SearchChanged component built, integration in 01-02) |
+| LAND-04 | Phase 1 | In Progress (WhatAILooksAt component built, integration in 01-02) |
+| LAND-05 | Phase 1 | In Progress (ReportExample component built, integration in 01-02) |
 | SCAN-01 | Phase 1 | Pending |
 | SCAN-02 | Phase 1 | Pending |
 | SCAN-03 | Phase 1 | Pending |
