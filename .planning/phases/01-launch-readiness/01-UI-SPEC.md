@@ -57,18 +57,20 @@ Exceptions:
 
 | Role | Size | Weight | Line Height | Font | Tailwind Class |
 |------|------|--------|-------------|------|----------------|
-| Display | 48–60px (text-5xl/6xl) | 800 (extrabold) | 1.1 | Syne | `font-display text-5xl font-extrabold leading-none tracking-tight` |
+| Display | 48–60px (text-5xl/6xl) | 700 (bold) | 1.1 | Syne | `font-display text-5xl font-bold leading-none tracking-tight` |
 | Heading | 28–36px (text-3xl/4xl) | 700 (bold) | 1.2 | Syne | `font-display text-3xl font-bold leading-tight` |
 | Body | 16–18px (text-base/lg) | 400 (regular) | 1.6 | DM Sans | `font-body text-lg font-normal leading-relaxed` |
-| Label / Caption | 14px (text-sm) | 500 (medium) | 1.4 | DM Sans | `font-body text-sm font-medium` |
+| Label / Caption | 14px (text-sm) | 400 (regular) | 1.4 | DM Sans | `font-body text-sm font-normal` |
+
+**Font weights: 2 only — 400 (regular) and 700 (bold).** Display and Heading are both bold; visual contrast between them comes from size difference (48–60px vs 28–36px), not weight. Label/Caption uses 400 at 14px — the smaller size differentiates it from body without a separate weight.
 
 Notes:
-- Stat numbers (sektion 3: "64%", "1 av 10", "0 kr"): text-5xl, font-extrabold, accent color, Syne
+- Stat numbers (sektion 3: "64%", "1 av 10", "0 kr"): text-5xl, font-bold, accent color, Syne
 - Code examples in checklist: `font-mono text-sm` — system monospace stack (JetBrains Mono not required)
 - Mobile: Display scales to text-4xl on small screens (`text-4xl md:text-5xl lg:text-6xl`)
 - Body text max-width: prose `max-w-2xl` — matches landing-page-proposal.md's "max-w-4xl for textsektioner"
 
-**Source:** landing-page-proposal.md §Typografi, RESEARCH.md §Pattern 6 (Syne 400/600/700/800 + DM Sans).
+**Source:** landing-page-proposal.md §Typografi, RESEARCH.md §Pattern 6 (Syne + DM Sans). Weights reduced from 4 to 2 per checker fix (BLOCK Dimension 4).
 
 ---
 
@@ -214,12 +216,14 @@ Global CSS additions to `app/globals.css`:
 | Element | Copy |
 |---------|------|
 | Primary CTA (scroll — Hero/Checklist) | Analysera din sida |
-| Primary CTA (submit — ToolSection) | Analysera |
+| Primary CTA (submit — ToolSection) | Analysera sidan |
 | Premium CTA heading | Beställ komplett analys |
 | Premium CTA button | Beställ — 499 kr |
 | Premium CTA sub-text | Jens granskar manuellt och hör av sig. |
 | Premium submitted heading | Vi hör av oss! |
 | Premium submitted body | Du får ett mail när din analys är klar. |
+
+**Note on submit CTA:** Changed from "Analysera" to "Analysera sidan" so the action object is explicit. Addresses FLAG in Dimension 1 Copywriting.
 
 ### Section headings
 
@@ -363,6 +367,8 @@ No third-party component registries in this phase.
 | PremiumCTA email → localStorage | CONTEXT.md §Scan-flöde + RESEARCH.md §Pattern 4 |
 | Checklist 7 items (not 6) | REQUIREMENTS.md LAND-04 + landing-page-proposal.md §Sektion 4 |
 | Error copy Swedish | app/lib/errorMessages.ts (existing) |
+| Font weights reduced to 2 (400 + 700) | Checker BLOCK fix — Dimension 4 Typography |
+| Submit CTA "Analysera sidan" (not "Analysera") | Checker FLAG fix — Dimension 1 Copywriting |
 
 ---
 
