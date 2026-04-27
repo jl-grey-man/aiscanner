@@ -159,8 +159,8 @@ All values multiples of 4.
 Exceptions:
 - Hero section: `min-height: 100vh` (full viewport)
 - TickerBreak: 12px vertical (slim stripe separator)
-- All buttons: minimum 44px height (touch target)
-- Hero CTA button: `padding: 12px 28px`
+- All buttons: minimum 48px height (WCAG 2.5.5 touch target — accessibility exception, not a grid value)
+- Hero CTA button: `padding: 12px 32px`
 - ScanCTA button: `padding: 12px 32px`
 
 **Source:** `v3.html` section CSS classes — exact values extracted from `.v3-hero`, `.v3-changed`, `.v3-cta`, `.v3-report`, etc.
@@ -388,7 +388,7 @@ box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 ```css
 background: white;
 border-radius: 16px;
-padding: 28px 32px;
+padding: 32px 32px;
 text-align: center;
 box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 ```
