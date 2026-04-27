@@ -2,95 +2,78 @@
 
 ## What This Is
 
-A Swedish-language web tool where business owners enter their website URL and receive a live, detailed report on how well their site is optimized for AI search engines (ChatGPT, Perplexity, Google AI Overview). The report is written in plain Swedish for non-technical readers and ends with a CTA to fix issues themselves or hire the service.
+A Swedish-language web tool where business owners enter their website URL (and optionally city) and receive a detailed AI-powered report on how well their site is optimized for AI search engines (ChatGPT, Perplexity, Google AI Overview). The report is written in plain Swedish for non-technical readers and ends with a prioritized action plan. The stack is Next.js 15 App Router, deployed on PiPod at analyze.pipod.net.
 
 ## Core Value
 
-A Swedish business owner can enter their URL, wait ~30 seconds, and understand exactly what they need to do to be found by AI search engines — in language they understand, with concrete actions they can take.
+A Swedish business owner can enter their URL, wait ~90 seconds, and understand exactly what they need to do to be found by AI search engines — in language they understand, with concrete actions they can take.
 
 ## Requirements
 
 ### Validated
 
-- ✓ SSE streaming from FastAPI backend → React frontend (live report cards)
-- ✓ 10 sequential checks: HTTPS, language, AI-crawler access, llms.txt, meta tags, heading structure, structured data, content freshness, entity clarity (AI), FAQ content
-- ✓ Score formula: `(good×10 + warning×5) / (total×10) × 100`
-- ✓ Rate limiting: 3 requests/IP/hour (in-memory)
-- ✓ All UI text in Swedish, non-technical language
-- ✓ Deployed on PiPod (Raspberry Pi 5) with nginx + systemd
-- ✓ Google Places API integration for business verification
-- ✓ Business type detection (local vs national)
-- ✓ Cross-platform rating divergence detection
-- ✓ Review theme analysis via AI
+- ✓ Next.js 15 App Router monolith, TypeScript, standalone output — deployed on PiPod port 8010
+- ✓ Enhanced scan (`/api/enhanced-scan`): 3× Gemini Flash parallel (technical, FAQ, E-A-T) + Gemini Pro synthesis
+- ✓ Enhanced scraper: robots.txt, OG tags, FAQ schema, sitemap, E-A-T signals, canonical, Google Maps detection
+- ✓ Google Places: 2-batch review fetch (up to 10 merged reviews), review reply analysis
+- ✓ Directory checker: Tavily-powered NAP check against Eniro + Hitta
+- ✓ AI mention checker: GPT-4o-mini two-step (entity query → niche extraction → category query)
+- ✓ EnhancedReport component: status badges + synthesis markdown action plan
+- ✓ Cloudflare Tunnel: analyze.pipod.net → nginx → port 8010
+- ✓ In-memory result cache (24h TTL)
+- ✓ Swedish UI, dark theme (bg-zinc-950), mobile responsive
 
 ### Active
 
-- [ ] Fix `_check_content_depth()` — missing function for national businesses
-- [ ] Add sitemap.xml check
-- [ ] Add robots meta-tag check (`<meta name="robots">`)
-- [ ] Add NAP consistency check (Name/Address/Phone vs Google Business Profile)
-- [ ] Add E-A-T basics check (About page, contact info, named authors)
-- [ ] Schema validation (correctness, not just existence)
-- [ ] Core Web Vitals / page speed
-- [ ] Internal link structure analysis
-- [ ] Local directory presence (Eniro, Gulasidor, Hitta.se)
-- [ ] Content freshness cycle (regularity, not just dates)
+- [ ] Lead capture: email gate — summary free, full synthesis behind email submission
+- [ ] Rate limiting on /api/enhanced-scan (3 scans/IP/hour)
+- [ ] Dev toggle removed from production (env-gated or deleted)
+- [ ] API keys moved to .env.local; .env added to .gitignore
+- [ ] nginx config: proxy all traffic to port 8010 (remove dead frontend/dist alias)
+- [ ] App SEO: proper `<title>` and `<meta description>` for the scanner page itself
+- [ ] Dead code removed: backend/ (Python FastAPI) and frontend/ (Vite/React)
 
 ### Out of Scope
 
-- Real-time continuous monitoring (deferred — manual scan only for now)
-- Multi-language reports (Swedish only)
-- PDF export of reports
-- User accounts / login (no auth system)
-- Payment processing (manual invoicing for agency plans)
-- Mobile native app (web-only)
+- Real-time continuous monitoring — manual scan only for v1
+- Multi-language reports — Swedish-only by design
+- PDF export of reports — deferred to v2
+- User accounts / login — no auth system for v1
+- Payment processing (Stripe) — manual invoicing, deferred to v2
+- Mobile native app — web-only
+- Core Web Vitals check — requires browser rendering, not viable with current scraper
 
 ## Context
 
 - Target market: ~550,000 Swedish SMEs, ~85% have websites, <5% optimized for AI search
-- Best target segment: local service businesses (dentists, electricians, lawyers, restaurants, salons)
+- Best target: local service businesses (dentists, electricians, lawyers, restaurants, salons)
 - No established Swedish competitor in AI-specific search optimization
-- Semrush/Ahrefs don't focus on AI signals
-- AI search shift: AI answers directly instead of linking. Not visible as source = invisible.
-- Google AI Overviews launched globally May 2024, Swedish October 2024 (~15-20% of searches)
+- AI search shift: AI answers directly instead of linking — not visible as source = invisible
+- Google AI Overviews launched in Sweden October 2024 (~15–20% of searches)
 - ChatGPT Search launched October 2024 (200M+ active users)
-- Perplexity: 100M+ monthly users, "Deep Research" mode
-- LLMs.txt standard emerged mid-2024, supported by Anthropic, OpenAI, Perplexity
+- Stack migrated from FastAPI + React (Vite) → Next.js 15 in April 2026
 
 ## Constraints
 
-- **Tech stack:** FastAPI + React 19 + Vite — locked, already built
-- **AI API:** OpenRouter (Gemini Flash) — budget constraint, Haiku/Sonnet equivalent
-- **Hosting:** PiPod (Raspberry Pi 5) — limited compute, single-node
-- **Language:** Swedish UI only — market decision
-- **Budget:** No paid infrastructure beyond OpenRouter API calls
+- **Tech stack**: Next.js 15 App Router — locked, fully deployed
+- **AI APIs**: OpenRouter (Gemini Flash/Pro) + GPT-4o-mini via OpenRouter for AI mention testing
+- **Directory API**: Tavily — Eniro/Hitta block scrapers, API is the only reliable path
+- **Hosting**: PiPod (Raspberry Pi 5) — limited compute, single-node
+- **Language**: Swedish UI only — market decision
+- **Budget**: No paid infrastructure beyond API costs (OpenRouter, Tavily, Google Places)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Swedish-only UI | Target market is Swedish SMEs who need clarity, not English | ✓ Good — differentiates from competitors |
-| SSE streaming | Live progress builds trust and engagement | ✓ Good — feels fast even when analysis takes time |
-| OpenRouter instead of direct Claude API | Cost flexibility, model switching without code changes | — Pending |
-| PiPod self-hosting | No hosting costs, full control | ✓ Good — works for current load |
-| No user accounts | Simpler architecture, faster to market | ⚠️ Revisit — limits monetization options |
-
-## Evolution
-
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition** (via `gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+| Swedish-only UI | Target market is Swedish SMEs who need clarity in their language | ✓ Good — differentiates from competitors |
+| Next.js migration from FastAPI+React | One codebase, simpler deployment, TypeScript everywhere | ✓ Good — cleaner architecture |
+| OpenRouter instead of direct Gemini API | Cost flexibility, model switching without code changes | ✓ Good — enabled Flash→Pro upgrade path |
+| Tavily for directory checks | Eniro/Hitta block scrapers — API is the only reliable path | ✓ Good — works reliably |
+| Enhanced scan as primary (no free/premium gate yet) | Deliver full value immediately; gate content behind email | — Pending — lead capture not yet implemented |
+| No user accounts for v1 | Simpler architecture, faster to market | ⚠️ Revisit — limits monetization options |
+| GPT-4o-mini for AI mention testing | Reliable entity knowledge, separate from main Gemini pipeline | — Pending — adds OpenAI dependency |
+| PiPod self-hosting | No hosting costs, full control | ✓ Good — handles current load |
 
 ---
-*Last updated: 2026-04-22 after GSD initialization*
+*Last updated: 2026-04-27 — full rewrite to reflect Next.js stack and enhanced scan architecture*

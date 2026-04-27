@@ -2,57 +2,76 @@
 
 ## Overview
 
-Take the existing 10-check AI Search Scanner from its current state to a complete v1 with 15 checks, fixing critical gaps (missing function, sitemap, robots meta, NAP, E-A-T) and adding deeper analysis (schema validation, performance, links, local directories, freshness cycle). Two phases: first fix the critical bugs and add missing checks, then deepen existing checks and improve UX.
+Produkten har tre delar att bygga: (1) ny landningssida med tydlig narrativ, (2) rätt scan-flöde med gratis direkt + betald via email-leverans med manuell review, (3) teknisk städning inför stabil drift.
 
 ## Phases
 
-- [ ] **Phase 1: Critical Fixes & Missing Checks** - Fix `_check_content_depth`, add sitemap.xml, robots meta, NAP, E-A-T
-- [ ] **Phase 2: Deepening & UX** - Schema validation, Core Web Vitals, internal links, local directories, freshness cycle, updated scoring
+- [ ] **Phase 1: Landing Page & Scan Flow** — Ny 8-sektions landningssida + gratis scan direkt + premium-erbjudande efter scan
+- [ ] **Phase 2: Premium Delivery Pipeline** — Email-capture, review-kö, emailutskick som websida + PDF
+- [ ] **Phase 3: Launch Readiness** — Rate limiting, säkerhet (.env), nginx-fix, dead code, dev-toggle
 
 ## Phase Details
 
-### Phase 1: Critical Fixes & Missing Checks
-**Goal**: Fix the crashing bug for national businesses and add the 5 most important missing checks identified in April 2026 analysis
-**Depends on**: Nothing (first phase)
-**Requirements**: FIX-01, SITEMAP-01, ROBOTS-01, NAP-01, EAT-01
-**Success Criteria** (what must be TRUE):
-  1. Scanning a national business URL no longer crashes (content depth check works)
-  2. Report includes a sitemap.xml card with existence/validity status
-  3. Report includes a robots meta-tag card detecting noindex/nofollow
-  4. Report includes a NAP consistency card comparing website vs Google Business Profile
-  5. Report includes an E-A-T basics card checking About page, contact info, named authors
-**Plans**: 3 plans
+### Phase 1: Landing Page & Scan Flow
+
+**Goal:** Ersätt nuvarande 2-sektions hero med ny 8-sektions narrativ landningssida. Gratis scan körs direkt på sidan. Premium erbjuds efter gratis scan (men levereras inte ännu — det är Phase 2).
+**Depends on:** Nothing (first phase)
+**Requirements:** LAND-01, LAND-02, LAND-03, LAND-04, LAND-05, SCAN-01, SCAN-02
+**Success Criteria:**
+  1. Landningssidan har 8 sektioner per handoff-design: Hero, Förklararen, Problemet, Checklistan, Företagsexempel, Vanliga misstag, Verktyget, Footer
+  2. Gratis scan (enhanced-scan) körs direkt på sidan utan krav på email
+  3. Efter gratis scan visas CTA: "Beställ komplett analys" → kräver email-inmatning
+  4. Betald analys triggas INTE ännu (placeholder) — det är Phase 2
+  5. Dev-toggle borttagen från UI
+  6. Mörkt tema (zinc-950) konsekvent genom hela sidan
+**Plans:** 3
 
 Plans:
-- [ ] 01-01: Fix `_check_content_depth()` crash for national businesses
-- [ ] 01-02: Add sitemap.xml and robots meta-tag checks
-- [ ] 01-03: Add NAP consistency and E-A-T basics checks
+- [ ] 01-01: 8-sektions landningssida (Hero → Förklararen → Problemet → Checklistan)
+- [ ] 01-02: Företagsexempel + Vanliga misstag + Verktyget + Footer
+- [ ] 01-03: Gratis scan-integration + premium CTA-form (email capture, ingen leverans ännu)
 
-### Phase 2: Deepening & UX
-**Goal**: Validate schema correctness, add performance and link analysis, check local directory presence, measure content freshness cycle, update score formula and report UX
-**Depends on**: Phase 1
-**Requirements**: SCHEMA-01, PERF-01, LINKS-01, LOCAL-01, FRESH-01, UX-01, UX-02, UX-03
-**Success Criteria** (what must be TRUE):
-  1. Schema card validates JSON-LD correctness (not just presence)
-  2. Report includes Core Web Vitals / page speed score
-  3. Report includes internal link structure analysis
-  4. Report checks presence on Eniro, Gulasidor, Hitta.se for local businesses
-  5. Report measures content update regularity (not just latest date)
-  6. All new checks produce cards in the same format as existing 10
-  7. Score formula updated to include all 15 checks
-**Plans**: 3 plans
+### Phase 2: Premium Delivery Pipeline
+
+**Goal:** Betald analys körs, Jens granskar i review-kö, skickar per email som websida + PDF
+**Depends on:** Phase 1
+**Requirements:** PREM-01, PREM-02, PREM-03, PREM-04, PREM-05
+**Success Criteria:**
+  1. När användare beställer premium: enhanced-scan Pro-analys körs och sparas i kö
+  2. Jens kan se pending analyser i admin-vy (enkel lista med URL, email, datum)
+  3. Jens kan granska rapporten och godkänna/avvisa
+  4. Vid godkännande skickas email till kunden med länk till webbrapporten + PDF
+  5. PDF genereras automatiskt från rapport-HTML
+**Plans:** 3
 
 Plans:
-- [ ] 02-01: Add schema validation, Core Web Vitals, and internal link checks
-- [ ] 02-02: Add local directory presence and content freshness cycle checks
-- [ ] 02-03: Update score formula and report UX (priority ranking, consistent cards)
+- [ ] 02-01: Premium scan queue (trigga + spara i SQLite, admin list-vy)
+- [ ] 02-02: Admin review + approve/reject flow
+- [ ] 02-03: Email delivery + PDF generation
+
+### Phase 3: Launch Readiness
+
+**Goal:** Teknisk städning — ingen funktion saknas men driftstabiliteten och säkerheten behöver stärkas
+**Depends on:** Phase 2
+**Requirements:** LAUNCH-01, LAUNCH-02, LAUNCH-03, LAUNCH-04, LAUNCH-05, LAUNCH-06
+**Success Criteria:**
+  1. /api/enhanced-scan returnerar 429 efter 3 anrop från samma IP/timme
+  2. API-nycklar enbart i .env.local; .env i .gitignore
+  3. nginx-config proxar allt till port 8010 (dead frontend/dist alias borttagen)
+  4. backend/ och frontend/ kataloger borttagna från repo
+  5. enhanced-scan filer committade
+**Plans:** 2
+
+Plans:
+- [ ] 03-01: Rate limiting, .env-fix, nginx-cleanup
+- [ ] 03-02: Dead code removal + commit untracked files
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 → 2
+**Execution Order:** 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Critical Fixes & Missing Checks | 0/3 | Not started | - |
-| 2. Deepening & UX | 0/3 | Not started | - |
+| 1. Landing Page & Scan Flow | 0/3 | Not started | - |
+| 2. Premium Delivery Pipeline | 0/3 | Not started | - |
+| 3. Launch Readiness | 0/2 | Not started | - |

@@ -2,24 +2,28 @@
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-22)
+See: `.planning/PROJECT.md` (updated 2026-04-27)
 
-**Core value:** A Swedish business owner can enter their URL, wait ~30 seconds, and understand exactly what they need to do to be found by AI search engines.
-**Current focus:** Project initialization — defining requirements and roadmap for v1 completion.
+**Core value:** En svensk företagare kan skanna sin sajt gratis, förstå vad som saknas, och beställa en komplett analys som granskas manuellt och levereras per email.
+**Current focus:** Phase 1 — Landing Page & Scan Flow
 
 ## Current Phase
 
-Project initialized. Ready for planning.
+Phase 1: Landing Page & Scan Flow — Context klar, redo för planning.
 
 ## Next Action
 
-Run `gsd-plan-phase 1` to plan Phase 1: Critical Fixes & Missing Checks.
+Kör `/clear` sedan `/gsd-plan-phase 1` för att planera Phase 1.
 
 ## Active Decisions
 
-- Brownfield project with existing codebase (backend + frontend deployed)
-- Skipped codebase mapping — CLAUDE.md provides sufficient architecture context
-- 2-phase v1 roadmap defined (13 requirements across 6 plans)
+- Produktmodell: gratis scan direkt på sidan → premium via email-leverans med manuell review
+- Enhanced scan (`/api/enhanced-scan`) är aktiv endpoint — inga ändringar i Phase 1
+- 8-sektions landningssida från handoff-design (AI Analys-handoff.zip)
+- Mörkt tema (bg-zinc-950) konsekvent
+- Dev-toggle: bort helt (inte env-gated)
+- Premium i Phase 1: bara email-capture, ingen leverans
+- Roadmap omstrukturerat 2026-04-27: Phase 1=Landing, Phase 2=Premium Pipeline, Phase 3=Cleanup
 
 ## Blockers
 
@@ -27,6 +31,6 @@ None.
 
 ## Notes
 
-- 10 checks already implemented and deployed
-- 5 critical gaps identified in April 2026 analysis (Priority 1)
-- Additional 5 improvements identified (Priority 2)
+- Context-filen: `.planning/phases/01-launch-readiness/01-CONTEXT.md`
+- Tre inkompatibla output-typer (FreeReportData/PremiumReportData/EnhancedReportData) är teknisk skuld — inte akut, adresseras i Phase 3 eller v2
+- Handoff-zip extraheras av planner/executor vid implementering
