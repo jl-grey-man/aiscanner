@@ -15,6 +15,9 @@
     "react-dom": "^19.1.0",
     "zod": "^4.3.6"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
