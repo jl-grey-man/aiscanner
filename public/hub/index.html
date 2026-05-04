@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Search Scanner — Project Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .priority-badge { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; }
+    .card-hover { transition: box-shadow 0.15s, border-color 0.15s; }
+    .card-hover:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #c7d2fe; }
+    .progress-bar { height: 6px; border-radius: 3px; background: #e5e7eb; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    .section-title { letter-spacing: -0.02em; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded">AI SCANNER</div>
+        <h1 class="text-lg font-semibold text-gray-900">Project Hub</h1>
+        <span class="text-gray-300">|</span>
+        <a href="https://analyze.pipod.net" target="_blank" class="text-indigo-600 hover:underline text-sm font-medium flex items-center gap-1">
+          analyze.pipod.net
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-gray-500">
+        <span>Status uppdaterad: <strong class="text-gray-700">2026-04-27</strong></span>
+        <span class="flex items-center gap-1.5">
+          <span class="status-dot bg-green-500"></span>
+          <span class="text-green-700 font-medium">Live</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-8 space-y-10">
+
+    <!-- Wren's Briefing — uppdateras kontinuerligt -->
+    <section class="bg-indigo-50 border border-indigo-200 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-bold text-indigo-900 text-base">Lägesrapport — 2026-04-27 (kväll)</h2>
+        <span class="text-xs text-indigo-400">Uppdateras av Wren vid varje förändring</span>
+      </div>
+      <div class="text-sm text-indigo-900 space-y-3 leading-relaxed">
+        <p><strong>Var vi är:</strong> <strong>Fas 1 är klar.</strong> Enhanced-scan är nu den primära flödet i appen — URL-inmatning + stadsval → /api/enhanced-scan → EnhancedReport.tsx. Det gamla free/full-scan-flödet är kvar men används inte längre av UI:t. Kompletta rapporter testade på Tvåkanten (Göteborg) och Bjurfors.</p>
+        <p><strong>Klart idag (utöver Fas 1):</strong> Tavily-baserad katalogkoll (ersatte blockad scraping) med NAP-konsistens. Tvåstegs AI-omnämnande-test (entity → niche → kategori). City-input i UI — säkerställer lokala sökfrågor, aldrig "Sverige". Dubbla Places-anrop (2×5 recensioner) med dedup + sampleNote-disclaimer. Synthesisrensning (ingen preamble, inga tidsramar). Rapport för Tvåkanten genererad och deployad.</p>
+        <p><strong>Vad som återstår innan lansering:</strong> Fas 3 (timeout-fix — enhanced scan tar ~90s, Cloudflare kopplar ner vid 100s) är teknisk blocker. Fas 2 (lead capture/e-post) blockerar affärsmodellen. Fas 4 (Stripe) sist.</p>
+        <p><strong>Nästa steg:</strong> Fas 3 (polling-arkitektur) → Fas 2 (e-postgate) → lansering → Fas 4 (Stripe).</p>
+      </div>
+    </section>
+
+    <!-- Implementationsplan: Betald Analys -->
+    <section class="bg-white border border-gray-200 rounded-xl p-6">
+      <h2 class="text-xl font-bold section-title mb-1 text-gray-900">Implementationsplan — Betald Analys</h2>
+      <p class="text-sm text-gray-500 mb-5">4 faser för att gå från fungerande endpoint till betalande kunder</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Fas 1 -->
+        <div class="border border-green-200 bg-green-50 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-1 rounded">Fas 1 ✓ Klar</span>
+            <span class="text-xs text-green-500">2026-04-27</span>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Koppla ihop endpointen</h3>
+          <p class="text-xs text-gray-500 mb-3">Enhanced-scan är nu primärt flöde. UI:t kör analyze.pipod.net med stadsval direkt mot /api/enhanced-scan.</p>
+          <ul class="text-xs text-gray-700 space-y-1.5">
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">✓</span><span><code class="bg-white px-1 rounded">EnhancedReport.tsx</code> — status badges + synthesis markdown renderer</span></li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">✓</span><span><code class="bg-white px-1 rounded">useAnalysis</code> — <code class="bg-white px-1 rounded">analyze(url, city)</code> → enhancedReport state</span></li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">✓</span><span>Stadsval-fält i UI — city → city-guard i API</span></li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">✓</span><span>Tavily katalogkoll + NAP + 2×5 recensioner + sampleNote</span></li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-green-100 text-xs text-green-700 font-medium">✓ Live på analyze.pipod.net</div>
+        </div>
+
+        <!-- Fas 2 -->
+        <div class="border border-gray-200 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">Fas 2</span>
+            <span class="text-xs text-gray-400">1 dag</span>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Lead capture</h3>
+          <p class="text-xs text-gray-500 mb-3">Samla e-poster innan rapporten visas. Noll leads idag — detta är det blockerande affärsproblemet.</p>
+          <ul class="text-xs text-gray-700 space-y-1.5">
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Byt "Kör Full Analys"-knappen mot e-postformulär</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Spara mail + URL i leads-fil/DB</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Kör enhanced scan → visa rapport direkt</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>E-posta även rapporten till användaren via SMTP</span></li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-amber-700 font-medium">⚠ Blockerar: Fas 1 måste vara klar</div>
+        </div>
+
+        <!-- Fas 3 -->
+        <div class="border border-gray-200 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">Fas 3</span>
+            <span class="text-xs text-gray-400">1 dag</span>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Timeout-fix</h3>
+          <p class="text-xs text-gray-500 mb-3">Enhanced scan tar ~2 min. Cloudflare kopplar ner efter 100s. Utan detta crashar alla anrop via analyze.pipod.net.</p>
+          <ul class="text-xs text-gray-700 space-y-1.5">
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span><code class="bg-gray-100 px-1 rounded">POST /api/enhanced-scan/start</code> — startar scan, returnerar <code class="bg-gray-100 px-1 rounded">job_id</code></span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span><code class="bg-gray-100 px-1 rounded">GET /api/enhanced-scan/status/[id]</code> — polling var 5s</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Progress-text per steg: "Analyserar signaler… Skapar plan…"</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Spara jobb i Redis (finns) eller in-memory Map</span></li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-red-700 font-medium">🔴 Teknisk blocker för produktion</div>
+        </div>
+
+        <!-- Fas 4 -->
+        <div class="border border-gray-200 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">Fas 4</span>
+            <span class="text-xs text-gray-400">1–2 dagar</span>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Stripe — ta betalt</h3>
+          <p class="text-xs text-gray-500 mb-3">Byt e-postformuläret mot betalning. Fas 2 och 3 måste vara klara.</p>
+          <ul class="text-xs text-gray-700 space-y-1.5">
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Stripe Checkout (engångspris, t.ex. 299 kr)</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Webhook: verifiera betalning → starta scan</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Betalnings-token i session → låser upp rapporten</span></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-400 mt-0.5">→</span><span>Skicka rapport som PDF/HTML till köparens mail</span></li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 font-medium">Kräver: Fas 1 + 2 + 3</div>
+        </div>
+
+      </div>
+
+      <div class="mt-5 bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div class="text-xs font-semibold text-gray-700 mb-2">Snabbaste vägen till första betalande kund</div>
+        <div class="flex items-center gap-2 text-xs text-gray-600">
+          <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">Fas 1</span>
+          <span class="text-gray-400">→</span>
+          <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">Fas 3</span>
+          <span class="text-gray-400">→</span>
+          <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">Fas 2 (e-post)</span>
+          <span class="text-gray-400">→ lansera → validera intresse →</span>
+          <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">Fas 4 (Stripe)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Innehåll & rapport-spec -->
+    <section class="bg-white border border-gray-200 rounded-xl p-6">
+      <h2 class="text-xl font-bold section-title mb-5 text-gray-900">Innehåll &amp; rapport-spec</h2>
+
+      <!-- De två rapporterna sida vid sida -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+        <!-- Gratisrapporten -->
+        <div class="border-2 border-gray-200 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-gray-800 text-base">Gratisrapporten</h3>
+            <span class="text-xs font-bold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">GRATIS</span>
+          </div>
+          <p class="text-xs text-gray-500 mb-4">Visas direkt på sajten — kräver ingen registrering. Syfte: ge tillräckligt för att väcka intresse, inte tillräckligt för att lösa problemet.</p>
+          <ul class="text-sm text-gray-700 space-y-2">
+            <li class="flex items-start gap-2"><span class="text-gray-400 mt-1">●</span> <strong>Totalt AI-synlighetspoäng</strong> (0–100)</li>
+            <li class="flex items-start gap-2"><span class="text-gray-400 mt-1">●</span> <strong>23 kontroller</strong> i 4 kategorier: Teknisk SEO, Lokal närvaro, AI-innehåll, Strukturerad data</li>
+            <li class="flex items-start gap-2"><span class="text-gray-400 mt-1">●</span> Varje kontroll: OK / Varning / Kritisk</li>
+            <li class="flex items-start gap-2"><span class="text-gray-400 mt-1">●</span> Kort förklaring av vad som hittades</li>
+            <li class="flex items-start gap-2"><span class="text-gray-400 mt-1">●</span> Lista med de mest kritiska problemen</li>
+            <li class="flex items-start gap-2"><span class="text-gray-400 mt-1">●</span> Snabbvinster — saker som fixas på under en timme</li>
+            <li class="flex items-start gap-2"><span class="text-red-400 mt-1">✕</span> <span class="text-gray-400">Inga lösningar — bara diagnos</span></li>
+            <li class="flex items-start gap-2"><span class="text-red-400 mt-1">✕</span> <span class="text-gray-400">Ingen Google Business Profile-data</span></li>
+            <li class="flex items-start gap-2"><span class="text-red-400 mt-1">✕</span> <span class="text-gray-400">Ingen konkurrentjämförelse</span></li>
+          </ul>
+        </div>
+
+        <!-- Premiumrapporten -->
+        <div class="border-2 border-indigo-300 rounded-xl p-5 bg-indigo-50/30">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-indigo-900 text-base">Premiumrapporten</h3>
+            <span class="text-xs font-bold bg-indigo-600 text-white px-2.5 py-1 rounded-full">499 kr</span>
+          </div>
+          <p class="text-xs text-gray-500 mb-4">Levereras som PDF eller HTML. Kunden ska kunna ge den direkt till sin webbutvecklare — eller fixa allt själv om de vill.</p>
+          <ul class="text-sm text-gray-700 space-y-2">
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> <strong>Allt i gratisrapporten</strong></li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> <strong>Skräddarsydd lösning för varje icke-OK kontroll</strong> — inga undantag</li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> Varje åtgärd: vad / varför / steg-för-steg / kopierbar kod</li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> Prioriterad ordning: Kritiskt → Viktigt → Bra att ha</li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> <strong>Google Business Profile-analys</strong> — betyg, recensioner, GBP vs. webbplats</li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> <strong>NAP-konsekvenskoll</strong> — namn/adress/telefon stämmer överens?</li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> <strong>Konkurrentjämförelse</strong> — 3 konkurrenter, poäng, vad de gör bättre</li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> Skriven på begriplig svenska — ingen teknisk bakgrund krävs</li>
+            <li class="flex items-start gap-2"><span class="text-indigo-500 mt-1">●</span> Ordlista för tekniska termer i slutet</li>
+          </ul>
+          <div class="mt-4 pt-4 border-t border-indigo-200">
+            <div class="text-xs text-indigo-700 font-semibold mb-2">Enhanced-rapporter (nya, AI-genererade):</div>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <a href="http://100.72.180.20/aiscanner-demos/bjurfors-enhanced.html" target="_blank" class="inline-flex items-center gap-1.5 bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-indigo-700">Bjurfors (mäklare) ✦</a>
+              <a href="http://100.72.180.20/aiscanner-demos/roranalys-enhanced.html" target="_blank" class="inline-flex items-center gap-1.5 bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-indigo-700">Röranalys (VVS) ✦</a>
+              <a href="http://100.72.180.20/aiscanner-demos/tvakanten-enhanced.html" target="_blank" class="inline-flex items-center gap-1.5 bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-indigo-700">Tvåkanten (restaurang) ✦</a>
+            </div>
+            <div class="text-xs text-indigo-600 font-semibold mb-2">Legacy-rapporter (handskrivna):</div>
+            <div class="flex flex-wrap gap-2">
+              <a href="http://100.72.180.20/aiscanner-demos/bjurfors-rapport.html" target="_blank" class="inline-flex items-center gap-1.5 bg-white border border-indigo-300 text-indigo-700 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-indigo-50">Bjurfors</a>
+              <a href="http://100.72.180.20/aiscanner-demos/roranalys-rapport.html" target="_blank" class="inline-flex items-center gap-1.5 bg-white border border-indigo-300 text-indigo-700 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-indigo-50">Röranalys</a>
+              <a href="http://100.72.180.20/aiscanner-demos/tvakanten-rapport.html" target="_blank" class="inline-flex items-center gap-1.5 bg-white border border-indigo-300 text-indigo-700 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-indigo-50">Tvåkanten</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Landningssida & lead gen -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2 text-sm uppercase tracking-wide">Landningssida — förslag klart</h3>
+          <p class="text-sm text-blue-800 mb-3">Fullständigt innehållsförslag med narrativ, statistik (64% AI-sök), checklista, före/efter-exempel och 3× URL-inputs. <strong>Ej implementerat ännu.</strong></p>
+          <a href="http://100.72.180.20/aiscanner-demos/landing-page-proposal.md" target="_blank" class="inline-flex items-center gap-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-blue-100">Läs förslaget →</a>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-2 text-sm uppercase tracking-wide">Lead gen pipeline — spec klar</h3>
+          <p class="text-sm text-green-800 mb-3">Google Places → pre-qualify → e-post-extraktion → AI-scan → personaliserat utskick via Hydroxide SMTP. ~$10/kampanj, estimat 3–30 kunder/körning. <strong>Ej implementerat ännu.</strong></p>
+          <a href="http://100.72.180.20/aiscanner-demos/lead-gen-research.md" target="_blank" class="inline-flex items-center gap-1.5 bg-white border border-green-300 text-green-700 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-green-100">Läs specen →</a>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Status Overview -->
+    <section>
+      <h2 class="text-xl font-bold section-title mb-5 text-gray-900">Systemstatus</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <!-- Working -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 card-hover">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="status-dot bg-green-500"></span>
+            <span class="text-xs font-bold text-green-700 uppercase tracking-wide">Fungerar</span>
+          </div>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> Free scan — 23 kontroller via Gemini Flash</li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> Full scan — Gemini 2.5 Pro + Google Places</li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> Multi-page scraping (4 undersidor)</li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> Cloudflare Tunnel → analyze.pipod.net</li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> AI model fallback chain</li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> Fasbaserad rapport (4 kategorier)</li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> Google Maps + schema-detektering</li>
+            <li class="flex items-start gap-2"><span class="text-green-500 mt-0.5">&#10003;</span> 24h in-memory cache</li>
+          </ul>
+        </div>
+
+        <!-- Broken / Missing -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 card-hover">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="status-dot bg-red-500"></span>
+            <span class="text-xs font-bold text-red-700 uppercase tracking-wide">Saknas / Trasigt</span>
+          </div>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">&#10007;</span> Lead capture — ingen e-post-gate</li>
+            <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">&#10007;</span> Rate limiting på API-routes</li>
+            <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">&#10007;</span> Dev-toggle synlig i produktion</li>
+            <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">&#10007;</span> .env med API-nycklar ej gitignorerat</li>
+            <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">&#10007;</span> nginx-config pekar på dead frontend/dist</li>
+            <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">&#10007;</span> Cloudflare 504 timeout vid full scan</li>
+            <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">&#10007;</span> Noll tester för Next.js-koden</li>
+          </ul>
+        </div>
+
+        <!-- Tech Debt -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 card-hover">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="status-dot bg-yellow-400"></span>
+            <span class="text-xs font-bold text-yellow-700 uppercase tracking-wide">Teknisk skuld</span>
+          </div>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">&#9888;</span> Två kodbaser — backend/ + frontend/ är dead code</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">&#9888;</span> CLAUDE.md beskriver fel arkitektur</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">&#9888;</span> Cache förlorad vid varje omstart</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">&#9888;</span> Ingen felrapportering (Sentry/logging)</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">&#9888;</span> Ingen E-A-T-kontroll som distinkt check</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">&#9888;</span> Ingen robots meta-check</li>
+            <li class="flex items-start gap-2"><span class="text-yellow-500 mt-0.5">&#9888;</span> Ingen sitemap-validering (bara existens)</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Launch Readiness Bar -->
+    <section class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold section-title text-gray-900">Launch Readiness</h2>
+        <span class="text-2xl font-bold text-indigo-600">62%</span>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Core scanning (fungerar)</span>
+            <span class="font-medium text-green-700">100%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill bg-green-500" style="width:100%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Lead capture &amp; monetisering</span>
+            <span class="font-medium text-red-600">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill bg-red-400" style="width:0%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Säkerhet (rate limiting, .env)</span>
+            <span class="font-medium text-yellow-700">20%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill bg-yellow-400" style="width:20%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Infrastruktur &amp; deployment</span>
+            <span class="font-medium text-green-700">85%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill bg-green-500" style="width:85%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Frontend polish</span>
+            <span class="font-medium text-yellow-700">60%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill bg-yellow-400" style="width:60%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Lead gen pipeline</span>
+            <span class="font-medium text-red-600">5%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill bg-red-400" style="width:5%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Priority TODO -->
+    <section>
+      <h2 class="text-xl font-bold section-title mb-1 text-gray-900">Prioriterad att-göra-lista</h2>
+      <p class="text-sm text-gray-500 mb-5">Sorterad: kritisk → hög → medium → backlog</p>
+
+      <div class="space-y-3">
+
+        <!-- P1 -->
+        <div class="bg-white rounded-xl border border-red-200 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-red-100 text-red-700">Kritisk</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Lead capture — e-post gate på full rapport</h3>
+                <p class="text-sm text-gray-500 mt-1">Ingen kan bli kund utan ett sätt att samla kontaktinfo. Visa free scan score fritt — gate de detaljerade faserna bakom e-postformulär. Spara i SQLite. GDPR-text krävs. Blockar allt annat kring monetisering.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">app/page.tsx</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">app/api/leads/route.ts (ny)</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">data/leads.db (ny)</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">#1 från STATUS.md</span>
+          </div>
+        </div>
+
+        <!-- P2 -->
+        <div class="bg-white rounded-xl border border-red-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-red-100 text-red-700">Kritisk</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Ta bort dev-toggle i produktion</h3>
+                <p class="text-sm text-gray-500 mt-1">"Dev: Start | Resultat" syns för alla besökare. Env-gate med NEXT_PUBLIC_DEV_MODE eller ta bort helt. Snabbaste fixen.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">app/page.tsx</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">.env.local</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">#2 från STATUS.md</span>
+          </div>
+        </div>
+
+        <!-- P3 -->
+        <div class="bg-white rounded-xl border border-orange-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-orange-100 text-orange-700">Hög</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Flytta .env API-nycklar — säkerhetsrisk</h3>
+                <p class="text-sm text-gray-500 mt-1">.env med riktiga OpenRouter + Google Places-nycklar är committed och inte gitignorerat. Flytta till .env.local, lägg .env i .gitignore. Säkerhetsrisk om repot någonsin görs publikt.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">.env → .env.local</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">.gitignore uppdatera</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">Hög svårighetsgrad i skuld-tabellen</span>
+          </div>
+        </div>
+
+        <!-- P4 -->
+        <div class="bg-white rounded-xl border border-orange-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-orange-100 text-orange-700">Hög</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Rate limiting på /api/scan och /api/full-scan</h3>
+                <p class="text-sm text-gray-500 mt-1">Inga skydd mot spam-anrop. Porta rate_limiter.py-logiken till TypeScript middleware. 3 anrop/IP/timme räcker initialt.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">app/api/scan/route.ts</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">app/lib/rateLimiter.ts (ny)</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">#3 från STATUS.md</span>
+          </div>
+        </div>
+
+        <!-- P5 -->
+        <div class="bg-white rounded-xl border border-orange-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-orange-100 text-orange-700">Hög</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Fixa Cloudflare 504 timeout för full scan</h3>
+                <p class="text-sm text-gray-500 mt-1">Full scan tar länge (Gemini 2.5 Pro + Places API). Cloudflare default timeout är 100s. Lösning: response streaming, eller öka timeout i tunnel-config, eller split i två anrop.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">~/.cloudflared/analyze-config.yml</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">app/api/full-scan/route.ts</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">Infrastruktur</span>
+          </div>
+        </div>
+
+        <!-- P6 -->
+        <div class="bg-white rounded-xl border border-yellow-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-yellow-100 text-yellow-700">Medium</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Landningssida — förbättrad narrativ och layout</h3>
+                <p class="text-sm text-gray-500 mt-1">Fullständigt förslag i <a href="landing-page-proposal.md" class="text-indigo-500 hover:underline">docs/landing-page-proposal.md</a>. Ny sektionsstruktur med förklaring, siffror (64% av sökningar), checklista, före/efter-exempel och 3× URL-inputs för konvertering.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">app/page.tsx refactor</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">8 nya sektioner</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">Se proposal-doc</span>
+          </div>
+        </div>
+
+        <!-- P7 -->
+        <div class="bg-white rounded-xl border border-yellow-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-yellow-100 text-yellow-700">Medium</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Lead gen pipeline — automatisk outreach</h3>
+                <p class="text-sm text-gray-500 mt-1">Fullständig design i <a href="lead-gen-research.md" class="text-indigo-500 hover:underline">docs/lead-gen-research.md</a>. Google Places API → pre-qualify → e-post-extraktion → AI-scan → personaliserat e-postutskick via Hydroxide. Kostnad ~$10/kampanj, estimat 3–30 kunder/körning.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">scripts/lead_collector.py (ny)</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">scripts/outreach.py (ny)</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">data/leads.db (ny)</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">Fullständigt spec klart</span>
+          </div>
+        </div>
+
+        <!-- P8 -->
+        <div class="bg-white rounded-xl border border-gray-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-gray-100 text-gray-600">Backlog</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">Rensa dead code — backend/ och frontend/</h3>
+                <p class="text-sm text-gray-500 mt-1">Python FastAPI + Vite React är gammal stack. Förvirrar. Arkivera eller ta bort. Uppdatera CLAUDE.md med korrekt Next.js-arkitektur.</p>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-400">
+                  <span class="bg-gray-100 rounded px-2 py-0.5">backend/ → arkiv</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">frontend/ → arkiv</span>
+                  <span class="bg-gray-100 rounded px-2 py-0.5">CLAUDE.md uppdatera</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">Låg prioritet</span>
+          </div>
+        </div>
+
+        <!-- P9 -->
+        <div class="bg-white rounded-xl border border-gray-100 p-5 card-hover">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span class="priority-badge bg-gray-100 text-gray-600">Backlog</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">nginx config cleanup + E-A-T check + robots meta</h3>
+                <p class="text-sm text-gray-500 mt-1">nginx-config för analyze.pipod.net har dead <code class="text-xs">alias frontend/dist/</code> — fungerar men är missvisande. E-A-T och robots &lt;meta&gt;-detektering saknas som distinkta checks i scannern.</p>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">Cleanup</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Docs -->
+    <section>
+      <h2 class="text-xl font-bold section-title mb-5 text-gray-900">Dokumentation &amp; rapporter</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <a href="http://100.72.180.20/STATUS.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#128202;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">STATUS.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">Levande dashboard — vad som fungerar, vad som är trasigt, nästa 3 uppgifter. Senast: 2026-04-26.</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="http://100.72.180.20/Checklist.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#9989;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">Checklist.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">Feature-checklista med [x] / [ ] för allt från scraping till infrastruktur och lead capture.</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="http://100.72.180.20/CLAUDE.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#128218;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">CLAUDE.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">Teknisk stack, arkitektur, kommandon, kodingregler och fragile areas. OBS: delvis inaktuell.</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="http://100.72.180.20/aiscanner-demos/landing-page-proposal.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#127775;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">landing-page-proposal.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">Fullständigt designförslag för ny landningssida. 8 sektioner, narrativ, siffror, före/efter.</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="http://100.72.180.20/aiscanner-demos/lead-gen-research.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#128640;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">lead-gen-research.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">Fullständig pipeline-spec. Google Places → pre-qualify → e-post → AI-scan → Hydroxide SMTP. ~$10/kampanj.</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="http://100.72.180.20/aiscanner-demos/analys-2026-04.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#128196;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">analys-2026-04.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">Månadsanalys april 2026.</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="http://100.72.180.20/SCANNER_VERIFICATION.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#128269;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">SCANNER_VERIFICATION.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">QA-testresultat mot riktiga företag.</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="http://100.72.180.20/aiscanner-demos/swedish_smb_ai_research.md" target="_blank" class="bg-white rounded-xl border border-gray-200 p-4 card-hover block group">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">&#128300;</div>
+            <div>
+              <div class="font-semibold text-gray-800 group-hover:text-indigo-700 text-sm">swedish_smb_ai_research.md</div>
+              <div class="text-xs text-gray-500 mt-0.5">Marknadsresearch — svenska SMB och AI-sökmotorer.</div>
+            </div>
+          </div>
+        </a>
+
+      </div>
+
+      <!-- Sample Reports -->
+      <h3 class="text-base font-bold text-gray-700 mt-6 mb-2">Enhanced-rapporter (AI-genererade) ✦</h3>
+      <div class="flex flex-wrap gap-3 mb-4">
+        <a href="http://100.72.180.20/aiscanner-demos/bjurfors-enhanced.html" target="_blank" class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-300 rounded-lg px-4 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 card-hover">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Bjurfors (mäklare)
+        </a>
+        <a href="http://100.72.180.20/aiscanner-demos/roranalys-enhanced.html" target="_blank" class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-300 rounded-lg px-4 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 card-hover">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Röranalys (VVS)
+        </a>
+        <a href="http://100.72.180.20/aiscanner-demos/tvakanten-enhanced.html" target="_blank" class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-300 rounded-lg px-4 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 card-hover">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Tvåkanten (restaurang)
+        </a>
+      </div>
+      <h3 class="text-base font-bold text-gray-700 mb-3">Legacy-rapporter (handskrivna)</h3>
+      <div class="flex flex-wrap gap-3">
+        <a href="http://100.72.180.20/aiscanner-demos/bjurfors-rapport.html" target="_blank" class="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-700 card-hover">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Bjurfors (mäklare)
+        </a>
+        <a href="http://100.72.180.20/aiscanner-demos/roranalys-rapport.html" target="_blank" class="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-700 card-hover">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Röranalys (VVS)
+        </a>
+        <a href="http://100.72.180.20/aiscanner-demos/tvakanten-rapport.html" target="_blank" class="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-700 card-hover">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Tvåkanten
+        </a>
+      </div>
+    </section>
+
+    <!-- Tech Info -->
+    <section>
+      <h2 class="text-xl font-bold section-title mb-5 text-gray-900">Teknisk info</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Stack -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Stack</h3>
+          <table class="w-full text-sm">
+            <tbody class="divide-y divide-gray-100">
+              <tr><td class="py-2 text-gray-500 pr-4 w-32">Framework</td><td class="py-2 font-medium">Next.js 15 App Router</td></tr>
+              <tr><td class="py-2 text-gray-500">Språk</td><td class="py-2 font-medium">TypeScript (strict)</td></tr>
+              <tr><td class="py-2 text-gray-500">UI</td><td class="py-2 font-medium">Tailwind CSS</td></tr>
+              <tr><td class="py-2 text-gray-500">Scraping</td><td class="py-2 font-medium">node-fetch + cheerio</td></tr>
+              <tr><td class="py-2 text-gray-500">AI (free)</td><td class="py-2 font-medium">Gemini 2.5 Flash via OpenRouter</td></tr>
+              <tr><td class="py-2 text-gray-500">AI (premium)</td><td class="py-2 font-medium">Gemini 2.5 Pro via OpenRouter</td></tr>
+              <tr><td class="py-2 text-gray-500">Places</td><td class="py-2 font-medium">Google Places API (New)</td></tr>
+              <tr><td class="py-2 text-gray-500">Cache</td><td class="py-2 font-medium">In-memory Map (stub Redis)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Infra -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Infrastruktur</h3>
+          <table class="w-full text-sm">
+            <tbody class="divide-y divide-gray-100">
+              <tr><td class="py-2 text-gray-500 pr-4 w-32">Port</td><td class="py-2 font-medium"><code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">8010</code></td></tr>
+              <tr><td class="py-2 text-gray-500">Service</td><td class="py-2 font-medium"><code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">ai-scanner-api.service</code></td></tr>
+              <tr><td class="py-2 text-gray-500">Tunnel</td><td class="py-2 font-medium"><code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">analyze-tunnel.service</code></td></tr>
+              <tr><td class="py-2 text-gray-500">Live URL</td><td class="py-2"><a href="https://analyze.pipod.net" class="text-indigo-600 hover:underline font-medium">analyze.pipod.net</a></td></tr>
+              <tr><td class="py-2 text-gray-500">Tailscale</td><td class="py-2 font-medium"><code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">100.72.180.20:8010</code></td></tr>
+              <tr><td class="py-2 text-gray-500">Kodbas</td><td class="py-2 font-medium"><code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">/mnt/storage/aiscanner/</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Commands -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
+          <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Kommandon</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <div class="text-xs text-gray-400 mb-1.5 font-medium">Omstarta service</div>
+              <code class="block bg-gray-900 text-green-400 text-xs rounded-lg px-4 py-3 overflow-x-auto">sudo systemctl restart ai-scanner-api</code>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 mb-1.5 font-medium">Kolla status</div>
+              <code class="block bg-gray-900 text-green-400 text-xs rounded-lg px-4 py-3 overflow-x-auto">sudo systemctl status ai-scanner-api</code>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 mb-1.5 font-medium">Livellogg</div>
+              <code class="block bg-gray-900 text-green-400 text-xs rounded-lg px-4 py-3 overflow-x-auto">sudo journalctl -u ai-scanner-api -f</code>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 mb-1.5 font-medium">Build + deploy</div>
+              <code class="block bg-gray-900 text-green-400 text-xs rounded-lg px-4 py-3 overflow-x-auto">cd /mnt/storage/aiscanner && npm run build</code>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 mb-1.5 font-medium">Testa API lokalt</div>
+              <code class="block bg-gray-900 text-green-400 text-xs rounded-lg px-4 py-3 overflow-x-auto whitespace-nowrap">curl -s -X POST http://localhost:8010/api/scan \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.se"}'</code>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 mb-1.5 font-medium">Dev-server</div>
+              <code class="block bg-gray-900 text-green-400 text-xs rounded-lg px-4 py-3 overflow-x-auto">cd /mnt/storage/aiscanner && npm run dev</code>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section>
+      <h2 class="text-xl font-bold section-title mb-5 text-gray-900">Arkitektur</h2>
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="flex flex-wrap gap-2 text-xs mb-6">
+          <span class="bg-indigo-50 border border-indigo-200 text-indigo-700 rounded px-2 py-1 font-mono">app/ (live)</span>
+          <span class="text-gray-400 self-center">vs.</span>
+          <span class="bg-red-50 border border-red-200 text-red-500 rounded px-2 py-1 font-mono line-through">backend/ (dead)</span>
+          <span class="bg-red-50 border border-red-200 text-red-500 rounded px-2 py-1 font-mono line-through">frontend/ (dead)</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">app/page.tsx</div>
+            <div class="text-xs text-gray-500">Hero + URL-input + rapport-rendering (client component)</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">api/scan/route.ts</div>
+            <div class="text-xs text-gray-500">POST /api/scan — free scan, Gemini Flash, 23 checks</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">api/full-scan/route.ts</div>
+            <div class="text-xs text-gray-500">POST /api/full-scan — premium, Google Places + Gemini Pro</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">lib/scraper.ts</div>
+            <div class="text-xs text-gray-500">Web scraping + PageSummary-extraktion via cheerio</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">lib/prompts.ts</div>
+            <div class="text-xs text-gray-500">buildFreePrompt() / buildPremiumPrompt()</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">lib/places.ts</div>
+            <div class="text-xs text-gray-500">Google Places API-integration</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">lib/fallback.ts</div>
+            <div class="text-xs text-gray-500">ensurePhases() — fyller in om AI missar faser</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">lib/cache.ts</div>
+            <div class="text-xs text-gray-500">In-memory cache, 24h TTL (stub Redis)</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-mono text-xs text-indigo-600 font-semibold mb-1">lib/errorMessages.ts</div>
+            <div class="text-xs text-gray-500">Svenska felmeddelanden för användaren</div>
+          </div>
+        </div>
+
+        <!-- AI flow -->
+        <div class="mt-5 pt-5 border-t border-gray-100">
+          <div class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Fallback Chain</div>
+          <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="bg-green-50 border border-green-200 text-green-700 rounded px-3 py-1.5 font-medium text-xs">Gemini 2.5 Flash</span>
+            <span class="text-gray-400 text-xs">&#8594;</span>
+            <span class="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded px-3 py-1.5 font-medium text-xs">Flash Lite</span>
+            <span class="text-gray-400 text-xs">&#8594;</span>
+            <span class="bg-orange-50 border border-orange-200 text-orange-700 rounded px-3 py-1.5 font-medium text-xs">Mistral Small</span>
+            <span class="ml-4 text-gray-300">|</span>
+            <span class="ml-4 bg-purple-50 border border-purple-200 text-purple-700 rounded px-3 py-1.5 font-medium text-xs">Gemini 2.5 Pro</span>
+            <span class="text-gray-400 text-xs">&#8594;</span>
+            <span class="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded px-3 py-1.5 font-medium text-xs">Claude 3.5 Sonnet</span>
+            <span class="text-gray-400 text-xs">&#8594;</span>
+            <span class="bg-orange-50 border border-orange-200 text-orange-700 rounded px-3 py-1.5 font-medium text-xs">Gemini 2.0 Pro</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-gray-200 mt-12 py-6 text-center text-xs text-gray-400 bg-white">
+    AI Search Scanner Project Hub &mdash; Uppdatera vid varje session &mdash; <a href="https://analyze.pipod.net" class="hover:underline">analyze.pipod.net</a>
+  </footer>
+
+</body>
+</html>

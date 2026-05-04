@@ -76,15 +76,18 @@ export async function findBusinessByUrl(url: string, cityHint?: string) {
 
 export async function getPlaceDetails(placeId: string) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY
-  const res = await fetch(
-    `https://places.googleapis.com/v1/places/${placeId}?languageCode=sv`,
-    {
-      headers: {
-        'X-Goog-Api-Key': apiKey!,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,rating,userRatingCount,regularOpeningHours,photos,editorialSummary,types,reviews',
-      },
-    }
-  )
+
+  const url = `https://places.googleapis.com/v1/places/${placeId}?languageCode=sv`
+  const res = await fetch(url, {
+    headers: {
+      'X-Goog-Api-Key': apiKey!,
+      'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,rating,userRatingCount,regularOpeningHours,photos,editorialSummary,types,reviews',
+    },
+  })
   if (!res.ok) return null
-  return res.json()
+  const data = await res.json()
+
+  console.log(`[Places] Reviews: ${data.reviews?.length ?? 0}`)
+
+  return data
 }

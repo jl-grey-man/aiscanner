@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-analysrapport — röranalys.se</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f9fafb; color: #111827; font-family: 'Inter', system-ui, sans-serif; }
+  .badge-good { background: #dcfce7; color: #166534; }
+  .badge-warn { background: #fef3c7; color: #92400e; }
+  .badge-bad  { background: #fee2e2; color: #991b1b; }
+  .section-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .premium-badge { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #d97706; color: #78350f; }
+  .priority-critical { border-left: 4px solid #ef4444; }
+  .priority-important { border-left: 4px solid #f59e0b; }
+  .priority-nice { border-left: 4px solid #3b82f6; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  @media print { body { background: #fff; color: #000; } .section-card { border-color: #ccc; box-shadow: none; } }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ==================== SIDHUVUD ==================== -->
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="flex items-center gap-3 mb-2">
+    <span class="text-gray-500 text-sm">analyze.pipod.net</span>
+    <span class="text-gray-400">/</span>
+    <span class="text-gray-600 text-sm">röranalys.se</span>
+  </div>
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-1">Svensk Röranalys</h1>
+      <p class="text-gray-500 text-sm">röranalys.se &middot; VVS / Relining &middot; Storstockholm &middot; Analys 2026-04-26</p>
+    </div>
+    <div class="premium-badge rounded-lg px-4 py-2 text-amber-600 text-sm font-semibold">
+      Fullständig rapport
+    </div>
+  </div>
+
+  <!-- ==================== SAMMANFATTNING ==================== -->
+  <div class="section-card p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-5">Sammanfattning</h2>
+
+    <!-- Poang-översikt -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-lg p-5 text-center">
+        <div class="relative inline-flex items-center justify-center mb-2">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#f59e0b" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="251.2"
+              stroke-dashoffset="100" transform="rotate(-90 45 45)"/>
+          </svg>
+          <span class="absolute text-2xl font-bold text-gray-900">60</span>
+        </div>
+        <p class="text-gray-400 text-xs">Gratisanalys</p>
+      </div>
+      <div class="bg-white rounded-lg p-5 text-center border border-amber-800/40">
+        <div class="relative inline-flex items-center justify-center mb-2">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#f59e0b" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="251.2"
+              stroke-dashoffset="113" transform="rotate(-90 45 45)"/>
+          </svg>
+          <span class="absolute text-2xl font-bold text-gray-900">55</span>
+        </div>
+        <p class="text-amber-700 text-xs font-medium">Fullständig poäng</p>
+      </div>
+      <div class="bg-white rounded-lg p-5 text-center">
+        <div class="text-4xl font-bold text-gray-900 mb-1">3.8</div>
+        <div class="flex justify-center gap-0.5 mb-1">
+          <span class="text-yellow-700 text-lg">&#9733;&#9733;&#9733;</span><span class="text-yellow-700 text-lg">&#9733;&#9733;</span>
+        </div>
+        <p class="text-gray-400 text-xs">Google (24 recensioner)</p>
+      </div>
+    </div>
+
+    <!-- 3 viktigaste fynden -->
+    <div class="mb-5">
+      <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">De 3 viktigaste fynden</h3>
+      <div class="space-y-2">
+        <div class="flex gap-3 items-start">
+          <span class="text-red-700 mt-0.5 shrink-0">1.</span>
+          <p class="text-gray-600 text-sm"><strong class="text-gray-900">Öppettider matchar inte Google.</strong> Er webbplats säger "07:00&ndash;16:00 man&ndash;fre". Google Företagsprofil säger "öppet 24h". AI-motorer ser en direkt konflikt &mdash; och sanker er trovärdighetspoäng.</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="text-red-700 mt-0.5 shrink-0">2.</span>
+          <p class="text-gray-600 text-sm"><strong class="text-gray-900">Ingen llms.txt.</strong> Filen som talar om för AI hur den ska tolka er sajt saknas. Konkurrenter som har den prioriteras i AI-svar.</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="text-red-700 mt-0.5 shrink-0">3.</span>
+          <p class="text-gray-600 text-sm"><strong class="text-gray-900">Ingen Google Maps.</strong> Kontaktsidan använder OpenStreetMap, men Google söker specifikt efter sin egen Maps som platssignal. Ni saknar den.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Varningsruta: recensionsspridning -->
+    <div class="bg-orange-950/20 border border-orange-900/40 rounded-lg p-4 mb-5">
+      <div class="flex items-start gap-3">
+        <span class="text-orange-700 text-lg mt-0.5">!</span>
+        <div>
+          <p class="text-orange-600 font-medium text-sm">Varning: Stor spridning i kundupplevelse</p>
+          <p class="text-gray-500 text-sm mt-1">Era 24 recensioner visar en polariserad bild &mdash; antingen 5 stjarnor eller 1 stjarna, lite mittemellan. AI-motorer tolkar detta som "hog risk" och undviker att rekommendera er aktivt. En konsekvent 4-stjarnig profil är starkare för AI an en bimodal fördelning.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estimerad förbättring -->
+    <div class="bg-emerald-950/30 border border-emerald-900/40 rounded-lg p-4">
+      <p class="text-emerald-700 font-medium text-sm mb-1">Estimerad förbättring efter åtgärder</p>
+      <p class="text-gray-500 text-sm">Ni har en stark teknisk grund (Plumber-schema, JSON-LD, öppettider i koden). Med de tre kritiska fixarna (öppettider, llms.txt, Google Maps) kan poängen ga från <strong class="text-gray-900">55 till uppskattningsvis 73&ndash;78</strong>. Ytterligare förbättring krävs för att nå ettan Rörmokarna i Stockholm (84) &mdash; främst bättre recensionsprofil.</p>
+    </div>
+  </div>
+
+  <!-- ==================== VAD NI GOR RATT ==================== -->
+  <div class="section-card p-6 mb-8 border-green-900/30">
+    <h2 class="font-semibold text-green-700 mb-4 flex items-center gap-2">
+      <span>&#10003;</span> Stark teknisk grund &mdash; bättre an de flesta VVS-företag
+    </h2>
+    <p class="text-gray-500 text-sm mb-4">Svensk Röranalys har redan gjort det svara rätt. De flesta VVS-företag saknar allt nedan:</p>
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Plumber-schema korrekt implementerat (en LocalBusiness-typ)</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>JSON-LD med adress, telefon och öppettider</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Canonical tag på plats</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Stockholm namns i meta, schema och innehåll</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>5 klickbara telefonnummer på startsidan</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Öppettider i footer och i schema (måste dock synkas med Google)</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>HTTPS med giltigt certifikat</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Robots.txt + Sitemap (22 URL:er)</span></div>
+    </div>
+  </div>
+
+  <!-- ==================== ATGARDSPLAN ==================== -->
+  <div class="section-card p-6 mb-8" id="atgardsplan">
+    <h2 class="text-xl font-bold text-gray-900 mb-2">Åtgärdsplan</h2>
+    <p class="text-gray-400 text-sm mb-5">Sorterad efter prioritet. De tre första åtgärderna ger 18 av de 29 poäng som skiljer er från marknadsledaren.</p>
+
+    <!-- KRITISKT -->
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-3 h-3 bg-red-500 rounded-full shrink-0"></span>
+        <h3 class="text-red-700 font-semibold text-sm uppercase tracking-wide">Kritiskt &mdash; fixa först</h3>
+      </div>
+      <div class="space-y-2">
+        <a href="#fix-öppettider" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-critical">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">1. Synkronisera öppettider med Google</p>
+              <p class="text-gray-400 text-xs">Webbplatsen säger 07&ndash;16, Google säger 24h. Direkt NAP-konflikt.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~15 min</span>
+          </div>
+        </a>
+        <a href="#fix-llms" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-critical">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">2. Skapa llms.txt</p>
+              <p class="text-gray-400 text-xs">Saknas &mdash; AI-motorer vet inte hur sajten ska tolkas.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~5 min</span>
+          </div>
+        </a>
+        <a href="#fix-maps" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-critical">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">3. Lägg till Google Maps</p>
+              <p class="text-gray-400 text-xs">Kontaktsidan har OpenStreetMap &mdash; Google vill se sin egen karta.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~10 min</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- VIKTIGT -->
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-3 h-3 bg-amber-500 rounded-full shrink-0"></span>
+        <h3 class="text-amber-700 font-semibold text-sm uppercase tracking-wide">Viktigt &mdash; höjer poängen ytterligare</h3>
+      </div>
+      <div class="space-y-2">
+        <a href="#fix-h1" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-important">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">4. Stärks H1-taggen med nyckelord</p>
+              <p class="text-gray-400 text-xs">Kreativ men saknar "relining" och "Stockholm" &mdash; AI hittar er inte.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~5 min</span>
+          </div>
+        </a>
+        <a href="#fix-meta" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-important">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">5. Förbättra metabeskrivning</p>
+              <p class="text-gray-400 text-xs">Bra grund men kan stärkas med certifieringar och unik vinkel.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~10 min</span>
+          </div>
+        </a>
+        <a href="#fix-nap" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-important">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">6. Satts NAP på ALLA sidor</p>
+              <p class="text-gray-400 text-xs">NAP finns på startsidan men saknas på undersidor.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~30 min</span>
+          </div>
+        </a>
+        <a href="#fix-gbp" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-important">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">7. Optimera Google Företagsprofil</p>
+              <p class="text-gray-400 text-xs">Förbättra beskrivning och bemot negativa recensioner.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~20 min</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- BRA ATT HA -->
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-3 h-3 bg-blue-500 rounded-full shrink-0"></span>
+        <h3 class="text-blue-700 font-semibold text-sm uppercase tracking-wide">Bra att ha &mdash; polering</h3>
+      </div>
+      <div class="space-y-2">
+        <a href="#fix-semantisk" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-nice">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">8. Förbättra semantisk HTML</p>
+              <p class="text-gray-400 text-xs">Använd article/section för bättre AI-förståelse.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~1 h</span>
+          </div>
+        </a>
+        <a href="#fix-hastighet" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-nice">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">9. Mat sidhastighet</p>
+              <p class="text-gray-400 text-xs">Kraver manuell mätning &mdash; snabba sidor rankas högre.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~15 min</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DETALJERADE LOSNINGAR ==================== -->
+  <div class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-6">
+      <span class="text-amber-700">&#9733;</span>
+      <h2 class="text-xl font-bold text-gray-900">Detaljerade losningar</h2>
+      <span class="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">Premium</span>
+    </div>
+
+    <!-- FIX 1: Öppettider -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-öppettider">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+        <span class="text-red-700 text-xs font-medium uppercase tracking-wide">Kritiskt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">1. Synkronisera öppettider med Google Företagsprofil</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är problemet?</p>
+        <p class="text-gray-500 text-sm">Er webbplats och JSON-LD-schema säger <strong class="text-gray-700">"Måndag&ndash;Fredag 07:00&ndash;16:00"</strong>. Men er Google Företagsprofil säger <strong class="text-red-700">"Öppet 24 timmar"</strong>. AI-motorer jamfor dessa tva källor och ser en direkt konflikt.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Varför är det allvarligt?</p>
+        <p class="text-gray-500 text-sm">När en AI-motor som ChatGPT eller Perplexity ser motstridiga öppettider vet den inte vem som har rätt. Resultatet: den undviker att rekommendera er alls, eller säger "kontrollera öppettiderna direkt med företaget". Det är dåligt för er &mdash; AI borde kunna svara "Svensk Röranalys har öppet 07&ndash;16" med tillforlit.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har fixar ni det</p>
+        <ol class="text-gray-500 text-sm space-y-3 list-decimal list-inside">
+          <li>
+            <strong class="text-gray-700">Bestäm vad som är rätt.</strong> Har ni jour dygnet runt, eller har ni kontorstid 07&ndash;16 med jourmöjlighet?
+          </li>
+          <li>
+            <strong class="text-gray-700">Alternativ A: Ni har kontorstid + jour.</strong>
+            <p class="text-gray-400 mt-1 ml-5">Uppdatera Google Företagsprofil till "07:00&ndash;16:00 mån&ndash;fred". Lägg sedan till "Jourservice dygnet runt" i er GBP-beskrivning. På webbplatsen: skapa en egen joursida med texten "Jour 24/7 &mdash; ring 08-599 098 00" och lank dit från footern.</p>
+          </li>
+          <li>
+            <strong class="text-gray-700">Alternativ B: Ni är faktiskt öppna 24h.</strong>
+            <p class="text-gray-400 mt-1 ml-5">Uppdatera webbplatsen och JSON-LD till "24 timmar" och ta bort "07:00&ndash;16:00" från footern.</p>
+          </li>
+          <li>
+            <strong class="text-gray-700">Logga in på Google Företagsprofil:</strong> <a href="https://business.google.com" class="text-blue-700 underline">business.google.com</a> &rarr; valj "Svensk Röranalys" &rarr; "Redigera profil" &rarr; "Öppettider"
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- FIX 2: LLMS.TXT -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-llms">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+        <span class="text-red-700 text-xs font-medium uppercase tracking-wide">Kritiskt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">2. Skapa llms.txt</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är llms.txt?</p>
+        <p class="text-gray-500 text-sm">Det är en textfil på er webbplats som förklarar för AI-sökmotorer (ChatGPT, Perplexity med flera) vad ert företag gör. Tänkt som en "bruksanvisning" för AI. Precis som robots.txt talar om för Google hur den ska lasa sajten, talar llms.txt om för AI vad sajten handlar om.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Varför behöver ni detta?</p>
+        <p class="text-gray-500 text-sm">Utan llms.txt måste AI gissa vad Svensk Röranalys gör baserat på er HTML. Med filen får AI en tydlig, strukturerad sammanfattning &mdash; och prioriterar er över konkurrenter som saknar den.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har gör ni</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+          <li>Skapa en ny fil som heter <code class="text-green-700 bg-gray-50 px-1 rounded">llms.txt</code></li>
+          <li>Kopiera texten nedan</li>
+          <li>Ladda upp filen till roten av er webbplats (samma ställe dar robots.txt ligger)</li>
+          <li>Kontrollera att <code class="text-green-700 bg-gray-50 px-1 rounded">https://www.roranalys.se/llms.txt</code> visar filens innehåll</li>
+        </ol>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Kod att kopiera</p>
+        <pre class="bg-gray-50 rounded-lg p-4 text-xs text-green-700 overflow-x-auto leading-relaxed">__CODE_BLOCK_2__</pre>
+      </div>
+    </div>
+
+    <!-- FIX 3: Google Maps -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-maps">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+        <span class="text-red-700 text-xs font-medium uppercase tracking-wide">Kritiskt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">3. Lägg till Google Maps på kontaktsidan</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är problemet?</p>
+        <p class="text-gray-500 text-sm">Er kontaktsida har en karta &mdash; men den är från OpenStreetMap (via Leaflet). Google söker specifikt efter sin egen Google Maps-inbaddning som platssignal. OpenStreetMap syns inte för Googles AI.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Varför spelar det roll?</p>
+        <p class="text-gray-500 text-sm">Google Maps-inbaddning fungerar som ett "stämpel" som bekräftar att ni är ett riktigt fysiskt företag på en riktig adress. Utan det ser AI er mer som ett "online-företag" an ett VVS-företag på Fyrverkarbacken.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har gör ni</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside mb-4">
+          <li>Ga till <a href="https://maps.google.com" class="text-blue-700 underline">maps.google.com</a></li>
+          <li>Sok på "Svensk Röranalys" eller er adress "Fyrverkarbacken 36"</li>
+          <li>Klicka på <strong class="text-gray-700">Dela</strong> &rarr; <strong class="text-gray-700">Badda in en karta</strong></li>
+          <li>Kopiera iframe-koden</li>
+          <li>Lägg till den på er kontaktsida &mdash; antingen bredvid eller under er nuvarande OpenStreetMap-karta</li>
+        </ol>
+        <p class="text-gray-400 text-xs mb-3">Koden ser ut ungefär så har:</p>
+        <pre class="bg-gray-50 rounded-lg p-4 text-xs text-green-700 overflow-x-auto leading-relaxed">__CODE_BLOCK_3__</pre>
+        <p class="text-gray-400 text-xs mt-2">Tips: Behövs ni er OpenStreetMap-karta? Ni kan byta ut den helt mot Google Maps för maximal effekt.</p>
+      </div>
+    </div>
+
+    <!-- FIX 4: H1-tagg -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-h1">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+        <span class="text-amber-700 text-xs font-medium uppercase tracking-wide">Viktigt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">4. Stark H1-taggen med nyckelord</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är en H1-tagg?</p>
+        <p class="text-gray-500 text-sm">H1 är huvudrubriken på en sida &mdash; den största rubriken som besökare ser först. Det är ocksa en av de allra viktigaste signalerna för sökmotorer och AI. När någon frågar "relining Stockholm" tittar AI först på H1-taggen.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är problemet?</p>
+        <p class="text-gray-500 text-sm">Er nuvarande H1 är: <em class="text-gray-600">"Bevara, renovera och ta hand om det befintliga"</em>. Det är poetiskt och fint &mdash; men AI har ingen aning om att det handlar om relining i Stockholm. Ingen som söker på "VVS Stockholm" eller "relining BRF" hittar er via den rubriken.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Tva alternativ</p>
+        <div class="space-y-3">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-gray-600 text-xs font-medium mb-1">Alternativ A: Byt H1 helt</p>
+            <pre class="text-green-700 text-xs">__CODE_BLOCK_4__</pre>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-gray-600 text-xs font-medium mb-1">Alternativ B: Behållt kreativ H1, lägg till H2 med nyckelord</p>
+            <pre class="text-green-700 text-xs overflow-x-auto">__CODE_BLOCK_5__</pre>
+          </div>
+        </div>
+        <p class="text-gray-400 text-xs mt-3">Var rekommendation: Alternativ B &mdash; behållt ert varumarkes ton men ger AI det den behöver.</p>
+      </div>
+    </div>
+
+    <!-- FIX 5: Metabeskrivning -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-meta">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+        <span class="text-amber-700 text-xs font-medium uppercase tracking-wide">Viktigt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">5. Förbättra metabeskrivning</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är en metabeskrivning?</p>
+        <p class="text-gray-500 text-sm">Den korta texten som visas under er rubrik i Googles sökresultat. Det är aven en av de första sakerna AI läser för att första vad ert företag gör.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Er nuvarande</p>
+        <p class="text-gray-500 text-sm italic">"Svensk Röranalys hjälper BRF och fastighetsägare i Storstockholm med relining (strumpmetoden), rorinspektion och stamspolning. Serviceavtal &amp; snabb jour."</p>
+        <p class="text-gray-500 text-sm mt-2">Bra grund! Stad, tjänster och malgrupp finns. Men den kan stärkas med certifieringar, erfarenhet och någon unik vinkel.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Förslag på förbättrad version</p>
+        <pre class="bg-gray-50 rounded-lg p-4 text-xs text-green-700 overflow-x-auto leading-relaxed">__CODE_BLOCK_6__</pre>
+        <p class="text-gray-400 text-xs mt-3">Tillagt: "certifierade tekniker" (bygger fortroende), "kostnadsfri besiktning" (unik vinkel), tydligare öppettider.</p>
+      </div>
+    </div>
+
+    <!-- FIX 6: NAP pa alla sidor -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-nap">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+        <span class="text-amber-700 text-xs font-medium uppercase tracking-wide">Viktigt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">6. Satt NAP på ALLA sidor</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är NAP?</p>
+        <p class="text-gray-500 text-sm">NAP star för Name, Address, Phone (namn, adress, telefon). AI-motorer jamfor er kontaktinformation på webbplatsen med Google Företagsprofil, Eniro med mera. Information måste vara konsekvent &mdash; inte bara på startsidan utan på <em>alla</em> sidor.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är problemet?</p>
+        <p class="text-gray-500 text-sm">NAP finns på startsidan men saknas på några undersidor. AI som landar på en tjänstsida (t.ex. via en länk) hittar ingen kontaktinformation &mdash; och kanns osaker på att rekommendera er.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har fixar ni det</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+          <li><strong class="text-gray-700">Lägg till NAP i sidfoten (footer).</strong> Footern är den plats som visas på varje sida. Namn, adress, telefon och öppettider bor finnas dar.</li>
+          <li><strong class="text-gray-700">Gör telefonnumret klickbart</strong> med <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;a href="tel:0859909800"&gt;</code> &mdash; detta gör ni redan på startsidan, utok till alla sidor.</li>
+          <li><strong class="text-gray-700">Se till att JSON-LD-schemat</strong> laddas på alla sidor, inte bara startsidan.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- FIX 7: GBP -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-gbp">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+        <span class="text-amber-700 text-xs font-medium uppercase tracking-wide">Viktigt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">7. Optimera Google Företagsprofil</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är Google Företagsprofil (GBP)?</p>
+        <p class="text-gray-500 text-sm">Det är det som dyker upp till höger när någon Googlar "Svensk Röranalys" &mdash; karta, öppettider, recensioner, bilder. AI-motorer använder denna information tungt för lokala svar.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Konkreta åtgärder</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+          <li><strong class="text-gray-700">Fixa öppettider</strong> (se åtgärd 1 &mdash; detta är viktigast)</li>
+          <li><strong class="text-gray-700">Skriv en bra beskrivning</strong> &mdash; namna relining, rorinspektion, stamspolning, Storstockholm, BRF, certifierade tekniker. Max 750 tecken.</li>
+          <li><strong class="text-gray-700">Ladda upp minst 10 bilder</strong> &mdash; personal, fordon, projekt (före/efter relining). Profiler med bilder rankas högre.</li>
+          <li><strong class="text-gray-700">Svara på ALLA recensioner</strong> &mdash; sarskilt de negativa. AI läser era svar. Ett professionellt bemotande på en 1-stjarnig recension signalerar mer an tio 5-stjarniga.</li>
+          <li><strong class="text-gray-700">Lägg till tjänster i GBP</strong> &mdash; under "Tjänster", lägg till: Relining, Rorinspektion, Stamspolning, Jourservice. Google matchar dessa mot sökfrågor.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- FIX 8: Semantisk HTML -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-semantisk">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+        <span class="text-blue-700 text-xs font-medium uppercase tracking-wide">Bra att ha</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">8. Förbättra semantisk HTML</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är det?</p>
+        <p class="text-gray-500 text-sm">Semantisk HTML innebär att man använder rätt typ av HTML-taggar för rätt typ av innehåll. <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;article&gt;</code> för en artikel, <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;nav&gt;</code> för navigation, <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;main&gt;</code> för huvudinnehåll. Hjälper AI första vad varje del av sidan är.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Vad bor ändras?</p>
+        <p class="text-gray-500 text-sm">Be er webbutvecklare byta ut generiska <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;div&gt;</code>-taggar mot <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;main&gt;</code>, <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;article&gt;</code> och <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;section&gt;</code> dar det är lampligt. Lagre prioritet &mdash; er tekniska grund är redan bra.</p>
+      </div>
+    </div>
+
+    <!-- FIX 9: Sidhastighet -->
+    <div id="fix-hastighet">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+        <span class="text-blue-700 text-xs font-medium uppercase tracking-wide">Bra att ha</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">9. Mat och förbättra sidhastighet</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Varför spelar hastighet roll för AI?</p>
+        <p class="text-gray-500 text-sm">AI-sökmotorer lar sig från Google. Googles algoritm belonar snabba sidor. En sida som laddar på 1 sekund rankas högre an en som tar 5 sekunder.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har gör ni</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+          <li>Ga till <a href="https://pagespeed.web.dev/" class="text-blue-700 underline">pagespeed.web.dev</a></li>
+          <li>Skriv in <code class="text-green-700 bg-gray-50 px-1 rounded">roranalys.se</code></li>
+          <li>Nota poängen och föreslagna förbättringar</li>
+          <li>Skicka resultatet till er webbutvecklare</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PREMIUMANALYS: NAP ==================== -->
+  <div class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-5">
+      <span class="text-amber-700">&#9733;</span>
+      <h2 class="text-xl font-bold text-gray-900">NAP-konsistensanalys</h2>
+      <span class="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">Premium</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-500 text-xs mb-2 uppercase tracking-wide font-semibold">Webbplats + Schema</p>
+        <p class="text-gray-900 text-sm font-medium">Svensk Röranalys</p>
+        <p class="text-gray-600 text-sm">Fyrverkarbacken 36, Stockholm</p>
+        <p class="text-gray-600 text-sm">08-599 098 00</p>
+        <p class="text-green-600 text-sm">07:00&ndash;16:00 (man&ndash;fre)</p>
+      </div>
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-500 text-xs mb-2 uppercase tracking-wide font-semibold">Google Företagsprofil</p>
+        <p class="text-gray-900 text-sm font-medium">Svensk Röranalys</p>
+        <p class="text-gray-600 text-sm">Fyrverkarbacken 36, Stockholm</p>
+        <p class="text-gray-600 text-sm">08-599 098 00</p>
+        <p class="text-red-600 text-sm">Öppet 24 timmar</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-gray-600 text-sm">NAP-poäng</span>
+        <span class="text-yellow-700 font-bold">7 / 10</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
+        <div class="bg-yellow-500 h-2 rounded-full" style="width: 70%"></div>
+      </div>
+      <p class="text-gray-500 text-sm">Namn, adress och telefon matchar perfekt &mdash; utmarkt. Enda problemet är <strong class="text-gray-700">öppettidskonflikten</strong> (webbplats: 07&ndash;16, Google: 24h). Synka dessa och poängen går till 9&ndash;10/10.</p>
+    </div>
+  </div>
+
+  <!-- ==================== PREMIUMANALYS: Recensioner ==================== -->
+  <div class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-5">
+      <span class="text-amber-700">&#9733;</span>
+      <h2 class="text-xl font-bold text-gray-900">Recensionsanalys &mdash; 24 Google-recensioner</h2>
+      <span class="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">Premium</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-500 text-xs mb-3 uppercase tracking-wide font-semibold">Återkommande positiva ord</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">bemotande</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">tidplan</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">proffsiga</span>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-500 text-xs mb-3 uppercase tracking-wide font-semibold">Negativa ord (från lagbetyg)</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="bg-red-950/50 text-red-700 px-2.5 py-1 rounded text-xs">slarviga</span>
+          <span class="bg-red-950/50 text-red-700 px-2.5 py-1 rounded text-xs">kommunikation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-orange-950/30 border border-orange-900/40 rounded-lg p-4 mb-4">
+      <p class="text-orange-600 font-medium text-sm mb-2">Bimodal fördelning &mdash; varför det är ett problem</p>
+      <p class="text-gray-500 text-sm">Era recensioner är polariserade: många 5-stjarniga och många 1-stjarniga, men fa daremmellan. AI-motorer tolkar detta som "hog risk" &mdash; de kan inte vara säkra på om kunden får bra eller dalig service. Resultatet: AI undviker att rekommendera er och valjer istället en konkurrent med jamnare betyg.</p>
+    </div>
+
+    <div class="bg-white rounded-lg p-4">
+      <p class="text-gray-600 text-sm font-medium mb-2">Vad kan ni gora?</p>
+      <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+        <li><strong class="text-gray-700">Svara på varje negativ recension professionellt.</strong> AI läser era svar. "Vi beklagar och har tagit kontakt med kunden för att losa detta" är bättre an tystnad.</li>
+        <li><strong class="text-gray-700">Be aktivt nojda kunder om recensioner.</strong> 24 recensioner är lagt. Sikta på 50+ &mdash; ett mail/SMS efter avslutat jobb med lank till er Google-recension.</li>
+        <li><strong class="text-gray-700">Infor kvalitetskontroll efter jobb</strong> &mdash; ett kort telefonsamtal dagen efter för att fanga problem innan de blir negativa recensioner.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ==================== PREMIUMANALYS: Konkurrenter ==================== -->
+  <div class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-5">
+      <span class="text-amber-700">&#9733;</span>
+      <h2 class="text-xl font-bold text-gray-900">Konkurrentanalys &mdash; VVS Storstockholm</h2>
+      <span class="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">Premium</span>
+    </div>
+
+    <p class="text-gray-500 text-sm mb-4">Vi har jamfort er AI-synlighet med tva VVS-konkurrenter i Storstockholm.</p>
+
+    <div class="space-y-3 mb-5">
+      <div class="flex items-center gap-3 p-3 bg-white rounded-lg">
+        <div class="text-gray-400 text-sm w-6 text-center font-bold">1</div>
+        <div class="flex-1">
+          <p class="text-gray-900 text-sm font-medium">Rörmokarna i Stockholm</p>
+          <p class="text-gray-400 text-xs">llms.txt + Google Maps + konsekvent NAP + 4.7 rating</p>
+          <div class="w-full bg-gray-100 rounded-full h-2 mt-1.5">
+            <div class="bg-emerald-500 h-2 rounded-full" style="width: 84%"></div>
+          </div>
+        </div>
+        <span class="text-emerald-700 font-bold">84</span>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-white rounded-lg">
+        <div class="text-gray-400 text-sm w-6 text-center font-bold">2</div>
+        <div class="flex-1">
+          <p class="text-gray-900 text-sm font-medium">VVS-experten AB</p>
+          <p class="text-gray-400 text-xs">Starka schemas, Maps, svagare recensionsprofil</p>
+          <div class="w-full bg-gray-100 rounded-full h-2 mt-1.5">
+            <div class="bg-emerald-500 h-2 rounded-full" style="width: 76%"></div>
+          </div>
+        </div>
+        <span class="text-emerald-700 font-bold">76</span>
+      </div>
+      <div class="flex items-center gap-3 p-4 bg-blue-950/40 border border-blue-200/50 rounded-lg">
+        <div class="text-blue-700 text-sm w-6 text-center font-bold">&rarr;</div>
+        <div class="flex-1">
+          <p class="text-gray-900 text-sm font-medium">Svensk Röranalys <span class="text-gray-400 font-normal">(ni)</span></p>
+          <p class="text-gray-400 text-xs">Stark teknisk grund &mdash; öppettider, llms.txt och Maps saknas</p>
+          <div class="w-full bg-gray-100 rounded-full h-2 mt-1.5">
+            <div class="bg-blue-500 h-2 rounded-full" style="width: 55%"></div>
+          </div>
+        </div>
+        <span class="text-blue-700 font-bold">55</span>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-4">
+      <p class="text-gray-600 text-sm font-medium mb-2">Vad krävs för att ga om?</p>
+      <p class="text-gray-500 text-sm mb-2">Gapet till ettan (Rörmokarna) är 29 poäng. Av dessa är <strong class="text-gray-900">18 poäng åtgärdbara</strong> med de tre kritiska fixarna (öppettider, llms.txt, Google Maps). Det tar er till ~73&ndash;78 poäng &mdash; nara VVS-experten.</p>
+      <p class="text-gray-500 text-sm">Resterande 6&ndash;11 poäng handlar om <strong class="text-gray-900">recensionsvolym och -kvalitet</strong> &mdash; det tar tid men är avgörande på längre sikt. Med 50+ jamma recensioner (4.5+ snitt) när ni 80+.</p>
+    </div>
+  </div>
+
+  <!-- ==================== ALLA KONTROLLER ==================== -->
+  <div class="section-card p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-5">Alla 23 kontroller</h2>
+    <div class="space-y-1 text-sm">
+
+      <!-- Teknisk -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-2 pb-1 font-semibold">Teknisk (6 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">HTTPS / SSL</p><p class="text-gray-400 text-xs">HTTPS korrekt, giltigt certifikat.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Robots.txt</p><p class="text-gray-400 text-xs">Minimal robots.txt med Sitemap-referens.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Sitemap.xml</p><p class="text-gray-400 text-xs">Giltig sitemap med 22 URL:er.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Canonical tag</p><p class="text-gray-400 text-xs">Canonical tag finns: https://www.röranalys.se</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-bad px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">FEL</span>
+        <div>
+          <p class="text-gray-700">LLMS.TXT</p>
+          <p class="text-gray-400 text-xs">Saknas &mdash; returnerar 404.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-llms">Se åtgärd 2 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-warn px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">~</span>
+        <div>
+          <p class="text-gray-700">Sidhastighet</p>
+          <p class="text-gray-400 text-xs">Kraver manuell mätning via PageSpeed Insights.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-hastighet">Se åtgärd 9 &rarr;</a></p>
+        </div>
+      </div>
+
+      <!-- Lokal synlighet -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-5 pb-1 font-semibold">Lokal synlighet (6 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-warn px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">~</span>
+        <div>
+          <p class="text-gray-700">NAP-information</p>
+          <p class="text-gray-400 text-xs">Finns på startsidan. Saknas på några undersidor. Öppettider matchar inte Google.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-nap">Se åtgärd 6</a> + <a href="#fix-öppettider">åtgärd 1 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Telefonnummer synligt</p><p class="text-gray-400 text-xs">5 klickbara tel:-lankar på startsidan.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Stad namns</p><p class="text-gray-400 text-xs">"Storstockholm" i metabeskrivning, Stockholm i adress och schema.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-bad px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">FEL</span>
+        <div>
+          <p class="text-gray-700">Google Maps</p>
+          <p class="text-gray-400 text-xs">Kontaktsidan använder OpenStreetMap/Leaflet, inte Google Maps.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-maps">Se åtgärd 3 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Plumber-schema (LocalBusiness)</p><p class="text-gray-400 text-xs">@type: "Plumber" korrekt implementerat &mdash; AI vet att ni är ett VVS-företag.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Öppettider</p><p class="text-gray-400 text-xs">Finns i footer och JSON-LD. Matchar dock inte Google &mdash; se åtgärd 1.</p></div>
+      </div>
+
+      <!-- AI-beredskap -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-5 pb-1 font-semibold">AI-beredskap (5 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Schema markup (någon typ)</p><p class="text-gray-400 text-xs">JSON-LD med Plumber-schema.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">LocalBusiness-schema (Plumber)</p><p class="text-gray-400 text-xs">Korrekt &mdash; Plumber är en LocalBusiness-subtyp i schema.org.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">JSON-LD format</p><p class="text-gray-400 text-xs">JSON-LD med application/ld+json, korrekt formaterat.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-warn px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">~</span>
+        <div>
+          <p class="text-gray-700">AI-optimerad metabeskrivning</p>
+          <p class="text-gray-400 text-xs">Bra grund men kan stärkas med certifieringar och unik vinkel.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-meta">Se åtgärd 5 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-warn px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">~</span>
+        <div>
+          <p class="text-gray-700">Semantisk HTML</p>
+          <p class="text-gray-400 text-xs">Kan förbättras med article/section-taggar.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-semantisk">Se åtgärd 8 &rarr;</a></p>
+        </div>
+      </div>
+
+      <!-- Innehåll -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-5 pb-1 font-semibold">Innehåll (6 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-warn px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">~</span>
+        <div>
+          <p class="text-gray-700">H1-tagg</p>
+          <p class="text-gray-400 text-xs">"Bevara, renovera och ta hand om det befintliga" &mdash; kreativ men saknar nyckelord.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-h1">Se åtgärd 4 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Title-tagg</p><p class="text-gray-400 text-xs">"Relining, rorinspektion &amp; stamspolning i Stockholm" &mdash; ~50 tecken, utmarkt.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Metabeskrivning</p><p class="text-gray-400 text-xs">Finns och är relevant. Kan stärkas ytterligare.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Sprak</p><p class="text-gray-400 text-xs">Svenska &mdash; korrekt.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ORDLISTA ==================== -->
+  <div class="section-card p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">Ordlista</h2>
+    <p class="text-gray-400 text-sm mb-4">Förklaringar av tekniska termer i denna rapport.</p>
+    <div class="space-y-4 text-sm">
+      <div>
+        <p class="text-gray-700 font-medium">Schema markup / JSON-LD</p>
+        <p class="text-gray-400">Osynlig kod på er webbplats som talar om för sökmotorer vad ert företag är. JSON-LD är formatet som Google och AI föredrar. Ni har redan detta &mdash; med rätt typ (Plumber).</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Plumber-schema (LocalBusiness-subtyp)</p>
+        <p class="text-gray-400">En specifik typ i schema.org-systemet som talar om att webbplatsen tillhor ett VVS-/rörföretag. Det är en variant av "LocalBusiness" &mdash; så AI vet både att ni är ett lokalt företag OCH att ni jobbar med ror.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">NAP (Name, Address, Phone)</p>
+        <p class="text-gray-400">Ert företagsnamn, adress och telefonnummer. Måste vara identiskt överallt: webbplats, Google Företagsprofil, Eniro, Facebook. AI straffar inkonsekvent NAP.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">llms.txt</p>
+        <p class="text-gray-400">En textfil på er webbplats som förklarar för AI-sökmotorer vad ert företag gör. Ny standard som allt fler AI-motorer stödjer. Ni saknar den &mdash; se åtgärd 2.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Canonical tag</p>
+        <p class="text-gray-400">Osynlig kod som talar om "detta är den riktiga adressen till sidan". Förhindrar dubbletter. Ni har den på plats.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Google Företagsprofil (GBP)</p>
+        <p class="text-gray-400">Er företagsinformation på Google &mdash; karta, öppettider, recensioner, bilder. Gratis att hantera via business.google.com.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">OpenStreetMap vs Google Maps</p>
+        <p class="text-gray-400">OpenStreetMap är en fri karttjänst (som Wikipedia fast för kartor). Google Maps är Googles egen. För AI-synlighet är det Google Maps som raknas &mdash; Google söker specifikt efter sin egen karta som platssignal.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Semantisk HTML</p>
+        <p class="text-gray-400">Att använda rätt HTML-taggar för rätt innehåll (&lt;article&gt;, &lt;nav&gt;, &lt;main&gt;). Hjälper AI första sidstruktur.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Metabeskrivning</p>
+        <p class="text-gray-400">Kort text (150&ndash;160 tecken) under rubriken i sökresultat. AI läser den för att första sidans innehåll snabbt.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Bimodal fördelning (recensioner)</p>
+        <p class="text-gray-400">När betyg är klustrade vid både toppen (5/5) och botten (1/5) men fa mittemellan. AI tolkar detta som "osaker tjänstekvalitet" och undviker att rekommendera företaget.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <p class="text-center text-gray-400 text-xs pb-8">Genererad av analyze.pipod.net &middot; Rapport-ID: röranalys-20260426 &middot; Data hamtad 2026-04-26</p>
+</div>
+
+</body>
+</html>

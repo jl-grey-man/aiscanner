@@ -22,7 +22,7 @@ export function SearchChanged() {
       <div className="changed-inner">
         <R>
           <h2 className="section-h2">
-            Sökning håller på<br/>att förändras
+            Websökning har<br/>förändrats
           </h2>
         </R>
         <R delay={1}>
@@ -31,6 +31,28 @@ export function SearchChanged() {
             Nu ger AI ett direkt svar — och väljer själv vem den rekommenderar.
           </p>
         </R>
+
+        {/* Stats — BIG numbers */}
+        <div className="stats-row">
+          <R>
+            <div className="stat-item">
+              <span className="stat-num"><AnimNum value="64" suffix="%" /></span>
+              <span className="stat-label">av Google-sökningar visar nu ett AI-svar högst upp</span>
+            </div>
+          </R>
+          <R delay={1}>
+            <div className="stat-item">
+              <span className="stat-num">1–2</span>
+              <span className="stat-label">företag i ett typiskt AI-svar. Resten ignoreras.</span>
+            </div>
+          </R>
+          <R delay={2}>
+            <div className="stat-item">
+              <span className="stat-num"><AnimNum value="47" suffix="%" /></span>
+              <span className="stat-label">av unga vuxna söker via AI före Google</span>
+            </div>
+          </R>
+        </div>
 
         {/* The visual comparison */}
         <div className="compare-stage">
@@ -73,27 +95,6 @@ export function SearchChanged() {
           </div>
         </div>
 
-        {/* Stats — BIG numbers */}
-        <div className="stats-row">
-          <R>
-            <div className="stat-item">
-              <span className="stat-num"><AnimNum value="64" suffix="%" /></span>
-              <span className="stat-label">av Google-sökningar visar nu ett AI-svar högst upp</span>
-            </div>
-          </R>
-          <R delay={1}>
-            <div className="stat-item">
-              <span className="stat-num">1–2</span>
-              <span className="stat-label">företag i ett typiskt AI-svar. Resten ignoreras.</span>
-            </div>
-          </R>
-          <R delay={2}>
-            <div className="stat-item">
-              <span className="stat-num"><AnimNum value="47" suffix="%" /></span>
-              <span className="stat-label">av unga vuxna söker via AI före Google</span>
-            </div>
-          </R>
-        </div>
       </div>
     </section>
   )

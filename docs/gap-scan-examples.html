@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gap-analys: Nya kontroller — AI Search Scanner</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f9fafb; color: #111827; font-family: 'Inter', system-ui, sans-serif; }
+  .badge-good { background: #dcfce7; color: #166534; font-size: 0.75rem; padding: 2px 10px; border-radius: 9999px; font-weight: 600; }
+  .badge-warn { background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 2px 10px; border-radius: 9999px; font-weight: 600; }
+  .badge-bad  { background: #fee2e2; color: #991b1b; font-size: 0.75rem; padding: 2px 10px; border-radius: 9999px; font-weight: 600; }
+  .badge-na   { background: #f3f4f6; color: #6b7280; font-size: 0.75rem; padding: 2px 10px; border-radius: 9999px; font-weight: 600; }
+  .section-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .code-block { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; overflow-x: auto; white-space: pre; }
+  .report-quote { border-left: 3px solid #f59e0b; background: #fffbeb; padding: 16px 20px; border-radius: 0 8px 8px 0; }
+  .priority-1 { border-left: 4px solid #ef4444; }
+  .priority-2 { border-left: 4px solid #f59e0b; }
+  .priority-3 { border-left: 4px solid #3b82f6; }
+  @media print { body { background: #fff; } .section-card { box-shadow: none; } }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+  <!-- HEADER -->
+  <div class="flex items-center gap-3 mb-2">
+    <span class="text-gray-500 text-sm">analyze.pipod.net</span>
+    <span class="text-gray-400">/</span>
+    <span class="text-gray-600 text-sm">gap-analys</span>
+  </div>
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-1">Gap-analys: Nya kontroller</h1>
+    <p class="text-gray-500 text-sm">Utökade AI-synlighetskontroller · Testade mot 3 svenska sajter · 2026-04-27</p>
+    <p class="text-gray-400 text-xs mt-1">bjurfors.se · tvakanten.se · roranalys.se</p>
+  </div>
+
+  <!-- INTRO -->
+  <div class="section-card p-6 mb-8">
+    <h2 class="text-lg font-bold text-gray-900 mb-3">Om detta dokument</h2>
+    <p class="text-gray-600 text-sm mb-3">
+      Detta dokument visar resultat från 8 nya kontroller (A–H) som kompletterar den befintliga AI-scannern.
+      Varje kontroll har testats mot tre riktiga svenska företagssajter. Resultaten visar konkreta brister
+      och hur de skulle presenteras i en premiumrapport.
+    </p>
+    <div class="flex flex-wrap gap-2 text-xs">
+      <a href="#a" class="text-blue-600 hover:underline">A. Crawler-blockering</a>
+      <a href="#b" class="text-blue-600 hover:underline">B. FAQ-schema</a>
+      <a href="#c" class="text-blue-600 hover:underline">C. Service/Product-schema</a>
+      <a href="#d" class="text-blue-600 hover:underline">D. Open Graph</a>
+      <a href="#e" class="text-blue-600 hover:underline">E. Social media &amp; sameAs</a>
+      <a href="#f" class="text-blue-600 hover:underline">F. Innehållsdjup</a>
+      <a href="#g" class="text-blue-600 hover:underline">G. hreflang</a>
+      <a href="#h" class="text-blue-600 hover:underline">H. E-A-T-signaler</a>
+      <a href="#prio" class="text-blue-600 hover:underline font-semibold">Prioritering</a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL A: AI-crawler-blockering -->
+  <!-- ============================================================ -->
+  <div id="a" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">A</span>
+      <h2 class="text-lg font-bold text-gray-900">AI-crawler-blockering i robots.txt</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      Kontrollerar om sajten blockerar AI-crawlers (GPTBot, CCBot, ClaudeBot m.fl.) i sin robots.txt.
+      Om dessa crawlers blockeras kan inte ChatGPT, Claude eller Perplexity läsa sajten —
+      oavsett hur bra övrig SEO är. Många CMS-teman och säkerhetsplugins lägger till
+      blockering som standard utan att webbplatsägaren vet om det.
+    </p>
+
+    <!-- Resultat-tabell -->
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Sajt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">robots.txt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">AI-crawlers blockerade</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">bjurfors.se</td>
+            <td class="py-2 text-gray-600">3 riktade Disallow + Allow: /</td>
+            <td class="py-2 text-gray-600">Inga — inga AI-agenter blockeras</td>
+            <td class="py-2"><span class="badge-good">OK</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">tvakanten.se</td>
+            <td class="py-2 text-gray-600">Bara /wp-admin/ blockerad</td>
+            <td class="py-2 text-gray-600">Inga — standard WordPress-regler</td>
+            <td class="py-2"><span class="badge-good">OK</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">roranalys.se</td>
+            <td class="py-2 text-gray-600">Tomt — inga Disallow-regler</td>
+            <td class="py-2 text-gray-600">Inga — helt öppet</td>
+            <td class="py-2"><span class="badge-good">OK</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-gray-500 text-xs mb-4">
+      <strong>Notering:</strong> Alla tre sajter är öppna för AI-crawlers. Detta är ovanligt positivt —
+      många större sajter blockerar GPTBot och CCBot. Kontrollen ger mest värde när vi hittar blockering.
+    </p>
+
+    <!-- Exempeltext för rapport -->
+    <div class="report-quote">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (om blockering hittats):</p>
+      <p class="text-sm text-gray-700">
+        «Er robots.txt blockerar <strong>GPTBot</strong> och <strong>CCBot</strong>. Det innebär att ChatGPT
+        och Common Crawl (som tränar de flesta AI-modeller) inte kan läsa er webbplats. Oavsett hur bra er
+        övriga SEO är — er sajt är osynlig för dessa AI-system. Ändringen tar 5 minuter:
+        ta bort eller begränsa Disallow-regeln för dessa crawlers.»
+      </p>
+    </div>
+
+    <div class="mt-4">
+      <p class="text-xs font-semibold text-gray-500 mb-2">Exempel: robots.txt som blockerar AI-crawlers</p>
+      <div class="code-block">User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL B: FAQ-schema -->
+  <!-- ============================================================ -->
+  <div id="b" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">B</span>
+      <h2 class="text-lg font-bold text-gray-900">FAQ-schema och FAQ-innehåll</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      Kontrollerar om sajten har FAQ-innehåll och om det är markerat med FAQPage JSON-LD.
+      Frågor och svar är exakt det format som AI-sökmotorer föredrar —
+      en tydlig fråga med ett tydligt svar. Med FAQPage-schema får AI:n strukturerad data
+      att citera, och Google kan visa FAQ-snippets direkt i sökresultaten.
+    </p>
+
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Sajt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">FAQ-innehåll</th>
+            <th class="text-left py-2 text-gray-500 font-medium">FAQPage-schema</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">bjurfors.se</td>
+            <td class="py-2 text-gray-600">Ja — omfattande FAQ-sida (/sv/faq/) med 8+ kategorier</td>
+            <td class="py-2 text-gray-600">Nej — inget FAQPage JSON-LD</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">tvakanten.se</td>
+            <td class="py-2 text-gray-600">Nej — inga frågor-svar-sektioner</td>
+            <td class="py-2 text-gray-600">Nej</td>
+            <td class="py-2"><span class="badge-bad">Saknas</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">roranalys.se</td>
+            <td class="py-2 text-gray-600">Ja — 4 frågor på startsidan (relining, stamspolning m.m.)</td>
+            <td class="py-2 text-gray-600">Nej — inget FAQPage JSON-LD</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-quote mb-4">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (bjurfors.se):</p>
+      <p class="text-sm text-gray-700">
+        «Ni har en <strong>utmärkt FAQ-sida</strong> med frågor om köp, försäljning,
+        budgivning och undersökningsplikt. Men den saknar <strong>FAQPage-schema</strong>. Det betyder att AI-motorer
+        ser er FAQ som vanlig text istället för strukturerade frågor-svar som de kan citera direkt.
+        När någon frågar ChatGPT ”vad är undersökningsplikt vid bostadköp?”
+        hade Bjurfors kunnat vara källan — men utan schema går AI:n till konkurrenter som har det.
+        Lösningen är att lägga till JSON-LD på FAQ-sidan:»
+      </p>
+    </div>
+
+    <div>
+      <p class="text-xs font-semibold text-gray-500 mb-2">Exempel: FAQPage JSON-LD för bjurfors.se</p>
+      <div class="code-block">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Vad är undersökningsplikt vid bostadsköp?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Undersökningsplikt innebär att köparen ansvarar för att undersöka bostaden noggrant innan köp. Dolda fel kan reklameras i upp till 10 år för hus och 2 år för bostadsrätter."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Hur fungerar budgivning?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Budgivning är öppen som standard. Säljaren är inte bunden att acceptera högsta bud. Bud är inte juridiskt bindande förrän kontrakt är signerat."
+      }
+    }
+  ]
+}</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL C: Service/Product/Menu-schema -->
+  <!-- ============================================================ -->
+  <div id="c" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">C</span>
+      <h2 class="text-lg font-bold text-gray-900">Service/Product/Menu-schema</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      Kontrollerar om tjänster, produkter eller menyer är markerade med schema.org-typer som
+      <code class="text-xs bg-gray-100 px-1 rounded">Service</code>,
+      <code class="text-xs bg-gray-100 px-1 rounded">Product</code>,
+      <code class="text-xs bg-gray-100 px-1 rounded">Menu</code> eller
+      <code class="text-xs bg-gray-100 px-1 rounded">Offer</code>.
+      När AI-motorer söker efter ”relining Stockholm pris” eller ”restaurang Göteborg meny”
+      använder de strukturerad data för att hitta relevanta svar. Utan schema måste AI:n gässa
+      vad sajten erbjuder.
+    </p>
+
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Sajt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Schema-typer hittade</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Service/Product/Menu</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">bjurfors.se</td>
+            <td class="py-2 text-gray-600">Inga JSON-LD-scheman alls</td>
+            <td class="py-2 text-gray-600">Nej</td>
+            <td class="py-2"><span class="badge-bad">Saknas</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">tvakanten.se</td>
+            <td class="py-2 text-gray-600">Organization, BreadcrumbList, WebPage, WebSite</td>
+            <td class="py-2 text-gray-600">Nej — ingen Menu/Restaurant-schema trots restaurangsajt</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">roranalys.se</td>
+            <td class="py-2 text-gray-600">Plumber (LocalBusiness-subtyp)</td>
+            <td class="py-2 text-gray-600">Nej — inga Service-scheman för relining/stamspolning</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-quote mb-4">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (tvakanten.se):</p>
+      <p class="text-sm text-gray-700">
+        «Tvåkanten har en menysida, men menyn är <strong>enbart tillgänglig som PDF-filer</strong>.
+        AI-sökmotorer kan inte läsa PDF:er på samma sätt som HTML. Dessutom saknas
+        <strong>Restaurant-schema</strong> och <strong>Menu-schema</strong> helt. När någon frågar
+        Perplexity ”restauranger på Avenyn i Göteborg” kan AI:n inte veta att Tvåkanten
+        serverar svensk mat med lokala råvaror, att ni har lunch tisdag–fredag, eller vad det kostar.
+        Konkurrenter med Restaurant- och Menu-schema får förtur.»
+      </p>
+    </div>
+
+    <div>
+      <p class="text-xs font-semibold text-gray-500 mb-2">Exempel: Restaurant + Menu-schema för tvakanten.se</p>
+      <div class="code-block">{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "Tvåkanten",
+  "servesCuisine": "Svensk",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Kungsportsavenyn 27",
+    "addressLocality": "Göteborg"
+  },
+  "telephone": "+46313133336",
+  "hasMenu": {
+    "@type": "Menu",
+    "name": "Lunchmeny",
+    "hasMenuSection": {
+      "@type": "MenuSection",
+      "name": "Veckans lunch",
+      "hasMenuItem": {
+        "@type": "MenuItem",
+        "name": "Exempelrätt",
+        "offers": {
+          "@type": "Offer",
+          "price": "165",
+          "priceCurrency": "SEK"
+        }
+      }
+    }
+  }
+}</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL D: Open Graph-taggar -->
+  <!-- ============================================================ -->
+  <div id="d" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">D</span>
+      <h2 class="text-lg font-bold text-gray-900">Open Graph-taggar</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      Open Graph-taggar styr hur sajten visas när den delas på sociala medier, i Slack, Teams och
+      även i AI-genererade svar. Utan <code class="text-xs bg-gray-100 px-1 rounded">og:image</code>
+      blir delningen en trist textlänk. Utan <code class="text-xs bg-gray-100 px-1 rounded">og:description</code>
+      väljer plattformen själv vilken text den visar — ofta fel.
+    </p>
+
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Sajt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">og:title</th>
+            <th class="text-left py-2 text-gray-500 font-medium">og:description</th>
+            <th class="text-left py-2 text-gray-500 font-medium">og:image</th>
+            <th class="text-left py-2 text-gray-500 font-medium">twitter:card</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">bjurfors.se</td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Saknas</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">tvakanten.se</td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Saknas</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">roranalys.se</td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Saknas</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <p class="text-sm text-red-800">
+        <strong>Alla tre sajter saknar Open Graph-taggar helt.</strong> Detta är en av de vanligaste bristerna
+        bland svenska småföretag. Det tar 5 minuter att åtgärda och påverkar hur sajten
+        presenteras överallt — från Facebook-delningar till AI-citeringar.
+      </p>
+    </div>
+
+    <div class="report-quote mb-4">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (bjurfors.se):</p>
+      <p class="text-sm text-gray-700">
+        «Er startsida saknar <strong>alla Open Graph-taggar</strong>. När någon delar bjurfors.se
+        på Facebook, LinkedIn eller i en chatt visas ingen bild, ingen beskrivning — bara en URL.
+        För ett av Sveriges största mäklarföretag är detta en missad möjlighet vid varje
+        delning. Lägg till dessa 4 rader i ert <code>&lt;head&gt;</code>-element:»
+      </p>
+    </div>
+
+    <div>
+      <p class="text-xs font-semibold text-gray-500 mb-2">Exempel: Open Graph-taggar</p>
+      <div class="code-block">&lt;meta property="og:title" content="Bjurfors — Sveriges största privata mäklarkedja" /&gt;
+&lt;meta property="og:description" content="Sälj eller köp bostad med Bjurfors. 90 kontor, 600 mäklare." /&gt;
+&lt;meta property="og:image" content="https://www.bjurfors.se/images/og-hero.jpg" /&gt;
+&lt;meta property="og:type" content="website" /&gt;
+&lt;meta name="twitter:card" content="summary_large_image" /&gt;</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL E: Social media & sameAs -->
+  <!-- ============================================================ -->
+  <div id="e" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">E</span>
+      <h2 class="text-lg font-bold text-gray-900">Social media-närvaro och sameAs</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      <code class="text-xs bg-gray-100 px-1 rounded">sameAs</code> i JSON-LD kopplar ihop sajten med
+      företagets sociala profiler. Det hjälper Google och AI-motorer att förstå att
+      ”Tvåkanten på Instagram” och ”tvakanten.se” är samma företag.
+      Utan sameAs måste AI:n gässa — och den kan gässa fel.
+    </p>
+
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Sajt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Sociala länkar</th>
+            <th class="text-left py-2 text-gray-500 font-medium">sameAs i JSON-LD</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">bjurfors.se</td>
+            <td class="py-2 text-gray-600">Facebook, LinkedIn, Instagram, Pinterest</td>
+            <td class="py-2 text-gray-600">Nej — inga JSON-LD-scheman alls</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">tvakanten.se</td>
+            <td class="py-2 text-gray-600">Instagram</td>
+            <td class="py-2 text-gray-600">Ja — Instagram i sameAs</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">roranalys.se</td>
+            <td class="py-2 text-gray-600">Inga sociala länkar</td>
+            <td class="py-2 text-gray-600">Nej — ingen sameAs</td>
+            <td class="py-2"><span class="badge-bad">Saknas</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-quote">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (roranalys.se):</p>
+      <p class="text-sm text-gray-700">
+        «Svensk Röranalys har <strong>inga sociala medier-länkar</strong> på sajten och
+        ingen <code>sameAs</code>-koppling i sitt schema. För AI-motorer innebär detta att företaget
+        bara existerar på en enda plats på internet. Företag med verifierad närvaro på
+        flera plattformar får högre förtroende-poäng hos både Google och AI-sökmotorer.
+        Skapa åtminstone en Google Företagsprofil och lägg till URL:en i er schema.»
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL F: Innehållsdjup -->
+  <!-- ============================================================ -->
+  <div id="f" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">F</span>
+      <h2 class="text-lg font-bold text-gray-900">Innehållsdjup (sitemap-analys)</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      AI-sökmotorer värderar sajter med djupt, informativt innehåll. En blogg, kunskapsbank
+      eller guide-sektion signalerar expertis. Sitemap-analysen visar hur många sidor sajten har och
+      om det finns utbildande innehåll utöver rena tjänste-/produktsidor.
+    </p>
+
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Sajt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Totalt URL:er</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Blogg/guide-sidor</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Innehållstyper</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">bjurfors.se</td>
+            <td class="py-2 text-gray-600">~527</td>
+            <td class="py-2 text-gray-600">~21 artiklar/blogg</td>
+            <td class="py-2 text-gray-600">Bostadsannonser (81%), artiklar, FAQ</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">tvakanten.se</td>
+            <td class="py-2 text-gray-600">20</td>
+            <td class="py-2 text-gray-600">0</td>
+            <td class="py-2 text-gray-600">Meny, catering, bokning, om oss</td>
+            <td class="py-2"><span class="badge-bad">Lågt</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">roranalys.se</td>
+            <td class="py-2 text-gray-600">21</td>
+            <td class="py-2 text-gray-600">6 bloggartiklar</td>
+            <td class="py-2 text-gray-600">Tjänster (7), blogg (6), info</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-quote">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (tvakanten.se):</p>
+      <p class="text-sm text-gray-700">
+        «Er sajt har <strong>bara 20 sidor totalt</strong> och <strong>inget redaktionellt innehåll</strong>
+        — ingen blogg, inga guider, inga tips. För AI-sökmotorer betyder det att Tvåkanten
+        inte har något att citera när någon frågar ”bästa restauranger
+        Avenyn Göteborg”. Konkurrenter med artiklar om sin mat, sina producenter eller
+        Göteborgs matkultur får utrymme som ni går miste om. En enkel insats: publicera
+        2–3 artiklar i månaden om era råvaror, säsongsmenyer eller event.»
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL G: hreflang-taggar -->
+  <!-- ============================================================ -->
+  <div id="g" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">G</span>
+      <h2 class="text-lg font-bold text-gray-900">hreflang-taggar (flerspråkighet)</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      hreflang-taggar talar om för sökmotorer och AI att sajten finns på flera språk.
+      Utan dessa kan Google visa fel språkversion för användaren, och AI-motorer vet inte
+      att innehållet finns på t.ex. engelska. För sajter som bara är på svenska
+      är hreflang inte kritiskt, men för flerspråkiga sajter är det avgörande.
+    </p>
+
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Sajt</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Flerspråkig?</th>
+            <th class="text-left py-2 text-gray-500 font-medium">hreflang-taggar</th>
+            <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">bjurfors.se</td>
+            <td class="py-2 text-gray-600">Ja — svenska, engelska, spanska (Spanien-fastigheter)</td>
+            <td class="py-2 text-gray-600">Nej — saknas trots 3 språk i sitemap</td>
+            <td class="py-2"><span class="badge-bad">Saknas</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">tvakanten.se</td>
+            <td class="py-2 text-gray-600">Delvis — engelska undersidor (/book-a-table/, /about/)</td>
+            <td class="py-2 text-gray-600">Nej</td>
+            <td class="py-2"><span class="badge-warn">Delvis</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">roranalys.se</td>
+            <td class="py-2 text-gray-600">Nej — enbart svenska</td>
+            <td class="py-2 text-gray-600">Ej relevant</td>
+            <td class="py-2"><span class="badge-na">N/A</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-quote">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (bjurfors.se):</p>
+      <p class="text-sm text-gray-700">
+        «Bjurfors har innehåll på <strong>tre språk</strong> (svenska, engelska, spanska)
+        men saknar <strong>hreflang-taggar</strong> helt. Det innebär att Google kan visa den spanska
+        versionen för en svensk användare, eller den svenska för en engelsktalande köpare.
+        För Spanien-fastigheterna är detta särskilt allvarligt — internationella köpare
+        möts av fel språk. Lägg till hreflang i <code>&lt;head&gt;</code> på varje sida:»
+      </p>
+    </div>
+
+    <div>
+      <p class="text-xs font-semibold text-gray-500 mb-2">Exempel: hreflang för bjurfors.se</p>
+      <div class="code-block">&lt;link rel="alternate" hreflang="sv" href="https://www.bjurfors.se/sv/" /&gt;
+&lt;link rel="alternate" hreflang="en" href="https://www.bjurfors.se/en/" /&gt;
+&lt;link rel="alternate" hreflang="es" href="https://www.bjurfors.se/es/" /&gt;
+&lt;link rel="alternate" hreflang="x-default" href="https://www.bjurfors.se/sv/" /&gt;</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KONTROLL H: E-A-T-signaler -->
+  <!-- ============================================================ -->
+  <div id="h" class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xs font-mono text-gray-400">H</span>
+      <h2 class="text-lg font-bold text-gray-900">E-A-T-signaler (Expertise, Authoritativeness, Trust)</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4">
+      Google och AI-motorer bedömer företroende genom synliga signaler: organisationsnummer, certifieringar,
+      namngivna personer med titlar, och en trovärdig om-sida. Företag som visar vem de är och vilka
+      kvalifikationer de har rankas högre i både traditionell sökning och AI-svar.
+    </p>
+
+    <div class="overflow-x-auto mb-5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-2 text-gray-500 font-medium">Signal</th>
+            <th class="text-left py-2 text-gray-500 font-medium">bjurfors.se</th>
+            <th class="text-left py-2 text-gray-500 font-medium">tvakanten.se</th>
+            <th class="text-left py-2 text-gray-500 font-medium">roranalys.se</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">Org.nummer synligt</td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">Certifieringar</td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-good">Ja — ISO 14001, ISO 9001</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">Namngivna personer</td>
+            <td class="py-2"><span class="badge-good">Ja — Mats Ljung, Ola Lundqvist (ägare)</span></td>
+            <td class="py-2"><span class="badge-warn">Delvis — Mikael Hanwik (förnamn utan titel)</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 font-medium">Om-sida med teaminfo</td>
+            <td class="py-2"><span class="badge-good">Ja — historia sedan 1965, 600 anställda</span></td>
+            <td class="py-2"><span class="badge-warn">Delvis — kort beskrivning, sedan 1986</span></td>
+            <td class="py-2"><span class="badge-warn">Delvis — koncernstruktur, ingen personal</span></td>
+          </tr>
+          <tr>
+            <td class="py-2 font-medium">Person-schema</td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+            <td class="py-2"><span class="badge-bad">Nej</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-quote">
+      <p class="text-sm font-semibold text-amber-800 mb-2">Exempeltext i premiumrapport (roranalys.se):</p>
+      <p class="text-sm text-gray-700">
+        «Svensk Röranalys är <strong>ISO 14001- och ISO 9001-certifierade</strong> — det är
+        starka förtroende-signaler. Men certifieringarna nämns bara på om-sidan, inte i någon
+        strukturerad data. Lägg till certifieringarna i ert <code>Plumber</code>-schema med
+        <code>hasCredential</code> så att AI-motorer kan verifiera och citera dem. Dessutom saknas
+        <strong>organisationsnummer</strong> och <strong>namngivna personer</strong> helt. För ett
+        VVS-företag med jourtjänst är förtroende avgörande — kunder vill veta
+        vem som kommer till deras hem. Visa era tekniker med namn och certifieringar.»
+      </p>
+    </div>
+
+    <div>
+      <p class="text-xs font-semibold text-gray-500 mb-2">Exempel: Certifieringar i schema för roranalys.se</p>
+      <div class="code-block">{
+  "@context": "https://schema.org",
+  "@type": "Plumber",
+  "name": "Svensk Röranalys",
+  "hasCredential": [
+    {
+      "@type": "EducationalOccupationalCredential",
+      "credentialCategory": "Certifiering",
+      "name": "ISO 14001:2015 — Miljöledning",
+      "validFrom": "2025-11-15",
+      "validUntil": "2028-11-14"
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      "credentialCategory": "Certifiering",
+      "name": "ISO 9001:2015 — Kvalitetsledning",
+      "validFrom": "2025-11-15",
+      "validUntil": "2028-11-14"
+    }
+  ]
+}</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- PRIORITERING -->
+  <!-- ============================================================ -->
+  <div id="prio" class="section-card p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-5">Prioritering: Vilka 3 kontroller ger mest värde?</h2>
+    <p class="text-gray-600 text-sm mb-6">
+      Baserat på skanningen av tre riktiga svenska företagssajter — vilka kontroller avslöjar
+      de mest handlingsbara bristerna och ger störst mervärde i en premiumrapport?
+    </p>
+
+    <div class="space-y-4">
+      <!-- Prio 1 -->
+      <div class="priority-1 bg-white rounded-r-lg p-5">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">PRIO 1</span>
+          <h3 class="font-bold text-gray-900">D. Open Graph-taggar</h3>
+        </div>
+        <p class="text-gray-600 text-sm mb-2">
+          <strong>Alla tre sajter saknade OG-taggar helt.</strong> Detta är den vanligaste bristen
+          vi hittade och den enklaste att åtgärda (4 rader HTML). Påverkar varje gång
+          sajten delas på sociala medier, i Slack, eller citeras av AI. Extremt hög
+          träffsäkerhet — nästan alla småföretag saknar detta.
+        </p>
+        <p class="text-xs text-gray-400">Implementering: Enkel — kräver bara HTML-parsing av &lt;meta&gt;-taggar</p>
+      </div>
+
+      <!-- Prio 2 -->
+      <div class="priority-2 bg-white rounded-r-lg p-5">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">PRIO 2</span>
+          <h3 class="font-bold text-gray-900">B. FAQ-schema</h3>
+        </div>
+        <p class="text-gray-600 text-sm mb-2">
+          <strong>Två av tre sajter hade FAQ-innehåll utan FAQPage-schema.</strong> Detta är
+          ett kraftfullt fynd i rapporten — kunden har redan gjort jobbet med att skriva frågor och svar,
+          men får inte kreditering från AI-motorer. Åtgärden är enkel och resultatet
+          mätbart (FAQ-snippets i Google, citeringar i ChatGPT-svar).
+        </p>
+        <p class="text-xs text-gray-400">Implementering: Medel — kräver detektion av FAQ-mönster i HTML + schema-kontroll</p>
+      </div>
+
+      <!-- Prio 3 -->
+      <div class="priority-3 bg-white rounded-r-lg p-5">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">PRIO 3</span>
+          <h3 class="font-bold text-gray-900">H. E-A-T-signaler</h3>
+        </div>
+        <p class="text-gray-600 text-sm mb-2">
+          <strong>Ingen sajt hade organisationsnummer synligt, ingen hade Person-schema.</strong>
+          E-A-T-kontrollen hittar alltid något att förbättra och ger premiumrapporten djup.
+          Certifieringar, namngivna personer och organisationsnummer är saker som kunden kan
+          åtgärda direkt. Särskilt värdefullt för tjänsteföretag (VVS, mäklare,
+          konsulter) där förtroende är affärskritiskt.
+        </p>
+        <p class="text-xs text-gray-400">Implementering: Medel — regex för org.nr + nyckelordsdetection + HTML-analys</p>
+      </div>
+    </div>
+
+    <div class="mt-6 bg-gray-50 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">Övriga kontroller — värde per kontroll</h3>
+      <div class="grid grid-cols-2 gap-3 text-xs text-gray-600">
+        <div><strong>A. Crawler-blockering:</strong> Högt värde när det hittas, men låg träffsäkerhet (0/3 sajter hade blockering)</div>
+        <div><strong>C. Service/Menu-schema:</strong> Bra komplement till LocalBusiness-kontrollen som redan finns</div>
+        <div><strong>E. sameAs:</strong> Viktigt men överlappar delvis med befintlig sociala-medier-kontroll</div>
+        <div><strong>F. Innehållsdjup:</strong> Bra insikt men svårare att åtgärda (”skriv mer”)</div>
+        <div><strong>G. hreflang:</strong> Nischad — relevant bara för flerspråkiga sajter</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="text-center text-gray-400 text-xs py-8 border-t border-gray-200">
+    <p>AI Search Scanner — Gap-analys 2026-04-27</p>
+    <p class="mt-1">Kontroller testade manuellt mot bjurfors.se, tvakanten.se, roranalys.se</p>
+  </div>
+
+</div>
+
+</body>
+</html>

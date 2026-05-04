@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-analysrapport — Röranalys</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; color: #1a1a1a; line-height: 1.6; }
+.container { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
+.header { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; }
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.site-url { color: #6366f1; font-size: 14px; text-decoration: none; }
+.site-url:hover { text-decoration: underline; }
+h1 { font-size: 22px; font-weight: 700; color: #111; margin: 8px 0 4px; }
+.subtitle { color: #6b7280; font-size: 14px; }
+.score-circle { width: 72px; height: 72px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fef3c7; border: 3px solid #f59e0b; flex-shrink: 0; }
+.score-num { font-size: 22px; font-weight: 800; color: #92400e; }
+.score-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #92400e; font-weight: 600; }
+.overall-label { margin-top: 12px; font-size: 14px; color: #374151; }
+.section { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px 28px; margin-bottom: 20px; }
+.section h2 { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.check-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; }
+.check-card.card-ok { border-left: 4px solid #22c55e; background: #f0fdf4; }
+.check-card.card-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
+.check-card.card-bad { border-left: 4px solid #ef4444; background: #fef2f2; }
+.check-card.card-na { border-left: 4px solid #d1d5db; background: #f9fafb; }
+.check-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.check-title { font-size: 13px; font-weight: 600; color: #374151; }
+.badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+.badge-ok { background: #dcfce7; color: #166534; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-bad { background: #fee2e2; color: #991b1b; }
+.badge-na { background: #f3f4f6; color: #6b7280; }
+.check-finding { font-size: 12px; color: #374151; margin-bottom: 6px; }
+.check-fix { font-size: 12px; color: #6b7280; font-style: italic; }
+.check-fix::before { content: "→ "; color: #6366f1; font-style: normal; }
+.check-list { list-style: none; font-size: 11px; color: #4b5563; margin: 6px 0; }
+.check-list li::before { content: "• "; color: #6366f1; }
+code-details summary { font-size: 12px; color: #6366f1; cursor: pointer; margin-top: 8px; }
+.code-details { margin-top: 8px; }
+.code-details summary { font-size: 12px; color: #6366f1; cursor: pointer; list-style: none; }
+.code-details summary:hover { text-decoration: underline; }
+.code-details pre { margin-top: 8px; background: #1e1e2e; color: #cdd6f4; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+.place-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+.place-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.place-address, .place-phone { font-size: 13px; color: #6b7280; margin-bottom: 2px; }
+.place-rating { margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+.stars { color: #f59e0b; font-size: 16px; letter-spacing: 1px; }
+.rating-num { font-size: 16px; font-weight: 700; color: #111; }
+.review-count { font-size: 13px; color: #6b7280; }
+.place-verified { font-size: 12px; font-weight: 600; margin-top: 6px; }
+.place-verified.verified { color: #166534; }
+.place-verified.unverified { color: #92400e; }
+.synthesis { line-height: 1.7; }
+.synthesis h2 { font-size: 18px; font-weight: 700; margin: 24px 0 12px; color: #111; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; }
+.synthesis h3 { font-size: 15px; font-weight: 600; margin: 18px 0 8px; color: #374151; }
+.synthesis p { margin-bottom: 12px; font-size: 14px; }
+.synthesis ul, .synthesis ol { margin: 8px 0 12px 20px; font-size: 14px; }
+.synthesis li { margin-bottom: 4px; }
+.synthesis pre { background: #1e1e2e; color: #cdd6f4; padding: 14px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin: 12px 0; white-space: pre-wrap; word-break: break-all; }
+.synthesis code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+.synthesis pre code { background: none; padding: 0; }
+.synthesis blockquote { border-left: 3px solid #6366f1; padding-left: 14px; color: #6b7280; margin: 12px 0; }
+.meta { font-size: 12px; color: #9ca3af; margin-top: 32px; text-align: center; }
+.data-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.pill { font-size: 11px; background: #f3f4f6; color: #374151; padding: 3px 10px; border-radius: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <a href="https://www.roranalys.se" class="site-url" target="_blank">https://www.roranalys.se</a>
+      <h1>AI-analysrapport — Röranalys</h1>
+      <p class="subtitle">Kritisk situation &middot; 2 godkänt, 1 varning, 6 kritiskt av 10 kontroller</p>
+      <div class="data-pills">
+        <span class="pill">Sidor i sitemap: 22</span>
+        <span class="pill">AI-crawlers blockerade: 0</span>
+        <span class="pill">Sociala länkar: 0</span>
+        <span class="pill">Org.nr synligt: Nej</span>
+      </div>
+    </div>
+    <div class="score-circle">
+      <span class="score-num">25</span>
+      <span class="score-label">poäng</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Tekniska AI-signaler</h2>
+  <div class="check-grid">
+    <div class="check-card card-ok">
+      <div class="check-header"><span class="check-title">AI-crawlers</span><span class="badge badge-ok">OK</span></div>
+      <p class="check-finding">Inga AI-crawlers är blockerade i robots.txt, vilket är bra för AI-synlighet.</p>
+      <p class="check-fix">Ingen åtgärd krävs.</p>
+      <ul class="check-list"><em>Inga blockerade</em></ul>
+    </div>
+    <div class="check-card card-ok">
+      <div class="check-header"><span class="check-title">Open Graph-taggar</span><span class="badge badge-ok">OK</span></div>
+      <p class="check-finding">og:title, og:description och og:image finns.</p>
+      <p class="check-fix">Ingen åtgärd krävs.</p>
+      <em>Inga</em>
+      
+    </div>
+    <div class="check-card card-bad">
+      <div class="check-header"><span class="check-title">Sociala plattformar</span><span class="badge badge-bad">Kritiskt</span></div>
+      <p class="check-finding">Inga sociala länkar hittades.</p>
+      <p class="check-fix">Överväg att lägga till länkar till relevanta sociala medieplattformar för att öka varumärkeskännedomen och engagemanget.</p>
+      <ul class="check-list"><em>Inga hittade</em></ul>
+    </div>
+    <div class="check-card card-na">
+      <div class="check-header"><span class="check-title">Hreflang</span><span class="badge badge-na">Ej aktuellt</span></div>
+      <p class="check-finding">Inga hreflang-taggar hittades, vilket indikerar att webbplatsen troligen bara är på ett språk.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>FAQ & Innehållsdjup</h2>
+  <div class="check-grid">
+    <div class="check-card card-bad">
+      <div class="check-header"><span class="check-title">FAQ-schema</span><span class="badge badge-bad">Kritiskt</span></div>
+      <p class="check-finding">Ingen FAQ-sida eller FAQ-sektion hittades på webbplatsen. Inget FAQPage schema implementerat.</p>
+      <p class="check-fix">Skapa en FAQ-sida eller FAQ-sektion med vanliga frågor och svar relaterade till relining, rörinspektion och stamspolning. Implementera FAQPage schema för att öka synligheten i sökresultaten.</p>
+      <ul class="check-list"><em>Inga frågor hittade</em></ul>
+      <details class="code-details"><summary>Visa kodexempel</summary><pre><code>{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Vad är relining och hur fungerar det?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Relining är en metod för att renovera avloppsrör inifrån utan att behöva gräva upp dem. En ny, starkare rörstruktur skapas inuti det befintliga röret med hjälp av en härdande massa."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Hur vet jag om jag behöver en rörinspektion?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Om du upplever återkommande stopp i avloppet, dålig lukt eller misstänker läckage, är det en bra idé att genomföra en rörinspektion. Vi använder kamerateknik för att undersöka rörens skick."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Vad innebär stamspolning och varför är det viktigt?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Stamspolning innebär att vi rengör avloppsstammarna i fastigheten med högtrycksvatten. Det är viktigt för att förebygga stopp och förlänga livslängden på avloppssystemet."
+    }
+  }]
+}</code></pre></details>
+    </div>
+    <div class="check-card card-warning">
+      <div class="check-header"><span class="check-title">Innehållsdjup</span><span class="badge badge-warning">Varning</span></div>
+      <p class="check-finding">Webbplatsen har ett begränsat antal sidor och saknar en blogg eller guide-sektion. Detta kan påverka synligheten i sökresultaten för sökfraser relaterade till problem och lösningar inom relining, rörinspektion och stamspolning.</p>
+      <p class="check-fix">Skapa en blogg eller guide-sektion med informativa artiklar och guider relaterade till relining, rörinspektion och stamspolning. Öka antalet sidor på webbplatsen genom att skapa mer detaljerade beskrivningar av tjänster och fallstudier.</p>
+    </div>
+    <div class="check-card card-bad">
+      <div class="check-header"><span class="check-title">Service/Produkt-schema</span><span class="badge badge-bad">Kritiskt</span></div>
+      <p class="check-finding">Inga Service eller Product schema hittades på webbplatsen. Detta gör det svårare för sökmotorer att förstå vilka tjänster som erbjuds.</p>
+      <p class="check-fix">Implementera Service schema för varje tjänst som erbjuds (relining, rörinspektion, stamspolning). Detta hjälper sökmotorer att förstå vad företaget erbjuder och kan förbättra synligheten i sökresultaten.</p>
+      <ul class="check-list"><em>Inga</em></ul>
+      <details class="code-details"><summary>Visa kodexempel</summary><pre><code>{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Relining",
+  "description": "Vi erbjuder relining av avloppsrör i Stockholm. En kostnadseffektiv och smidig lösning för att renovera dina rör utan att gräva.",
+  "provider": {
+    "@type": "Organization",
+    "name": "[Företagsnamn]"
+  },
+  "serviceType": "Avloppsrenovering",
+  "areaServed": {
+    "@type": "City",
+    "name": "Stockholm"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Relining",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Relining av avloppsrör",
+          "description": "Relining av avloppsrör med strumpmetoden.",
+          "areaServed": {
+            "@type": "City",
+            "name": "Stockholm"
+          }
+        }
+      }
+    ]
+  }
+}</code></pre></details>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>E-A-T (Trovärdighet & Auktoritet)</h2>
+  <div class="check-grid">
+    <div class="check-card card-bad">
+      <div class="check-header"><span class="check-title">E-A-T-signaler</span><span class="badge badge-bad">Kritiskt</span></div>
+      <p class="check-finding">E-A-T-signalerna är mycket svaga. En 'Om oss'-sida finns, men organisationsnummer, certifieringar och information om experter saknas.</p>
+      <p class="check-fix">Lägg till organisationsnummer synligt på webbplatsen. Inkludera information om relevanta certifieringar för relining, rörinspektion och stamspolning. Skapa person-schema för anställda med expertis inom området och presentera dem på webbplatsen.</p>
+      <ul class="check-list"><li>Om oss-sida</li></ul>
+    </div>
+    <div class="check-card card-bad">
+      <div class="check-header"><span class="check-title">Organisationsnummer</span><span class="badge badge-bad">Kritiskt</span></div>
+      <p class="check-finding">Organisationsnummer saknas.</p>
+    </div>
+    <div class="check-card card-bad">
+      <div class="check-header"><span class="check-title">Certifieringar</span><span class="badge badge-bad">Kritiskt</span></div>
+      <p class="check-finding">Inga certifieringsnyckelord hittades. Detta är problematiskt eftersom det indikerar brist på verifierad kompetens.</p>
+      <p class="check-fix">Lägg till information om relevanta certifieringar, till exempel 'Säker Vatteninstallation', 'Byggkeramikrådets branschregler för våtrum', eller certifieringar specifika för relining-tekniker. Visa logotyper och länka till utfärdande organisationer.</p>
+      <ul class="check-list"><em>Inga</em></ul>
+    </div>
+  </div>
+</div>
+
+
+<div class="section">
+  <h2>Google Business Profile</h2>
+  <div class="place-card">
+    <div class="place-name">Svensk Röranalys</div>
+    <div class="place-address">Fyrverkarbacken 36, 112 60 Stockholm, Sverige</div>
+    <div class="place-phone">08-599 098 00</div>
+    <div class="place-rating">
+      <span class="stars">★★★☆☆</span>
+      <span class="rating-num">3.8</span>
+      <span class="review-count">(24 recensioner)</span>
+    </div>
+    <div class="place-verified verified">Verifierad domänmatchning</div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Prioriterad åtgärdsplan</h2>
+  <div id="synthesis" class="synthesis"></div>
+</div>
+
+<p class="meta">Genererad 2026-04-27 &middot; AI Search Scanner Enhanced &middot; 4 AI-anrop (3× Flash + 1× Pro)</p>
+</div>
+
+<script>
+const raw = "## Prioriterad \u00e5tg\u00e4rdsplan f\u00f6r R\u00f6ranalys\n\nDenna plan \u00e4r utformad f\u00f6r att maximera er synlighet i AI-drivna s\u00f6kmotorer (som Google AI Overviews, Perplexity, ChatGPT) och traditionella s\u00f6kresultat. Prioriteringen baseras p\u00e5 \u00e5tg\u00e4rdernas f\u00f6rv\u00e4ntade effekt i f\u00f6rh\u00e5llande till arbetsinsatsen.\n\n### Kritiskt (\u00e5tg\u00e4rda denna vecka)\n\nDessa \u00e5tg\u00e4rder \u00e4r fundamentala f\u00f6r att AI-system och s\u00f6kmotorer ska kunna f\u00f6rst\u00e5 och lita p\u00e5 er verksamhet. De har h\u00f6gst prioritet.\n\n1.  **Implementera `Service`-schema f\u00f6r era k\u00e4rntj\u00e4nster.**\n    *   **Varf\u00f6r:** Utan detta schema m\u00e5ste AI gissa vilka tj\u00e4nster ni erbjuder. Med schemat talar ni om exakt vad ni g\u00f6r, var ni g\u00f6r det och f\u00f6r vem. Detta \u00e4r avg\u00f6rande f\u00f6r att matchas mot fr\u00e5gor som \"vilka f\u00f6retag g\u00f6r relining i Stockholm?\".\n    *   **\u00c5tg\u00e4rd:** L\u00e4gg till f\u00f6ljande JSON-LD-skript p\u00e5 respektive tj\u00e4nstesida (Relining, R\u00f6rinspektion, Stamspolning). Anpassa `name`, `description` och `itemListElement` f\u00f6r varje specifik tj\u00e4nst.\n\n    **Kodexempel f\u00f6r Relining-sidan:**\n    ```html\n    <script type=\"application/ld+json\">\n    {\n      \"@context\": \"https://schema.org\",\n      \"@type\": \"Service\",\n      \"name\": \"Relining av avloppsr\u00f6r\",\n      \"serviceType\": \"Avloppsrenovering\",\n      \"provider\": {\n        \"@type\": \"Plumber\",\n        \"name\": \"Svensk R\u00f6ranalys\",\n        \"address\": {\n          \"@type\": \"PostalAddress\",\n          \"streetAddress\": \"Fyrverkarbacken 36\",\n          \"addressLocality\": \"Stockholm\",\n          \"postalCode\": \"112 60\",\n          \"addressCountry\": \"SE\"\n        },\n        \"telephone\": \"+46859909800\"\n      },\n      \"areaServed\": {\n        \"@type\": \"City\",\n        \"name\": \"Stockholm\"\n      },\n      \"description\": \"Professionell relining i Stockholm. Vi renoverar dina befintliga avloppsr\u00f6r inifr\u00e5n med moderna metoder, en kostnadseffektiv och st\u00f6rningsfri l\u00f6sning j\u00e4mf\u00f6rt med traditionellt stambyte.\",\n      \"hasOfferCatalog\": {\n        \"@type\": \"OfferCatalog\",\n        \"name\": \"Relining-tj\u00e4nster\",\n        \"itemListElement\": [\n          {\n            \"@type\": \"Offer\",\n            \"itemOffered\": {\n              \"@type\": \"Service\",\n              \"name\": \"Relining med strumpmetoden f\u00f6r villor\"\n            }\n          },\n          {\n            \"@type\": \"Offer\",\n            \"itemOffered\": {\n              \"@type\": \"Service\",\n              \"name\": \"Relining f\u00f6r bostadsr\u00e4ttsf\u00f6reningar\"\n            }\n          }\n        ]\n      }\n    }\n    </script>\n    ```\n\n2.  **St\u00e4rk E-A-T-signaler (Expertis, Auktoritet, Trov\u00e4rdighet).**\n    *   **Varf\u00f6r:** AI-modeller prioriterar k\u00e4llor de kan lita p\u00e5. Saknaden av grundl\u00e4ggande f\u00f6retagsinformation och certifieringar \u00e4r en stor varningsflagga.\n    *   **\u00c5tg\u00e4rd:**\n        *   **Organisationsnummer:** L\u00e4gg till ert organisationsnummer tydligt i sidfoten p\u00e5 *alla* sidor.\n        *   **Kontaktinformation:** Se till att adress och telefonnummer (samma som i GBP) finns i sidfoten.\n        *   **Certifieringar:** Skapa en sektion p\u00e5 \"Om oss\"-sidan eller direkt p\u00e5 startsidan som visar logotyper och namn p\u00e5 relevanta certifieringar (t.ex. S\u00e4ker Vatten, branschspecifika relining-certifikat). Detta \u00e4r en extremt stark trov\u00e4rdighetssignal.\n\n3.  **Optimera Google Business Profile (GBP) Kategorier.**\n    *   **Varf\u00f6r:** De nuvarande kategorierna \u00e4r f\u00f6r generella. R\u00e4tt kategorier hj\u00e4lper Google att f\u00f6rst\u00e5 er nisch och visa er f\u00f6r relevanta lokala s\u00f6kningar.\n    *   **\u00c5tg\u00e4rd:** Logga in p\u00e5 ert [Google Business Profile](https://www.google.com/business/). \u00c4ndra era kategorier.\n        *   **Prim\u00e4r kategori:** `Plumber` (R\u00f6rmokare)\n        *   **Sekund\u00e4ra kategorier:** `Drain cleaning service` (Avloppsrensning), `Sewer contractor` (Avloppsentrepren\u00f6r). Ta bort `point_of_interest` och `establishment`.\n\n### Viktigt (\u00e5tg\u00e4rda denna m\u00e5nad)\n\nDessa \u00e5tg\u00e4rder bygger vidare p\u00e5 grunden och hj\u00e4lper er att f\u00e5nga upp en bredare upps\u00e4ttning s\u00f6kfr\u00e5gor.\n\n1.  **Skapa en FAQ-sida och implementera `FAQPage`-schema.**\n    *   **Varf\u00f6r:** Anv\u00e4ndare st\u00e4ller ofta direkta fr\u00e5gor till s\u00f6kmotorer. En FAQ-sida med korrekt schema kan g\u00f6ra att era svar visas direkt i s\u00f6kresultatet (Rich Snippets) och i AI Overviews.\n    *   **\u00c5tg\u00e4rd:** Skapa en ny sida `/faq` eller en sektion p\u00e5 startsidan med de 3-5 vanligaste fr\u00e5gorna kunderna st\u00e4ller. Anv\u00e4nd kodexemplet fr\u00e5n analysen f\u00f6r att strukturera informationen.\n\n    **Kodexempel att placera p\u00e5 FAQ-sidan:**\n    ```html\n    <script type=\"application/ld+json\">\n    {\n      \"@context\": \"https://schema.org\",\n      \"@type\": \"FAQPage\",\n      \"mainEntity\": [{\n        \"@type\": \"Question\",\n        \"name\": \"Vad \u00e4r relining och hur fungerar det?\",\n        \"acceptedAnswer\": {\n          \"@type\": \"Answer\",\n          \"text\": \"Relining, eller r\u00f6rinfodring, \u00e4r en metod f\u00f6r att renovera avloppsr\u00f6r inifr\u00e5n utan att beh\u00f6va gr\u00e4va upp mark eller riva v\u00e4ggar. Vi skapar ett nytt, sj\u00e4lvb\u00e4rande r\u00f6r inuti det befintliga med hj\u00e4lp av en flexibel strumpa som impregneras med h\u00e4rdplast och sedan h\u00e4rdas p\u00e5 plats.\"\n        }\n      }, {\n        \"@type\": \"Question\",\n        \"name\": \"Hur vet jag om jag beh\u00f6ver en r\u00f6rinspektion?\",\n        \"acceptedAnswer\": {\n          \"@type\": \"Answer\",\n          \"text\": \"Tecken p\u00e5 att du kan beh\u00f6va en r\u00f6rinspektion inkluderar \u00e5terkommande stopp i avloppet, d\u00e5lig lukt, fuktfl\u00e4ckar eller om din fastighet \u00e4r \u00e4ldre \u00e4n 30 \u00e5r. En kamerainspektion ger en tydlig bild av r\u00f6rens skick och eventuella problem.\"\n        }\n      }, {\n        \"@type\": \"Question\",\n        \"name\": \"Vad kostar relining i Stockholm?\",\n        \"acceptedAnswer\": {\n          \"@type\": \"Answer\",\n          \"text\": \"Kostnaden f\u00f6r relining varierar beroende p\u00e5 r\u00f6rens l\u00e4ngd, dimension och skick. Det \u00e4r dock n\u00e4stan alltid ett betydligt billigare alternativ \u00e4n ett traditionellt stambyte. Kontakta oss f\u00f6r en kostnadsfri offert baserad p\u00e5 en r\u00f6rinspektion.\"\n        }\n      }]\n    }\n    </script>\n    ```\n\n2.  **Presentera era experter med `Person`-schema.**\n    *   **Varf\u00f6r:** Att visa vilka som st\u00e5r bakom f\u00f6retaget bygger f\u00f6rtroende. `Person`-schema hj\u00e4lper s\u00f6kmotorer att koppla specifik expertis till ert varum\u00e4rke.\n    *   **\u00c5tg\u00e4rd:** P\u00e5 \"Om oss\"-sidan, presentera nyckelpersoner (VD, certifierade tekniker) med namn, bild och en kort biografi om deras erfarenhet. L\u00e4gg till `Person`-schema f\u00f6r dem.\n\n    **Kodexempel f\u00f6r en person p\u00e5 \"Om oss\"-sidan:**\n    ```html\n    <script type=\"application/ld+json\">\n    {\n      \"@context\": \"https://schema.org\",\n      \"@type\": \"Person\",\n      \"name\": \"Karl Svensson\",\n      \"jobTitle\": \"Certifierad Relining-tekniker\",\n      \"image\": \"https://www.roranalys.se/path/to/karl-svensson.jpg\",\n      \"worksFor\": {\n        \"@type\": \"Plumber\",\n        \"name\": \"Svensk R\u00f6ranalys\"\n      },\n      \"description\": \"Karl har \u00f6ver 15 \u00e5rs erfarenhet av avloppsrenovering och \u00e4r en av v\u00e5ra ledande experter p\u00e5 relining med strumpmetoden.\"\n    }\n    </script>\n    ```\n\n### Bra att ha (n\u00e4sta kvartal)\n\nDessa \u00e5tg\u00e4rder \u00e4r mer l\u00e5ngsiktiga och syftar till att etablera er som en auktoritet inom er nisch.\n\n1.  **Starta en kunskapsbank eller blogg.**\n    *   **Varf\u00f6r:** Analysen visar p\u00e5 ett tunt inneh\u00e5ll. En kunskapsbank positionerar er som experter och f\u00e5ngar upp s\u00f6kningar i ett tidigare skede av kundresan (t.ex. \"varf\u00f6r luktar det avlopp i badrummet?\").\n    *   **\u00c5tg\u00e4rd:** Skapa en sektion `/kunskapsbank`. Skriv artiklar som besvarar vanliga kundproblem. Exempel p\u00e5 titlar:\n        *   \"Relining vs. Stambyte: Vad ska man v\u00e4lja?\"\n        *   \"5 tecken p\u00e5 att det \u00e4r dags f\u00f6r en stamspolning\"\n        *   \"S\u00e5 g\u00e5r en r\u00f6rinspektion med kamera till \u2013 Steg f\u00f6r steg\"\n\n2.  **L\u00e4gg till sociala medier-l\u00e4nkar.**\n    *   **Varf\u00f6r:** \u00c4ven om ni inte \u00e4r aktiva, ger l\u00e4nkar till profiler (t.ex. LinkedIn, Facebook) en extra signal om att f\u00f6retaget \u00e4r legitimt.\n    *   **\u00c5tg\u00e4rd:** Skapa f\u00f6retagsprofiler om de inte finns. L\u00e4gg sedan in ikoner med l\u00e4nkar till era sociala medier i sidfoten.\n\n## Google Business Profile-analys\n\nEr GBP-profil \u00e4r en av era viktigaste tillg\u00e5ngar f\u00f6r lokal AI-s\u00f6k.\n\n*   **Betyg & Recensioner:** **3.8** p\u00e5 **24 recensioner** \u00e4r en svaghet. M\u00e5nga kunder filtrerar bort f\u00f6retag med betyg under 4.0. Antalet recensioner \u00e4r en bra start, men betyget m\u00e5ste upp.\n*   **Svarsfrekvens:** Ok\u00e4nd, men kritisk. Ni m\u00e5ste svara p\u00e5 *alla* recensioner, b\u00e5de positiva och negativa. Ett professionellt svar p\u00e5 en negativ recension kan omv\u00e4nda en potentiell kund.\n*   **Styrkor:** Ni \u00e4r verifierade och har \u00f6ppet dygnet runt, vilket \u00e4r en stark signal f\u00f6r ett servicef\u00f6retag som hanterar akuta problem.\n*   **Svagheter:** Betyget \u00e4r f\u00f6r l\u00e5gt. Kategorierna \u00e4r f\u00f6r generella (se kritisk \u00e5tg\u00e4rd #3).\n\n**Rekommendation:** Starta omedelbart en process f\u00f6r att systematiskt be n\u00f6jda kunder om en recension. Skicka en l\u00e4nk till er GBP-profil efter avslutat jobb. M\u00e5let \u00e4r att n\u00e5 **4.5+ i betyg**.\n\n## Konkurrentanalys\n\nBaserat p\u00e5 bransch (relining/r\u00f6rservice) och ort (Stockholm) \u00e4r era troliga huvudkonkurrenter:\n\n1.  **Swoosh Sverige AB:** En stor nationell akt\u00f6r med stark n\u00e4rvaro i Stockholm.\n2.  **Spoltec AB:** En annan stor och v\u00e4letablerad konkurrent med bred tj\u00e4nsteportf\u00f6lj.\n3.  **Repiper:** En specialist inom just relining, ofta med starkt varum\u00e4rke inom den nischen.\n\n*   **Vad de g\u00f6r b\u00e4ttre:**\n    *   **Inneh\u00e5llsdjup:** De har ofta omfattande kunskapsbanker, guider och fallstudier.\n    *   **E-A-T:** De \u00e4r generellt b\u00e4ttre p\u00e5 att visa upp certifieringar, personal och referensprojekt.\n    *   **Schema:** St\u00f6rre akt\u00f6rer har oftast mer avancerad schema-implementation f\u00f6r tj\u00e4nster, recensioner och artiklar.\n\n*   **Var R\u00f6ranalys kan vinna:**\n    *   **Hyperlokal fokus:** Betona er lokala f\u00f6rankring i Stockholm. Skapa inneh\u00e5ll specifikt f\u00f6r olika stadsdelar eller typer av fastigheter (t.ex. \"Relining f\u00f6r BRF i Vasastan\").\n    *   **Personlig service och f\u00f6rtroende:** Som en mindre akt\u00f6r kan ni framh\u00e4va den personliga kontakten. Genom att implementera `Person`-schema och visa upp era tekniker kan ni bygga ett f\u00f6rtroende som de st\u00f6rre, mer anonyma f\u00f6retagen har sv\u00e5rt att matcha.\n    *   **Agilitet:** Ni kan implementera dessa tekniska och inneh\u00e5llsm\u00e4ssiga f\u00f6rb\u00e4ttringar snabbare \u00e4n en stor organisation. Agera nu.\n\n## Sammanfattning\n\nEr webbplats har en grundl\u00e4ggande teknisk setup som \u00e4r godk\u00e4nd f\u00f6r AI-crawlers, men saknar helt de avg\u00f6rande lager av strukturerad data och trov\u00e4rdighetssignaler (E-A-T) som kr\u00e4vs f\u00f6r att ranka i moderna AI-s\u00f6kningar. Er AI-beredskap \u00e4r f\u00f6r n\u00e4rvarande l\u00e5g.\n\nDe absolut viktigaste n\u00e4sta stegen \u00e4r att omedelbart implementera **`Service`-schema** f\u00f6r att definiera era tj\u00e4nster och kraftigt **st\u00e4rka era E-A-T-signaler** genom att publicera organisationsnummer och certifieringar. Dessa tv\u00e5 \u00e5tg\u00e4rder kommer att ha st\u00f6rst positiv inverkan p\u00e5 er synlighet.";
+document.getElementById('synthesis').innerHTML = marked.parse(raw);
+</script>
+</body>
+</html>

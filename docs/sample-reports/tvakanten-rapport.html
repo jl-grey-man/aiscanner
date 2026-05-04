@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-analysrapport — tvåkanten.se</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f9fafb; color: #111827; font-family: 'Inter', system-ui, sans-serif; }
+  .badge-good { background: #dcfce7; color: #166534; }
+  .badge-warn { background: #fef3c7; color: #92400e; }
+  .badge-bad  { background: #fee2e2; color: #991b1b; }
+  .section-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .premium-badge { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #d97706; color: #78350f; }
+  .priority-critical { border-left: 4px solid #ef4444; }
+  .priority-important { border-left: 4px solid #f59e0b; }
+  .priority-nice { border-left: 4px solid #3b82f6; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  @media print { body { background: #fff; color: #000; } .section-card { border-color: #ccc; box-shadow: none; } }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ==================== SIDHUVUD ==================== -->
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="flex items-center gap-3 mb-2">
+    <span class="text-gray-500 text-sm">analyze.pipod.net</span>
+    <span class="text-gray-400">/</span>
+    <span class="text-gray-600 text-sm">tvåkanten.se</span>
+  </div>
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-1">Restaurang Tvåkanten</h1>
+      <p class="text-gray-500 text-sm">tvåkanten.se &middot; Restaurang &middot; Kungsportsavenyn, Göteborg &middot; Analys 2026-04-26</p>
+    </div>
+    <div class="premium-badge rounded-lg px-4 py-2 text-amber-600 text-sm font-semibold">
+      Fullständig rapport
+    </div>
+  </div>
+
+  <!-- ==================== SAMMANFATTNING ==================== -->
+  <div class="section-card p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-5">Sammanfattning</h2>
+
+    <!-- Poang-översikt -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-lg p-5 text-center">
+        <div class="relative inline-flex items-center justify-center mb-2">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#f59e0b" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="251.2"
+              stroke-dashoffset="104" transform="rotate(-90 45 45)"/>
+          </svg>
+          <span class="absolute text-2xl font-bold text-gray-900">58</span>
+        </div>
+        <p class="text-gray-400 text-xs">Gratisanalys</p>
+      </div>
+      <div class="bg-white rounded-lg p-5 text-center border border-amber-800/40">
+        <div class="relative inline-flex items-center justify-center mb-2">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="45" cy="45" r="40" fill="none" stroke="#10b981" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="251.2"
+              stroke-dashoffset="82" transform="rotate(-90 45 45)"/>
+          </svg>
+          <span class="absolute text-2xl font-bold text-gray-900">68</span>
+        </div>
+        <p class="text-amber-700 text-xs font-medium">Fullständig poäng</p>
+      </div>
+      <div class="bg-white rounded-lg p-5 text-center">
+        <div class="text-4xl font-bold text-gray-900 mb-1">4.2</div>
+        <div class="flex justify-center gap-0.5 mb-1">
+          <span class="text-yellow-700 text-lg">&#9733;&#9733;&#9733;&#9733;</span><span class="text-yellow-700 text-lg">&#9733;</span>
+        </div>
+        <p class="text-gray-400 text-xs">Google (927 recensioner)</p>
+      </div>
+    </div>
+
+    <!-- 3 viktigaste fynden -->
+    <div class="mb-5">
+      <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">De 3 viktigaste fynden</h3>
+      <div class="space-y-2">
+        <div class="flex gap-3 items-start">
+          <span class="text-red-700 mt-0.5 shrink-0">1.</span>
+          <p class="text-gray-600 text-sm"><strong class="text-gray-900">Fel schema-typ.</strong> Er webbplats säger till AI att ni är ett "Organization" (företag i allmänhet) istället för "Restaurant". När någon frågar ChatGPT "basta restaurang på Avenyn" syns ni inte i svaret &mdash; för AI vet inte att ni är en restaurang.</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="text-red-700 mt-0.5 shrink-0">2.</span>
+          <p class="text-gray-600 text-sm"><strong class="text-gray-900">Ingen Google Maps.</strong> AI-motorer ser Google Maps-inbaddning som bevis på att ni är ett riktigt fysiskt ställe. Utan den behandlas ni som "online-företag".</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="text-amber-700 mt-0.5 shrink-0">3.</span>
+          <p class="text-gray-600 text-sm"><strong class="text-gray-900">Namnform skiljer sig.</strong> Webbplatsen säger "Restaurang Tvåkanten", Google säger "Tvåkanten". AI ser detta som en inkonsistens. Latt att fixa &mdash; men det sanker er NAP-poäng.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estimerad förbättring -->
+    <div class="bg-emerald-950/30 border border-emerald-900/40 rounded-lg p-4">
+      <p class="text-emerald-700 font-medium text-sm mb-1">Estimerad förbättring efter åtgärder</p>
+      <p class="text-gray-500 text-sm">Ni har redan en stark grund (llms.txt, bra metabeskrivning, öppettider). Med de tva kritiska fixarna kan poängen ga från <strong class="text-gray-900">68 till uppskattningsvis 80&ndash;85</strong>. Det räcker för att ga forbi Taverna Averna (78) och nara Brasserie Lipp (82).</p>
+    </div>
+  </div>
+
+  <!-- ==================== VAD NI GOR RATT ==================== -->
+  <div class="section-card p-6 mb-8 border-green-900/30">
+    <h2 class="font-semibold text-green-700 mb-4 flex items-center gap-2">
+      <span>&#10003;</span> Vad ni redan gör rätt &mdash; bättre an de flesta
+    </h2>
+    <p class="text-gray-500 text-sm mb-4">Tvåkanten har redan gjort mycket rätt. Har är allt som redan fungerar:</p>
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>llms.txt finns och är korrekt formaterad &mdash; AI vet hur sajten ska lasas</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Robots.txt + Sitemap.xml (19 URL:er)</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Öppettider synliga på sidan och i schema</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Göteborg namns i meta, schema och innehåll</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>NAP-information komplett (namn, adress, telefon)</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Stark H1: "Restaurang Tvåkanten - Svensk Mat på Avenyn i Göteborg"</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Canonical tag på plats</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Schema markup finns (Organization + BreadcrumbList + WebPage)</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>JSON-LD format används korrekt</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>Utmarkt metabeskrivning med stad, kok och tjänster</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>HTTPS med giltigt certifikat</span></div>
+      <div class="flex items-start gap-2 text-gray-600"><span class="text-green-700 mt-0.5">&#10003;</span> <span>927 Google-recensioner &mdash; stark social proof</span></div>
+    </div>
+  </div>
+
+  <!-- ==================== ATGARDSPLAN ==================== -->
+  <div class="section-card p-6 mb-8" id="atgardsplan">
+    <h2 class="text-xl font-bold text-gray-900 mb-2">Åtgärdsplan</h2>
+    <p class="text-gray-400 text-sm mb-5">Sorterad efter prioritet. Ni behöver bara 4 åtgärder &mdash; ni har redan gjort största jobbet.</p>
+
+    <!-- KRITISKT -->
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-3 h-3 bg-red-500 rounded-full shrink-0"></span>
+        <h3 class="text-red-700 font-semibold text-sm uppercase tracking-wide">Kritiskt &mdash; storst effekt</h3>
+      </div>
+      <div class="space-y-2">
+        <a href="#fix-schema" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-critical">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">1. Byt Organization till Restaurant-schema</p>
+              <p class="text-gray-400 text-xs">AI vet inte att ni är en restaurang. Enskilt största förbättringen.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~10 min</span>
+          </div>
+        </a>
+        <a href="#fix-maps" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-critical">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">2. Lägg till Google Maps på kontaktsidan</p>
+              <p class="text-gray-400 text-xs">Bekräftar för AI att ni är en fysisk plats på Avenyn.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~10 min</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- VIKTIGT -->
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-3 h-3 bg-amber-500 rounded-full shrink-0"></span>
+        <h3 class="text-amber-700 font-semibold text-sm uppercase tracking-wide">Viktigt &mdash; höjer poängen ytterligare</h3>
+      </div>
+      <div class="space-y-2">
+        <a href="#fix-nap" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-important">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">3. Synkronisera namnformen med Google</p>
+              <p class="text-gray-400 text-xs">"Restaurang Tvåkanten" vs "Tvåkanten" &mdash; höjer NAP-poäng från 6 till 9.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~5 min</span>
+          </div>
+        </a>
+        <a href="#fix-gbp" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-important">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">4. Optimera GBP-beskrivning med recensionsnyckelord</p>
+              <p class="text-gray-400 text-xs">Era recensioner säger "wallenbergare" och "atmosfar" &mdash; GBP-beskrivningen gör det inte.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~15 min</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- BRA ATT HA -->
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-3 h-3 bg-blue-500 rounded-full shrink-0"></span>
+        <h3 class="text-blue-700 font-semibold text-sm uppercase tracking-wide">Bra att ha &mdash; polering</h3>
+      </div>
+      <div class="space-y-2">
+        <a href="#fix-semantisk" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-nice">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">5. Förbättra semantisk HTML</p>
+              <p class="text-gray-400 text-xs">Använd article/section-taggar för bättre AI-förståelse av sidstrukturen.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~1 h</span>
+          </div>
+        </a>
+        <a href="#fix-hastighet" class="block bg-white rounded-lg p-3 hover:bg-gray-100/80 transition priority-nice">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-900 text-sm font-medium">6. Mat sidhastighet</p>
+              <p class="text-gray-400 text-xs">Kraver manuell mätning &mdash; snabba sidor rankas högre.</p>
+            </div>
+            <span class="text-gray-400 text-xs shrink-0 ml-2">~15 min</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DETALJERADE LOSNINGAR ==================== -->
+  <div class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-6">
+      <span class="text-amber-700">&#9733;</span>
+      <h2 class="text-xl font-bold text-gray-900">Detaljerade losningar</h2>
+      <span class="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">Premium</span>
+    </div>
+
+    <!-- FIX 1: Restaurant-schema -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-schema">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+        <span class="text-red-700 text-xs font-medium uppercase tracking-wide">Kritiskt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">1. Byt Organization till Restaurant-schema</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är schema markup?</p>
+        <p class="text-gray-500 text-sm">Schema markup är en osynlig kodbit som talar om för sökmotorer exakt vad ert företag är. Tänkt som ett digitalt visitkort för maskiner. Ni har redan ett &mdash; men det är av fel typ.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är problemet?</p>
+        <p class="text-gray-500 text-sm">Er nuvarande kod säger <code class="text-yellow-700 bg-gray-50 px-1 rounded">@type: "Organization"</code> &mdash; det är som att skriva "företag" på visitkortet istället för "restaurang". ChatGPT och Perplexity fattar då inte att ni serverar mat. När någon frågar "bra restaurang på Avenyn Göteborg" är ni osynliga i svaret.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har fixar ni det</p>
+        <p class="text-gray-500 text-sm mb-2">Ni använder WordPress med All in One SEO-pluginet (AIOSEO). Så har ändrar ni schema-typen:</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+          <li>Logga in på WordPress-admin (vanligtvis <code class="text-green-700 bg-gray-50 px-1 rounded">tvakanten.se/wp-admin</code>)</li>
+          <li>Ga till <strong class="text-gray-700">All in One SEO &rarr; Search Appearance &rarr; Content Types</strong></li>
+          <li>Under Schema Markup: ändra "Organization" till "Local Business" och sedan valj undertyp "Restaurant"</li>
+          <li>Om AIOSEO inte stödjer Restaurant-typ direkt: lägg till koden nedan manuellt i er <code class="text-green-700 bg-gray-50 px-1 rounded">header.php</code> eller via "Insert Headers and Footers"-plugin</li>
+          <li>Testa på <a href="https://validator.schema.org/" class="text-blue-700 underline">validator.schema.org</a></li>
+        </ol>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Kod att kopiera (ersatter ert nuvarande Organization-schema)</p>
+        <pre class="bg-gray-50 rounded-lg p-4 text-xs text-green-700 overflow-x-auto leading-relaxed">__CODE_BLOCK_3__</pre>
+      </div>
+    </div>
+
+    <!-- FIX 2: Google Maps -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-maps">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+        <span class="text-red-700 text-xs font-medium uppercase tracking-wide">Kritiskt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">2. Lägg till Google Maps på kontaktsidan</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är det?</p>
+        <p class="text-gray-500 text-sm">En inbaddad Google Maps-karta som visar var er restaurang ligger. Det är inte en bild av en karta &mdash; utan en interaktiv widget direkt från Google.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Varför spelar det roll?</p>
+        <p class="text-gray-500 text-sm">Google och AI-motorer ser Google Maps-inbaddning som ett starkt bevis på att ni är ett verkligt fysiskt ställe. Det är en av de signaler som skiljer "riktiga" restauranger från matsidor och bloggar. Utan den behandlas ni som ett online-företag i AIs ogon.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har gör ni &mdash; steg för steg</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside mb-4">
+          <li>Ga till <a href="https://maps.google.com" class="text-blue-700 underline">maps.google.com</a></li>
+          <li>Sok på "Restaurang Tvåkanten"</li>
+          <li>Klicka på <strong class="text-gray-700">Dela</strong> &rarr; <strong class="text-gray-700">Badda in en karta</strong></li>
+          <li>Kopiera iframe-koden</li>
+          <li>I WordPress: redigera er kontaktsida, lägg till ett "Anpassad HTML"-block, klistra in koden</li>
+        </ol>
+        <p class="text-gray-400 text-xs mb-3">Koden ser ut ungefär så har:</p>
+        <pre class="bg-gray-50 rounded-lg p-4 text-xs text-green-700 overflow-x-auto leading-relaxed">__CODE_BLOCK_4__</pre>
+        <p class="text-gray-400 text-xs mt-2">Tips: lägg den precis under er adress och öppettider på kontaktsidan.</p>
+      </div>
+    </div>
+
+    <!-- FIX 3: NAP-namnform -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-nap">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+        <span class="text-amber-700 text-xs font-medium uppercase tracking-wide">Viktigt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">3. Synkronisera namnformen</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är NAP?</p>
+        <p class="text-gray-500 text-sm">NAP star för Name, Address, Phone (namn, adress, telefon). AI-motorer jamfor er information på webbplatsen med Google, Facebook, TripAdvisor osv. Om uppgifterna inte stämmer sanker det er trovärdighetspoäng.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är problemet?</p>
+        <div class="grid grid-cols-2 gap-4 mt-3">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-gray-400 text-xs mb-2 uppercase tracking-wide">Webbplatsen</p>
+            <p class="text-yellow-600 text-sm font-medium">Restaurang Tvåkanten</p>
+            <p class="text-gray-500 text-sm">Kungsportsavenyn 27, Göteborg</p>
+            <p class="text-gray-500 text-sm">+46 31 31 33 36</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-gray-400 text-xs mb-2 uppercase tracking-wide">Google Företagsprofil</p>
+            <p class="text-yellow-600 text-sm font-medium">Tvåkanten</p>
+            <p class="text-gray-500 text-sm">Kungsportsavenyn 27, Göteborg</p>
+            <p class="text-gray-500 text-sm">+46 31 31 33 36</p>
+          </div>
+        </div>
+        <div class="mt-3 bg-yellow-950/30 rounded-lg p-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-gray-600 text-sm">NAP-poäng</span>
+            <span class="text-yellow-700 font-bold">6 / 10</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-2">
+            <div class="bg-yellow-500 h-2 rounded-full" style="width: 60%"></div>
+          </div>
+          <p class="text-gray-400 text-xs mt-2">Adress och telefon matchar. Namn skiljer sig &mdash; latt att fixa.</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har fixar ni det</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+          <li><strong class="text-gray-700">Bestäm ett namn</strong> &mdash; antingen "Restaurang Tvåkanten" eller "Tvåkanten". Var rekommendation: <strong class="text-gray-900">"Restaurang Tvåkanten"</strong> (tydligare för AI att det är en restaurang).</li>
+          <li><strong class="text-gray-700">Uppdatera Google Företagsprofil</strong> &mdash; logga in på <a href="https://business.google.com" class="text-blue-700 underline">business.google.com</a>, ändra namnet till "Restaurang Tvåkanten".</li>
+          <li><strong class="text-gray-700">Kolla aven</strong> Facebook, Instagram, TripAdvisor och Eniro &mdash; samma namn överallt.</li>
+        </ol>
+        <p class="text-gray-400 text-xs mt-3">Efter namnsynken bedomer vi att er NAP-poäng går från 6/10 till 9/10.</p>
+      </div>
+    </div>
+
+    <!-- FIX 4: GBP-beskrivning -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-gbp">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+        <span class="text-amber-700 text-xs font-medium uppercase tracking-wide">Viktigt</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">4. Optimera Google Företagsprofil med recensionsnyckelord</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är Google Företagsprofil (GBP)?</p>
+        <p class="text-gray-500 text-sm">Det är informationen som dyker upp i Google när någon söker på "Tvåkanten Göteborg" &mdash; kartan, öppettider, bilder och recensioner. AI-motorer använder denna information tungt för att avgora vem de ska rekommendera.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Era recensionsnyckelord &mdash; använd dem</p>
+        <p class="text-gray-500 text-sm mb-3">Vi har analyserat era 927 Google-recensioner. De vanligaste positiva nyckelorden är:</p>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">service</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">atmosfar</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">wallenbergare</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">toast skagen</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">personlig</span>
+        </div>
+        <p class="text-gray-500 text-sm">AI-motorer jamfor dessa nyckelord med er GBP-beskrivning. Om beskrivningen inte nämner "wallenbergare" men 200 recensioner gör det &mdash; tappar ni relevanspoäng.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Förslag på ny GBP-beskrivning (kopiera)</p>
+        <div class="bg-gray-50 rounded-lg p-4 text-sm text-green-700">
+          <p>Restaurang Tvåkanten på Avenyn i Göteborg serverar klassisk svensk husmanskost med personlig service sedan 1976. Kända för var wallenbergare, toast skagen och var varma atmosfar. Vi erbjuder aven catering, cocktailkurser och dryckesprovningar för sallskap och företag. Öppet tisdag-lordag.</p>
+        </div>
+        <p class="text-gray-400 text-xs mt-3">Notera: alla fetmarkerade nyckelord från recensionerna är med. AI matchar dessa ord mot frågor som "restaurang med bra service Göteborg" eller "var ater man wallenbergare i Göteborg".</p>
+      </div>
+    </div>
+
+    <!-- FIX 5: Semantisk HTML -->
+    <div class="mb-8 pb-8 border-b border-gray-200" id="fix-semantisk">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+        <span class="text-blue-700 text-xs font-medium uppercase tracking-wide">Bra att ha</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">5. Förbättra semantisk HTML</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Vad är semantisk HTML?</p>
+        <p class="text-gray-500 text-sm">Det innebär att man använder rätt typ av HTML-taggar för rätt typ av innehåll. <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;article&gt;</code> för en artikel, <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;nav&gt;</code> för meny, <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;main&gt;</code> för huvudinnehåll. Hjälper AI första vad varje del av sidan är.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Vad bor ändras?</p>
+        <p class="text-gray-500 text-sm">Be er webbutvecklare att granska WordPress-temat och byta ut generiska <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;div&gt;</code>-taggar mot <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;main&gt;</code>, <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;article&gt;</code> och <code class="text-green-700 bg-gray-50 px-1 rounded">&lt;section&gt;</code> dar det är lampligt. Lagre prioritet då effekten är begransad jamfort med schema-ändringen.</p>
+      </div>
+    </div>
+
+    <!-- FIX 6: Sidhastighet -->
+    <div id="fix-hastighet">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+        <span class="text-blue-700 text-xs font-medium uppercase tracking-wide">Bra att ha</span>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">6. Mat och förbättra sidhastighet</h3>
+
+      <div class="bg-white rounded-lg p-4 mb-4">
+        <p class="text-gray-600 text-sm font-medium mb-1">Varför spelar det roll för AI?</p>
+        <p class="text-gray-500 text-sm">AI-sökmotorer lar sig från Google. Googles algoritm belonar snabba sidor. En sida som laddar på 1 sekund rankas högre an en som tar 5 sekunder.</p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-600 text-sm font-medium mb-2">Så har gör ni</p>
+        <ol class="text-gray-500 text-sm space-y-2 list-decimal list-inside">
+          <li>Ga till <a href="https://pagespeed.web.dev/" class="text-blue-700 underline">pagespeed.web.dev</a></li>
+          <li>Skriv in <code class="text-green-700 bg-gray-50 px-1 rounded">tvakanten.se</code></li>
+          <li>Nota poängen och de föreslagna förbättringarna</li>
+          <li>Vanliga WordPress-optimeringar: cachning-plugin (WP Super Cache), bildoptimering (Smush), lat inläsning av bilder</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PREMIUMANALYS: Recensioner ==================== -->
+  <div class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-5">
+      <span class="text-amber-700">&#9733;</span>
+      <h2 class="text-xl font-bold text-gray-900">Recensionsanalys &mdash; 927 Google-recensioner</h2>
+      <span class="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">Premium</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-500 text-xs mb-3 uppercase tracking-wide font-semibold">Positiva nyckelord (använd dessa i er marknadsföring)</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">service</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">atmosfar</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">wallenbergare</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">toast skagen</span>
+          <span class="bg-green-950/50 text-green-700 px-2.5 py-1 rounded text-xs">personlig</span>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg p-4">
+        <p class="text-gray-500 text-xs mb-3 uppercase tracking-wide font-semibold">Förbättringsområden (från negativa recensioner)</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="bg-red-950/50 text-red-700 px-2.5 py-1 rounded text-xs">vantetid</span>
+          <span class="bg-red-950/50 text-red-700 px-2.5 py-1 rounded text-xs">portionsstorlek</span>
+          <span class="bg-red-950/50 text-red-700 px-2.5 py-1 rounded text-xs">pris/kvalitet</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 mb-4">
+      <p class="text-gray-600 text-sm font-medium mb-2">Hur påverkar detta er AI-synlighet?</p>
+      <p class="text-gray-500 text-sm">AI-motorer läser era recensioner och larer sig vad ni är bra på. När någon frågar "restaurang med bra service i Göteborg" matchar AI nyckelorden "service" i era recensioner mot frågan. Ju fler recensioner som nämner "service", desto starkare signal.</p>
+      <p class="text-gray-500 text-sm mt-2"><strong class="text-gray-700">Rekommendation:</strong> Se till att er webbplats och GBP-beskrivning använder samma ord som era nojda kunder. "Personlig service", "klassisk svensk mat", "varm atmosfar" bor finnas på er startsida.</p>
+    </div>
+
+    <div class="bg-white rounded-lg p-4">
+      <p class="text-gray-600 text-sm font-medium mb-2">Recensionsvolym: 927 &mdash; stark position</p>
+      <p class="text-gray-500 text-sm">927 recensioner är en utmarkt volym. AI ger mycket högre vikt till företag med fler recensioner. Er genomsnittsscore 4.2/5 är bra men inte utstaende. Fokusera på att bemota negativa recensioner &mdash; AI läser era svar ocksa.</p>
+    </div>
+  </div>
+
+  <!-- ==================== PREMIUMANALYS: Konkurrenter ==================== -->
+  <div class="section-card p-6 mb-8">
+    <div class="flex items-center gap-2 mb-5">
+      <span class="text-amber-700">&#9733;</span>
+      <h2 class="text-xl font-bold text-gray-900">Konkurrentanalys &mdash; Avenyn, Göteborg</h2>
+      <span class="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">Premium</span>
+    </div>
+
+    <p class="text-gray-500 text-sm mb-4">Vi har jamfort er AI-synlighet med tre restauranger i samma område. Poängen baseras på samma 23 kontroller.</p>
+
+    <div class="space-y-3 mb-5">
+      <div class="flex items-center gap-3 p-3 bg-white rounded-lg">
+        <div class="text-gray-400 text-sm w-6 text-center font-bold">1</div>
+        <div class="flex-1">
+          <p class="text-gray-900 text-sm font-medium">Brasserie Lipp</p>
+          <p class="text-gray-400 text-xs">Restaurant-schema + Google Maps + konsekvent NAP</p>
+          <div class="w-full bg-gray-100 rounded-full h-2 mt-1.5">
+            <div class="bg-emerald-500 h-2 rounded-full" style="width: 82%"></div>
+          </div>
+        </div>
+        <span class="text-emerald-700 font-bold">82</span>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-white rounded-lg">
+        <div class="text-gray-400 text-sm w-6 text-center font-bold">2</div>
+        <div class="flex-1">
+          <p class="text-gray-900 text-sm font-medium">Taverna Averna</p>
+          <p class="text-gray-400 text-xs">Starkt lokalt schema, Maps-inbaddning</p>
+          <div class="w-full bg-gray-100 rounded-full h-2 mt-1.5">
+            <div class="bg-emerald-500 h-2 rounded-full" style="width: 78%"></div>
+          </div>
+        </div>
+        <span class="text-emerald-700 font-bold">78</span>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-white rounded-lg">
+        <div class="text-gray-400 text-sm w-6 text-center font-bold">3</div>
+        <div class="flex-1">
+          <p class="text-gray-900 text-sm font-medium">Le Pain Francais</p>
+          <p class="text-gray-400 text-xs">Bra llms.txt men svagare recensionsprofil</p>
+          <div class="w-full bg-gray-100 rounded-full h-2 mt-1.5">
+            <div class="bg-yellow-500 h-2 rounded-full" style="width: 75%"></div>
+          </div>
+        </div>
+        <span class="text-yellow-700 font-bold">75</span>
+      </div>
+      <div class="flex items-center gap-3 p-4 bg-blue-950/40 border border-blue-200/50 rounded-lg">
+        <div class="text-blue-700 text-sm w-6 text-center font-bold">&rarr;</div>
+        <div class="flex-1">
+          <p class="text-gray-900 text-sm font-medium">Restaurang Tvåkanten <span class="text-gray-400 font-normal">(ni)</span></p>
+          <p class="text-gray-400 text-xs">Stark bas &mdash; 2 fixes krävs för att ga forbi Taverna Averna</p>
+          <div class="w-full bg-gray-100 rounded-full h-2 mt-1.5">
+            <div class="bg-blue-500 h-2 rounded-full" style="width: 68%"></div>
+          </div>
+        </div>
+        <span class="text-blue-700 font-bold">68</span>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-4">
+      <p class="text-gray-600 text-sm font-medium mb-2">Vad krävs för att ga om?</p>
+      <p class="text-gray-500 text-sm">Ni har redan något ingen av konkurrenterna har: <strong class="text-gray-900">llms.txt</strong>. Det är en stor fördel. Brasserie Lipp leder med 14 poäng, men skillnaden är enkel: de har Restaurant-schema och Google Maps &mdash; tva saker ni kan lägga till på 20 minuter totalt. Med fix 1&ndash;2 bedomer vi att ni landar på <strong class="text-gray-900">80&ndash;85 poäng</strong>.</p>
+    </div>
+  </div>
+
+  <!-- ==================== ALLA KONTROLLER ==================== -->
+  <div class="section-card p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-5">Alla 23 kontroller</h2>
+    <div class="space-y-1 text-sm">
+
+      <!-- Teknisk -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-2 pb-1 font-semibold">Teknisk (6 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">HTTPS / SSL</p><p class="text-gray-400 text-xs">Giltigt certifikat, korrekt redirect.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Robots.txt</p><p class="text-gray-400 text-xs">Standard WordPress robots.txt med Sitemap-referens.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Sitemap.xml</p><p class="text-gray-400 text-xs">Giltig sitemap med 19 URL:er (via AIOSEO).</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">LLMS.TXT</p><p class="text-gray-400 text-xs">Finns och är korrekt formaterad &mdash; genererad av All in One SEO.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Canonical tag</p><p class="text-gray-400 text-xs">Canonical tag finns: https://www.tvåkanten.se/</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-warn px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">~</span>
+        <div>
+          <p class="text-gray-700">Sidhastighet</p>
+          <p class="text-gray-400 text-xs">Kraver manuell mätning via PageSpeed Insights.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-hastighet">Se åtgärd 6 &rarr;</a></p>
+        </div>
+      </div>
+
+      <!-- Lokal synlighet -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-5 pb-1 font-semibold">Lokal synlighet (6 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">NAP-information</p><p class="text-gray-400 text-xs">Namn, adress och telefon finns strukturerat i schema. Namnform behöver synkroniseras med Google.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Telefonnummer synligt</p><p class="text-gray-400 text-xs">+46 31 31 33 36 synlig i text och i JSON-LD.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Stad namns</p><p class="text-gray-400 text-xs">Göteborg namns i meta, schema och innehåll. Utmarkt.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-bad px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">FEL</span>
+        <div>
+          <p class="text-gray-700">Google Maps</p>
+          <p class="text-gray-400 text-xs">Ingen Google Maps-inbaddning på sidan.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-maps">Se åtgärd 2 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-bad px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">FEL</span>
+        <div>
+          <p class="text-gray-700">Restaurant-schema</p>
+          <p class="text-gray-400 text-xs">Har @type: Organization istället för Restaurant. AI vet inte att ni är en restaurang.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-schema">Se åtgärd 1 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Öppettider</p><p class="text-gray-400 text-xs">Finns synliga på sidan och i schema.</p></div>
+      </div>
+
+      <!-- AI-beredskap -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-5 pb-1 font-semibold">AI-beredskap (5 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Schema markup (någon typ)</p><p class="text-gray-400 text-xs">Organization + BreadcrumbList + WebPage + WebSite i JSON-LD.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-bad px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">FEL</span>
+        <div>
+          <p class="text-gray-700">Restaurant-schema specifikt</p>
+          <p class="text-gray-400 text-xs">Organization är fel typ för en restaurang. Byt till @type: "Restaurant".</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-schema">Se åtgärd 1 &rarr;</a></p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">JSON-LD format</p><p class="text-gray-400 text-xs">JSON-LD används korrekt med application/ld+json.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">AI-optimerad metabeskrivning</p><p class="text-gray-400 text-xs">"Restaurang på Avenyn i Göteborg med svensk mat &amp; personlig service." &mdash; utmarkt: stad, kok, tjänster.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-warn px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">~</span>
+        <div>
+          <p class="text-gray-700">Semantisk HTML</p>
+          <p class="text-gray-400 text-xs">Kan förbättras med bättre användning av article/section.</p>
+          <p class="text-blue-700 text-xs mt-1"><a href="#fix-semantisk">Se åtgärd 5 &rarr;</a></p>
+        </div>
+      </div>
+
+      <!-- Innehåll -->
+      <p class="text-gray-400 text-xs uppercase tracking-wider pt-5 pb-1 font-semibold">Innehåll (6 kontroller)</p>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">H1-tagg</p><p class="text-gray-400 text-xs">"Restaurang Tvåkanten - Svensk Mat på Avenyn i Göteborg" &mdash; utmarkt: namn, kok, plats.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Title-tagg</p><p class="text-gray-400 text-xs">"Restaurang Tvåkanten" &mdash; kort och tydligt.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5 border-b border-gray-200">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Metabeskrivning</p><p class="text-gray-400 text-xs">Stark metabeskrivning med stad, kok och tjänster.</p></div>
+      </div>
+      <div class="flex items-start gap-3 py-2.5">
+        <span class="badge-good px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">OK</span>
+        <div><p class="text-gray-700">Sprak</p><p class="text-gray-400 text-xs">Svenska &mdash; korrekt.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ORDLISTA ==================== -->
+  <div class="section-card p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">Ordlista</h2>
+    <p class="text-gray-400 text-sm mb-4">Förklaringar av tekniska termer som används i denna rapport.</p>
+    <div class="space-y-4 text-sm">
+      <div>
+        <p class="text-gray-700 font-medium">Schema markup / JSON-LD</p>
+        <p class="text-gray-400">Osynlig kod på er webbplats som talar om för sökmotorer vad ert företag är. JSON-LD är formatet som Google och AI föredrar. Ni har redan detta &mdash; men med fel typ (Organization istället för Restaurant).</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Restaurant-schema</p>
+        <p class="text-gray-400">En specifik typ i schema.org-systemet som talar om att webbplatsen tillhor en restaurang. Inkluderar information som meny, kok, öppettider och prisklass &mdash; allt som AI behöver för att rekommendera er när någon frågar om restauranger.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">NAP (Name, Address, Phone)</p>
+        <p class="text-gray-400">Ert företagsnamn, adress och telefonnummer. Dessa måste vara identiska överallt &mdash; webbplats, Google, Facebook, TripAdvisor. AI straffar inkonsekvent NAP.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">llms.txt</p>
+        <p class="text-gray-400">En textfil på er webbplats som förklarar för AI-sökmotorer vad ert företag gör. Ni har redan en &mdash; den genererades automatiskt av ert AIOSEO-plugin.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Canonical tag</p>
+        <p class="text-gray-400">En osynlig kod som talar om "detta är den riktiga adressen till sidan". Förhindrar dubbletter. Ni har denna på plats.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Google Företagsprofil (GBP)</p>
+        <p class="text-gray-400">Er företagsinformation på Google &mdash; kartan, öppettider, recensioner, bilder. Gratis att hantera via business.google.com.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Semantisk HTML</p>
+        <p class="text-gray-400">Att använda rätt HTML-taggar för rätt innehållstyp (&lt;article&gt;, &lt;nav&gt;, &lt;main&gt;). Hjälper AI första sidstruktur.</p>
+      </div>
+      <div>
+        <p class="text-gray-700 font-medium">Metabeskrivning</p>
+        <p class="text-gray-400">Kort text (150&ndash;160 tecken) under rubriken i sökresultat. AI läser den för att första sidans innehåll snabbt.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <p class="text-center text-gray-400 text-xs pb-8">Genererad av analyze.pipod.net &middot; Rapport-ID: tvåkanten-20260426 &middot; Data hamtad 2026-04-26</p>
+</div>
+
+</body>
+</html>

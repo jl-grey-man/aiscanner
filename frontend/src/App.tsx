@@ -161,8 +161,8 @@ export default function App() {
                 <AnalysisLogView events={analysisLog} />
               )}
 
-              {/* Full Scan Button */}
-              {(state === 'done' || state === 'premium-loading' || state === 'premium-done') && (
+              {/* Full Scan Button — alltid synlig så användaren kan försöka igen vid fel */}
+              {(state === 'done' || state === 'premium-loading' || state === 'premium-done' || state === 'error') && (
                 <FullScanButton
                   onClick={() => runPremium(url)}
                   loading={state === 'premium-loading'}

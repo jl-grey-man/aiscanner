@@ -51,7 +51,7 @@ em { font-family: var(--font-serif); font-style: italic; }
   display: flex; flex-direction: column; justify-content: center;
   padding: 80px 32px 60px;
   position: relative; overflow: hidden;
-  background: var(--c-bg);
+  background: url('/header.webp') center center / cover no-repeat;
 }
 .hero-glyph {
   position: absolute; right: -4vw; top: 50%; transform: translateY(-55%);
@@ -73,11 +73,14 @@ em { font-family: var(--font-serif); font-style: italic; }
 .hero-h1-sub {
   font-family: var(--font-serif); font-style: italic;
   font-size: clamp(36px, 6vw, 72px); line-height: 1;
-  color: var(--c-muted); margin-bottom: 36px;
+  color: #fff; margin-top: 24px; margin-bottom: 48px;
   letter-spacing: -0.01em;
+  background: var(--c-accent);
+  display: inline-block;
+  padding: 6px 12px 10px;
 }
 .hero-body {
-  font-size: 18px; line-height: 1.7; color: var(--c-muted);
+  font-size: 18px; line-height: 1.7; color: var(--c-ink);
   max-width: 440px; margin-bottom: 40px;
 }
 .hero-cta {
@@ -90,7 +93,7 @@ em { font-family: var(--font-serif); font-style: italic; }
 .hero-cta:hover { gap: 16px; }
 .hero-footnote {
   position: absolute; bottom: 48px; left: 32px;
-  font-size: 13px; line-height: 1.6; color: var(--c-light);
+  font-size: 13px; line-height: 1.6; color: var(--c-ink);
 }
 
 /* ══════════════════════════════════════════════════
@@ -303,7 +306,7 @@ em { font-family: var(--font-serif); font-style: italic; }
   text-align: center;
   position: relative;
 }
-.cta-inner { max-width: 600px; margin: 0 auto; padding: 0 32px; }
+.cta-inner { max-width: 860px; margin: 0 auto; padding: 0 48px 64px; }
 .cta-h2 {
   font-size: clamp(36px, 6vw, 64px); font-weight: 700;
   letter-spacing: -0.03em; line-height: 1; margin-bottom: 20px;
@@ -531,6 +534,21 @@ em { font-family: var(--font-serif); font-style: italic; }
   font-size: 13px; color: var(--c-light); flex-wrap: wrap; gap: 12px;
 }
 .site-footer a { text-decoration: none; }
+
+/* ══════════════════════════════════════════════════
+   SECTION IMAGE BREAK
+   ══════════════════════════════════════════════════ */
+.section-image-break {
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+.section-image-break__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
 
 /* ══════════════════════════════════════════════════
    GRAIN OVERLAY

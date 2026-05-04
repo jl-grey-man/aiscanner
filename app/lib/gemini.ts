@@ -2,6 +2,19 @@
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
+// Fallback-modeller om primära är rate-limited
+const FLASH_MODELS = [
+  'google/gemini-2.0-flash-001',
+  'google/gemini-2.0-flash-lite-001',
+  'mistralai/mistral-small-3.1-24b-instruct',
+]
+
+const PRO_MODELS = [
+  'google/gemini-2.5-pro-preview-03-25',
+  'anthropic/claude-3.5-sonnet',
+  'google/gemini-2.0-pro-exp-02-05',
+]
+
 function extractJson(text: string): any {
   const trimmed = text.trim()
 
@@ -46,7 +59,11 @@ function extractJson(text: string): any {
   throw new Error('Kunde inte tolka AI-svaret som JSON')
 }
 
-async function callOpenRouter(model: string, prompt: string): Promise<any> {
+async function sleep(ms: number): Promise<void> {
+  return new Promise(r => setTimeout(r, ms))
+}
+
+async function callWithModel(model: string, prompt: string): Promise<any> {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -69,7 +86,7 @@ async function callOpenRouter(model: string, prompt: string): Promise<any> {
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`OpenRouter error ${res.status}: ${text}`)
+    throw new Error(`OpenRouter error ${res.status}: ${text}`, { cause: { status: res.status } })
   }
 
   const data = await res.json()
@@ -82,16 +99,50 @@ async function callOpenRouter(model: string, prompt: string): Promise<any> {
   try {
     return extractJson(content)
   } catch (err: any) {
-    // Log raw response for debugging (truncated)
     console.error('JSON parse failed. Raw content (first 500 chars):', content.slice(0, 500))
     throw new Error(`Kunde inte tolka AI-svaret som JSON: ${err.message}`)
   }
 }
 
+async function callWithFallback(models: string[], prompt: string): Promise<any> {
+  const lastIdx = models.length - 1
+
+  for (let i = 0; i <= lastIdx; i++) {
+    const model = models[i]
+    try {
+      console.log(`[AI] Försöker med ${model}...`)
+      const result = await callWithModel(model, prompt)
+      console.log(`[AI] ${model} lyckades!`)
+      return result
+    } catch (err: any) {
+      const status = err?.cause?.status || 0
+      const isRateLimit = status === 429
+      const isLast = i === lastIdx
+
+      if (isRateLimit && !isLast) {
+        const delay = (i + 1) * 8000 // 8s, 16s
+        console.log(`[AI] ${model} rate-limited. Väntar ${delay}ms innan fallback...`)
+        await sleep(delay)
+        continue
+      }
+
+      if (isLast) {
+        throw err // Kasta sista felet
+      }
+
+      // Andra fel — försök nästa modell direkt
+      console.log(`[AI] ${model} misslyckades (${err.message}). Försöker fallback...`)
+      continue
+    }
+  }
+
+  throw new Error('Alla AI-modeller misslyckades')
+}
+
 export async function analyzeWithFlash(prompt: string): Promise<any> {
-  return callOpenRouter('google/gemini-2.0-flash-001', prompt)
+  return callWithFallback(FLASH_MODELS, prompt)
 }
 
 export async function analyzeWithPro(prompt: string): Promise<any> {
-  return callOpenRouter('google/gemini-2.5-pro-preview-03-25', prompt)
+  return callWithFallback(PRO_MODELS, prompt)
 }

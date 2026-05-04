@@ -87,6 +87,10 @@ export const CheckResultSchema = z.object({
   codeExample: z.string().nullable(),
   priority: z.enum(['critical', 'important', 'nice']).nullable(),
   tier: z.enum(['free', 'premium']),
+  // Rich report writer fields (populated by reportWriter.ts for bad/warning checks)
+  richRelevance: z.string().nullable().optional(),
+  richSteps: z.string().nullable().optional(),
+  richCodeExample: z.string().nullable().optional(),
 })
 
 export type CheckResult = z.infer<typeof CheckResultSchema>
@@ -138,7 +142,7 @@ const NAPFieldSchema = z.object({
     directory: z.string(),
     value: z.string(),
   })),
-  consistent: z.boolean(),
+  consistent: z.boolean().nullable(),
 })
 
 const NAPConsistencySchema = z.object({

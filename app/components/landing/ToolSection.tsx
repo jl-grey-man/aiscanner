@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef } from 'react'
 import { useAnalysis } from '@/app/hooks/useAnalysis'
 import { UrlInput } from '@/app/components/UrlInput'
@@ -7,7 +8,12 @@ import { Progress } from '@/app/components/Progress'
 import { EnhancedReport } from '@/app/components/EnhancedReport'
 import { PremiumCTA } from './PremiumCTA'
 
-export function ToolSection() {
+interface ToolSectionProps {
+  /** When provided, the scan is handled by the parent (AppShell). */
+  onAnalyze?: (url: string, city?: string) => void
+}
+
+export function ToolSection({ onAnalyze }: ToolSectionProps = {}) {
   const {
     state,
     enhancedReport,
@@ -15,18 +21,28 @@ export function ToolSection() {
     currentStep,
     progressPct,
     stepIndex,
-    analyze,
+    analyze: localAnalyze,
   } = useAnalysis()
+
+  // When controlled by a parent (onAnalyze provided), the parent handles
+  // loading/result states. ToolSection just shows the form.
+  const isControlled = onAnalyze !== undefined
+
+  // Use the parent-provided callback when available, otherwise fall back to
+  // the local hook so ToolSection still works standalone.
+  const analyze = onAnalyze ?? localAnalyze
 
   const reportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (enhancedReport && reportRef.current) {
+    if (!isControlled && enhancedReport && reportRef.current) {
       reportRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [enhancedReport])
+  }, [isControlled, enhancedReport])
 
-  const isScanning = state === 'scanning'
+  // In controlled mode always treat as idle (parent manages state).
+  const effectiveState = isControlled ? 'idle' : state
+  const isScanning = effectiveState === 'scanning'
 
   return (
     <section id="analysera" className="cta-section">
@@ -49,8 +65,8 @@ export function ToolSection() {
           Ingen e-post. Ingen registrering. Resultat direkt.
         </p>
 
-        {/* Progress while scanning */}
-        {isScanning && (
+        {/* Progress while scanning (standalone mode only) */}
+        {!isControlled && isScanning && (
           <div style={{ textAlign: 'left', marginTop: '24px' }}>
             <Progress
               currentStep={currentStep}
@@ -60,8 +76,8 @@ export function ToolSection() {
           </div>
         )}
 
-        {/* Error state */}
-        {state === 'error' && error && (
+        {/* Error state (standalone mode only) */}
+        {!isControlled && effectiveState === 'error' && error && (
           <div
             style={{
               background: 'rgba(255,255,255,0.08)',
@@ -78,8 +94,8 @@ export function ToolSection() {
           </div>
         )}
 
-        {/* Report + PremiumCTA */}
-        {enhancedReport && (
+        {/* Report + PremiumCTA (standalone mode only) */}
+        {!isControlled && enhancedReport && (
           <div ref={reportRef} style={{ textAlign: 'left', marginTop: '40px' }}>
             <EnhancedReport data={enhancedReport} />
             <div style={{ marginTop: '32px' }}>
@@ -88,6 +104,19 @@ export function ToolSection() {
           </div>
         )}
       </div>
+
+      {/* Phone image — full-width, shown only before scan */}
+      {effectiveState === 'idle' && (
+        <div style={{ lineHeight: 0 }}>
+          <Image
+            src="/soka-telefon.webp"
+            alt="Person söker på mobil"
+            width={1400}
+            height={787}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+      )}
     </section>
   )
 }

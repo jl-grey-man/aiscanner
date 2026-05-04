@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Search Scanner — Hur synlig är ditt företag för AI?</title>
+<meta name="description" content="Scanna din webbplats och se hur ChatGPT, Perplexity och Google AI bedömer ditt företag. 23 kontroller, gratis, resultat på 30 sekunder.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+    },
+  },
+}
+</script>
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+  .url-input-glow:focus-within {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .stat-ring {
+    transition: stroke-dashoffset 1s ease-out;
+  }
+
+  .check-item:nth-child(even) {
+    background: #f8fafc;
+  }
+
+  .report-sample {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  .subtle-gradient {
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f8fafc 100%);
+  }
+
+  .chat-bubble-ai {
+    background: #f1f5f9;
+    border-radius: 2px 16px 16px 16px;
+  }
+
+  .chat-bubble-user {
+    background: #2563eb;
+    color: white;
+    border-radius: 16px 16px 2px 16px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  }
+
+  .fade-border {
+    border-image: linear-gradient(to right, #e2e8f0, #bfdbfe, #e2e8f0) 1;
+  }
+</style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 1: HERO
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="relative overflow-hidden">
+  <div class="absolute inset-0 subtle-gradient"></div>
+  <div class="relative max-w-3xl mx-auto px-5 pt-24 pb-20 text-center">
+
+    <!-- Liten observation -->
+    <p class="text-sm text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">
+      Förra året svarade Google med en länklista. I år svarar ChatGPT med ett namn.
+    </p>
+
+    <!-- Huvudrubrik -->
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1] mb-6">
+      Dina kunder frågar AI.<br>
+      <span class="text-gray-400">Vad svarar den om dig?</span>
+    </h1>
+
+    <!-- Undertext -->
+    <p class="text-lg text-gray-500 max-w-xl mx-auto mb-12 leading-relaxed">
+      Allt fler söker via ChatGPT, Perplexity och Google AI istället för att scrolla bland länkar.
+      AI ger ett svar — inte tio. Antingen nämns ditt företag, eller så gör det inte det.
+    </p>
+
+    <!-- Diskret CTA -->
+    <div class="flex items-center justify-center gap-3 text-sm text-gray-400">
+      <span>Vill du se hur AI uppfattar din sajt?</span>
+      <a href="#analysera" class="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1">
+        Testa gratis
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 2: SÖKNING HAR FÖRÄNDRATS
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="py-20 sm:py-28 border-t border-gray-100">
+  <div class="max-w-5xl mx-auto px-5">
+
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mb-4">
+        Sökning håller på att förändras
+      </h2>
+      <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+        Fram till nyligen var Google-sökning en lista med tio blå länkar.
+        Nu ger AI ett direkt svar — och väljer själv vem den rekommenderar.
+      </p>
+    </div>
+
+    <!-- Före/efter jämförelse -->
+    <div class="grid md:grid-cols-2 gap-6 mb-12">
+
+      <!-- Google-sökning (förr) -->
+      <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <div class="flex items-center gap-2 mb-5">
+          <div class="w-2 h-2 rounded-full bg-gray-300"></div>
+          <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Förr — Google-sökning</span>
+        </div>
+
+        <!-- Sökruta -->
+        <div class="rounded-full border border-gray-200 px-4 py-2.5 mb-5 flex items-center gap-2">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <span class="text-sm text-gray-700">bästa mäklare stockholm</span>
+        </div>
+
+        <!-- Sökresultat -->
+        <div class="space-y-3">
+          <div class="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
+            <p class="text-blue-600 text-sm font-medium mb-0.5">Bjurfors.se — Mäklare i Stockholm</p>
+            <p class="text-xs text-gray-400">www.bjurfors.se</p>
+          </div>
+          <div class="p-3 rounded-lg border border-gray-100">
+            <p class="text-blue-600 text-sm font-medium mb-0.5">Fastighetsbyrån — Hitta din mäklare</p>
+            <p class="text-xs text-gray-400">www.fastighetsbyran.com</p>
+          </div>
+          <div class="p-3 rounded-lg border border-blue-100 bg-blue-50/30">
+            <div class="flex items-center gap-2">
+              <p class="text-blue-600 text-sm font-medium mb-0.5">Ditt Företag AB</p>
+              <span class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">Du</span>
+            </div>
+            <p class="text-xs text-gray-400">www.dittforetag.se</p>
+          </div>
+          <div class="p-3 rounded-lg border border-gray-100 opacity-60">
+            <p class="text-blue-600 text-sm font-medium mb-0.5">Svensk Fastighetsförmedling</p>
+            <p class="text-xs text-gray-400">www.svenskfast.se</p>
+          </div>
+          <div class="p-3 rounded-lg border border-gray-100 opacity-40">
+            <p class="text-blue-600 text-sm font-medium mb-0.5">HusmanHagberg — Mäklare sedan 1981</p>
+            <p class="text-xs text-gray-400">www.husmanhagberg.se</p>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-4">Du fanns med — plats 3 av 10</p>
+      </div>
+
+      <!-- AI-sökning (nu) -->
+      <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <div class="flex items-center gap-2 mb-5">
+          <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+          <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Nu — AI-sökning</span>
+        </div>
+
+        <!-- ChatGPT-stil konversation -->
+        <div class="space-y-4">
+          <div class="flex justify-end">
+            <div class="chat-bubble-user px-4 py-2.5 max-w-[85%]">
+              <p class="text-sm">Vilken mäklare i Stockholm ska jag anlita?</p>
+            </div>
+          </div>
+
+          <div class="flex justify-start">
+            <div class="chat-bubble-ai px-4 py-3 max-w-[95%]">
+              <p class="text-sm text-gray-700 leading-relaxed">
+                Baserat på kundrecensioner, lokal närvaro och tillgänglighet rekommenderar jag
+                <strong class="text-gray-900">Fastighetsbyrån Östermalm</strong>. De har över 340
+                femstjärnsrecensioner på Google, tydliga priser på sin webbplats, och erbjuder
+                gratis digital värdering online.
+              </p>
+              <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="text-xs text-gray-400">Källa: fastighetsbyran.com/ostermalm</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-3 rounded-lg bg-red-50 border border-red-100">
+          <p class="text-center text-xs text-red-600 font-medium">
+            Ett svar. En rekommendation. Ditt företag nämns inte.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistik-rad -->
+    <div class="grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+      <div class="text-center p-5 rounded-xl bg-gray-50">
+        <div class="text-3xl font-bold text-gray-900 mb-1">64%</div>
+        <p class="text-sm text-gray-500">av Google-sökningar visar nu ett AI-genererat svar högst upp</p>
+      </div>
+      <div class="text-center p-5 rounded-xl bg-gray-50">
+        <div class="text-3xl font-bold text-gray-900 mb-1">1–2</div>
+        <p class="text-sm text-gray-500">företag nämns i ett typiskt AI-svar. Resten ignoreras helt.</p>
+      </div>
+      <div class="text-center p-5 rounded-xl bg-gray-50">
+        <div class="text-3xl font-bold text-gray-900 mb-1">47%</div>
+        <p class="text-sm text-gray-500">av unga vuxna söker nu via AI före Google, enligt Reuters Institute</p>
+      </div>
+    </div>
+
+    <p class="text-center text-sm text-gray-400 mt-8 max-w-xl mx-auto">
+      För lokala företag spelar det extra stor roll. När AI bara rekommenderar ett eller två alternativ
+      finns ingen "plats 3" att tröstas av. Du är med i svaret, eller så finns du inte.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 3: KONKRET EXEMPEL
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="py-20 sm:py-28 bg-gray-50 border-t border-gray-100">
+  <div class="max-w-4xl mx-auto px-5">
+
+    <div class="text-center mb-14">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mb-4">
+        Vi frågade ChatGPT om en mäklare i Stockholm
+      </h2>
+      <p class="text-lg text-gray-500">
+        Svaret avslöjar exakt vad AI letar efter — och varför vissa företag alltid dyker upp.
+      </p>
+    </div>
+
+    <!-- ChatGPT-svar (fiktivt) -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 mb-10 shadow-sm">
+      <div class="flex items-center gap-2 mb-5">
+        <div class="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center">
+          <span class="text-white text-xs font-bold">AI</span>
+        </div>
+        <span class="text-sm font-medium text-gray-600">ChatGPT-svar</span>
+      </div>
+
+      <div class="text-gray-700 leading-relaxed space-y-3 mb-6">
+        <p>
+          <em class="text-gray-400 text-sm">"Vilken fastighetsmäklare i Stockholm rekommenderar du?"</em>
+        </p>
+        <p>
+          Ett populärt val i Stockholm är <strong class="text-gray-900">Fastighetsbyrån Östermalm</strong>.
+          De har ett starkt rykte med över 340 Google-recensioner (snittbetyg 4,8), erbjuder gratis
+          digital hemvärdering direkt på sin webbplats, och har tydliga uppgifter om priser och
+          provisionsnivåer. Kontoret ligger på Storgatan 12 och har öppet alla vardagar 9–18.
+        </p>
+        <p>
+          Ett annat alternativ är <strong class="text-gray-900">Notar Vasastan</strong> som specialiserar
+          sig på bostadsrätter i innerstaden och har en utförlig FAQ-sektion om köpprocessen.
+        </p>
+      </div>
+
+      <div class="border-t border-gray-100 pt-4">
+        <p class="text-xs text-gray-400">
+          Källor: fastighetsbyran.com/ostermalm, notar.se/vasastan, Google Maps
+        </p>
+      </div>
+    </div>
+
+    <!-- Varför just de? -->
+    <h3 class="text-xl font-bold text-gray-900 mb-6">
+      Varför valde AI just de företagen?
+    </h3>
+
+    <div class="grid sm:grid-cols-2 gap-4 mb-8">
+      <div class="flex gap-3 p-4 rounded-xl bg-white border border-gray-200">
+        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-900 mb-0.5">Schema markup med alla uppgifter</p>
+          <p class="text-xs text-gray-500">Deras sajt berättar i kod vad de är, var de finns, och vilka tjänster de erbjuder.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3 p-4 rounded-xl bg-white border border-gray-200">
+        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-900 mb-0.5">Hundratals verifierade recensioner</p>
+          <p class="text-xs text-gray-500">AI väger inte bara betyg utan även antal, och läser recensionernas text.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3 p-4 rounded-xl bg-white border border-gray-200">
+        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-900 mb-0.5">Konkret, svarbar information</p>
+          <p class="text-xs text-gray-500">Priser, öppettider, adress — allt som AI behöver för att ge ett fullständigt svar.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3 p-4 rounded-xl bg-white border border-gray-200">
+        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-900 mb-0.5">FAQ-sida med vanliga kundfrågor</p>
+          <p class="text-xs text-gray-500">AI älskar tydliga frågor och svar — det är det enklaste att citera.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-100 rounded-xl p-5 text-center">
+      <p class="text-sm text-blue-800">
+        Poängen? Det är inte de <em>bästa</em> mäklarna som nämns. Det är de som gör det
+        <strong>enklast för AI att hitta och förstå dem</strong>. Skillnaden är teknisk — och går att åtgärda.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 4: VAD AI TITTAR PÅ
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="py-20 sm:py-28 border-t border-gray-100">
+  <div class="max-w-3xl mx-auto px-5">
+
+    <div class="text-center mb-4">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mb-4">
+        Vad AI faktiskt tittar på
+      </h2>
+      <p class="text-lg text-gray-500 max-w-2xl mx-auto mb-12">
+        AI-sökmotorer är inte magiska. De följer regler. Här är de sex viktigaste
+        signalerna som avgör om ditt företag nämns eller ignoreras.
+      </p>
+    </div>
+
+    <div class="space-y-0 rounded-xl border border-gray-200 overflow-hidden">
+
+      <!-- Punkt 1 -->
+      <div class="check-item p-5 sm:p-6 border-b border-gray-100">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-sm font-bold text-blue-600">1</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-1">En kodsnutt som berättar vad du gör</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Det kallas "schema markup" — en osynlig bit kod på din sajt som berättar för AI:
+              "det här är en rörmokare i Malmö, de har öppet vardagar 7–17, och deras telefonnummer är 040-XXX XX XX."
+              Utan det tvingas AI gissa — och AI gissar sällan rätt.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Punkt 2 -->
+      <div class="check-item p-5 sm:p-6 border-b border-gray-100">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-sm font-bold text-blue-600">2</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-1">Samma uppgifter överallt</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Ditt namn, adress och telefonnummer måste stämma överens — på hemsidan, på Google,
+              på Eniro, överallt. Om din sajt säger "Kungsgatan 12" men Google säger "Kungsgatan 12A"
+              tappar du trovärdighet. AI korskontrollerar.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Punkt 3 -->
+      <div class="check-item p-5 sm:p-6 border-b border-gray-100">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-sm font-bold text-blue-600">3</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-1">Google Företagsprofil — AI:ns favoritkälla</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Din Google-profil är det första AI tittar på. Betyg, recensioner, öppettider, bilder —
+              allt används. En overifierad eller oupptaterad profil är som att inte ha en hemsida alls.
+              Många företag har en profil men har inte uppdaterat den på år.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Punkt 4 -->
+      <div class="check-item p-5 sm:p-6 border-b border-gray-100">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-sm font-bold text-blue-600">4</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-1">En sidbeskrivning som faktiskt säger något</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Varje sida har en kort beskrivning som AI läser först. Den ska vara din elevator pitch
+              på 155 tecken.
+            </p>
+            <div class="mt-3 grid sm:grid-cols-2 gap-3">
+              <div class="rounded-lg bg-red-50 border border-red-100 px-3 py-2">
+                <p class="text-xs text-red-400 font-medium mb-0.5">Dålig:</p>
+                <p class="text-xs text-red-700">"Välkommen till vår hemsida!"</p>
+              </div>
+              <div class="rounded-lg bg-green-50 border border-green-100 px-3 py-2">
+                <p class="text-xs text-green-600 font-medium mb-0.5">Bra:</p>
+                <p class="text-xs text-green-800">"Akut rörmokare i Göteborg. Jour dygnet runt, fasta priser. Ring 031-XXX."</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Punkt 5 -->
+      <div class="check-item p-5 sm:p-6 border-b border-gray-100">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-sm font-bold text-blue-600">5</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-1">Innehåll som faktiskt svarar på frågor</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              AI älskar sidor som svarar på riktiga frågor. Inte sidor fyllda med buzzwords, utan sidor
+              som förklarar vad du gör, för vem, och varför. En FAQ-sida med vanliga kundfrågor —
+              "Vad kostar relining?", "Hur lång tid tar en värdering?" — är guld värd.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Punkt 6 -->
+      <div class="check-item p-5 sm:p-6">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-sm font-bold text-blue-600">6</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-1">Att dörren faktiskt är öppen</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Många sajter blockerar AI utan att ägaren vet om det. En fil som heter robots.txt
+              styr vilka som får läsa din sajt. Är den felkonfigurerad — ofta av ett säkerhetsplugin
+              i WordPress — stängs ChatGPT ute helt. Det är som att låsa dörren för kunder.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mjuk CTA -->
+    <div class="text-center mt-10">
+      <p class="text-sm text-gray-500 mb-3">
+        Hur många av de här sex sakerna har din sajt?
+      </p>
+      <a href="#analysera" class="text-blue-600 hover:text-blue-700 font-medium text-sm inline-flex items-center gap-1">
+        Ta reda på det — gratis
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 5: GRATIS ANALYS (CTA)
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="analysera" class="py-20 sm:py-28 bg-gray-50 border-t border-gray-100">
+  <div class="max-w-2xl mx-auto px-5 text-center">
+
+    <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mb-4">
+      Hur ser det ut för din sajt?
+    </h2>
+    <p class="text-lg text-gray-500 mb-10 max-w-lg mx-auto">
+      Skriv in din webbadress så kontrollerar vi 23 saker som påverkar
+      hur AI-sökmotorer bedömer ditt företag.
+    </p>
+
+    <!-- URL-input -->
+    <div class="url-input-glow bg-white rounded-2xl border border-gray-200 p-2 flex items-center gap-2 max-w-lg mx-auto mb-6 shadow-sm transition-shadow">
+      <div class="flex items-center gap-2 flex-1 pl-3">
+        <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 003 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+        <input
+          type="text"
+          placeholder="www.dittforetag.se"
+          class="flex-1 text-base text-gray-900 placeholder-gray-400 outline-none bg-transparent py-2"
+          disabled
+        >
+      </div>
+      <button class="bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors whitespace-nowrap">
+        Analysera
+      </button>
+    </div>
+
+    <!-- Info under input -->
+    <div class="flex items-center justify-center gap-6 text-xs text-gray-400">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Gratis
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        23 kontroller
+      </span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Resultat på 30 sekunder
+      </span>
+    </div>
+
+    <p class="text-xs text-gray-400 mt-6">
+      Ingen e-post krävs. Ingen registrering. Du får rapporten direkt.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 6: VAD RAPPORTEN VISAR (INLINE EXEMPEL)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="py-20 sm:py-28 border-t border-gray-100">
+  <div class="max-w-4xl mx-auto px-5">
+
+    <div class="text-center mb-14">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mb-4">
+        Så här ser en rapport ut
+      </h2>
+      <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+        Vi analyserade bjurfors.se — en av Sveriges största mäklarkedjor.
+        Här är ett utdrag ur rapporten.
+      </p>
+    </div>
+
+    <!-- Inline rapport-exempel -->
+    <div class="report-sample rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+      <!-- Rapport-header -->
+      <div class="px-6 sm:px-8 pt-6 sm:pt-8 pb-5 border-b border-gray-100">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p class="text-xs text-gray-400 mb-1">analyze.pipod.net / bjurfors.se</p>
+            <h3 class="text-2xl font-bold text-gray-900">Bjurfors</h3>
+            <p class="text-sm text-gray-500">bjurfors.se &middot; Fastighetsmäklare &middot; 2026-04-26</p>
+          </div>
+          <div class="flex items-center gap-5">
+            <!-- Totalpoäng -->
+            <div class="text-center">
+              <div class="relative inline-flex items-center justify-center">
+                <svg width="72" height="72" viewBox="0 0 72 72">
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#f59e0b" stroke-width="6"
+                    stroke-linecap="round" stroke-dasharray="188.5"
+                    stroke-dashoffset="85" transform="rotate(-90 36 36)"/>
+                </svg>
+                <span class="absolute text-xl font-bold text-gray-900">55</span>
+              </div>
+              <p class="text-[10px] text-gray-400 mt-1">Totalpoäng</p>
+            </div>
+            <!-- Betyg -->
+            <div class="text-center">
+              <div class="text-2xl font-bold text-gray-900">4.6</div>
+              <div class="flex gap-0.5">
+                <span class="text-amber-500 text-sm">&#9733;&#9733;&#9733;&#9733;</span>
+                <span class="text-amber-500 text-sm">&#9733;</span>
+              </div>
+              <p class="text-[10px] text-gray-400 mt-0.5">Google (14 rec.)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Viktigaste fynden -->
+      <div class="px-6 sm:px-8 py-5 border-b border-gray-100">
+        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          De 3 viktigaste fynden
+        </h4>
+        <div class="space-y-3">
+          <div class="flex gap-3">
+            <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+              <span class="text-red-600 text-xs font-bold">!</span>
+            </div>
+            <p class="text-sm text-gray-700">
+              <strong class="text-gray-900">Inget schema markup.</strong>
+              AI-sökmotorer vet inte att Bjurfors är en mäklare, var de finns,
+              eller hur man kontaktar dem.
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+              <span class="text-red-600 text-xs font-bold">!</span>
+            </div>
+            <p class="text-sm text-gray-700">
+              <strong class="text-gray-900">NAP-poäng 2/10.</strong>
+              Telefonnumret på webbplatsen matchar inte Google-profilen.
+              AI ser det som en varningsflagga.
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+              <span class="text-amber-600 text-xs font-bold">!</span>
+            </div>
+            <p class="text-sm text-gray-700">
+              <strong class="text-gray-900">Ingen llms.txt.</strong>
+              Filen som berättar för AI hur den ska läsa sajten saknas helt.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kategoripoäng -->
+      <div class="px-6 sm:px-8 py-5 border-b border-gray-100">
+        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          Poäng per kategori
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-gray-600 font-medium">Teknik</span>
+              <span class="text-xs font-bold text-gray-900">4/6</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-green-500 rounded-full" style="width: 67%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-gray-600 font-medium">Lokal</span>
+              <span class="text-xs font-bold text-gray-900">2/6</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-red-400 rounded-full" style="width: 33%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-gray-600 font-medium">AI-beredskap</span>
+              <span class="text-xs font-bold text-gray-900">1/5</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-red-400 rounded-full" style="width: 20%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-gray-600 font-medium">Innehåll</span>
+              <span class="text-xs font-bold text-gray-900">4/6</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-green-500 rounded-full" style="width: 67%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detaljer (ett par rader) -->
+      <div class="px-6 sm:px-8 py-5">
+        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          Detaljerade kontroller (utdrag)
+        </h4>
+        <div class="space-y-2.5">
+          <div class="flex items-center gap-3 text-sm">
+            <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-700">HTTPS/SSL aktiv</span>
+          </div>
+          <div class="flex items-center gap-3 text-sm">
+            <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-700">Sitemap.xml hittad (423 sidor)</span>
+          </div>
+          <div class="flex items-center gap-3 text-sm">
+            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <span class="text-gray-700">Schema markup saknas helt — <span class="text-red-600 font-medium">kritiskt</span></span>
+          </div>
+          <div class="flex items-center gap-3 text-sm">
+            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <span class="text-gray-700">Telefonnummer matchar inte Google — <span class="text-red-600 font-medium">kritiskt</span></span>
+          </div>
+          <div class="flex items-center gap-3 text-sm">
+            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span class="text-gray-700">Metabeskrivning för generisk — <span class="text-amber-600 font-medium">förbättra</span></span>
+          </div>
+          <div class="flex items-center gap-3 text-sm">
+            <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-700">Innehåll på svenska</span>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-gray-100 text-center">
+          <p class="text-xs text-gray-400">
+            Detta är ett utdrag.
+            <a href="/aiscanner-demos/bjurfors-rapport.html" class="text-blue-600 hover:text-blue-700 font-medium">
+              Se hela Bjurfors-rapporten &rarr;
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 7: PREMIUMRAPPORTEN
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="py-20 sm:py-28 bg-gray-50 border-t border-gray-100">
+  <div class="max-w-4xl mx-auto px-5">
+
+    <div class="text-center mb-14">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mb-4">
+        Vill du ha lösningarna — inte bara diagnosen?
+      </h2>
+      <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+        Gratisscannern visar var problemen är. Premiumrapporten berättar exakt
+        hur du löser dem — med färdig kod, steg-för-steg-instruktioner, och en
+        prioriterad handlingsplan.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-10">
+
+      <!-- Gratis -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8">
+        <div class="flex items-center gap-2 mb-5">
+          <span class="text-sm font-semibold text-gray-900">Gratis analys</span>
+          <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">0 kr</span>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            23 kontroller i 4 kategorier
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Totalpoäng och kategoripoäng
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Generella förbättringsförslag
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Resultat direkt, ingen registrering
+          </li>
+        </ul>
+        <div class="mt-6 pt-4 border-t border-gray-100">
+          <p class="text-sm text-gray-400">Visar vad som saknas.</p>
+        </div>
+      </div>
+
+      <!-- Premium -->
+      <div class="bg-white rounded-2xl border-2 border-gray-900 p-6 sm:p-8 relative">
+        <div class="absolute -top-3 left-6">
+          <span class="bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full">
+            Fullständig rapport
+          </span>
+        </div>
+        <div class="flex items-center gap-2 mb-5">
+          <span class="text-sm font-semibold text-gray-900">Premiumanalys</span>
+          <span class="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full font-medium">499 kr</span>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex gap-2.5 text-sm text-gray-700 font-medium">
+            <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Allt i gratisanalysen, plus:
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Jämförelse mot 2–3 konkurrenter i din bransch
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            NAP-konsistens — matcher din sajt med Google-profilen?
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Recensionsanalys med sentiment och nyckelord
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Skräddarsydda kodsnuttar att kopiera in direkt
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Prioriterad handlingsplan — vilken åtgärd ger mest effekt först
+          </li>
+          <li class="flex gap-2.5 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Ordlista — alla tekniska termer förklarade på svenska
+          </li>
+        </ul>
+        <div class="mt-6 pt-4 border-t border-gray-100">
+          <p class="text-sm text-gray-500">
+            Tar 10 minuter att läsa. 2 timmar att implementera.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-sm text-gray-400 max-w-lg mx-auto">
+      Du behöver inte vara teknisk. Rapporten är skriven så att du kan ge den
+      till din webbutvecklare — eller göra det själv om du har tillgång till din sajts CMS.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEKTION 8: FAQ
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="py-20 sm:py-28 border-t border-gray-100">
+  <div class="max-w-2xl mx-auto px-5">
+
+    <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-10 text-center">
+      Vanliga frågor
+    </h2>
+
+    <div class="space-y-0 divide-y divide-gray-200">
+
+      <details class="group py-5">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <h3 class="text-base font-semibold text-gray-900 pr-4">
+            Behöver jag vara teknisk för att använda det här?
+          </h3>
+          <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-gray-500 leading-relaxed">
+          Nej. Gratisrapporten förklarar allt på ren svenska. Premiumrapporten innehåller
+          kodsnuttar, men de är gjorda för att kopieras rakt in — du eller din webbutvecklare
+          kan använda dem direkt.
+        </p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <h3 class="text-base font-semibold text-gray-900 pr-4">
+            Vad gör jag med rapporten?
+          </h3>
+          <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-gray-500 leading-relaxed">
+          Du skickar den till den som sköter din hemsida — din webbyrå, din IT-person, eller
+          din kompis som "kan datorer". Premiumrapporten har steg-för-steg-instruktioner och
+          färdig kod. Om du har tillgång till WordPress, Squarespace eller liknande kan du
+          göra en del av ändringarna själv.
+        </p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <h3 class="text-base font-semibold text-gray-900 pr-4">
+            Varför kostar premiumrapporten pengar?
+          </h3>
+          <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-gray-500 leading-relaxed">
+          Gratisscanningen ger dig diagnosen — vad som saknas. Premiumrapporten ger dig
+          lösningarna: konkurrentanalys, skräddarsydda kodsnuttar, recensionsanalys och
+          en prioriterad handlingsplan. Det är timmar av research packat i ett dokument du
+          kan agera på direkt.
+        </p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <h3 class="text-base font-semibold text-gray-900 pr-4">
+            Vi har redan en SEO-byrå. Behövs det här också?
+          </h3>
+          <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-gray-500 leading-relaxed">
+          Traditionell SEO och AI-synlighet överlappar men är inte samma sak. De flesta SEO-byråer
+          optimerar fortfarande för Googles länklista — inte för ChatGPT:s eller Perplexitys
+          direktsvar. Kör gratisscanningen och fråga sedan din byrå: "fixar ni det här?"
+          Om svaret är tystnad har du svaret.
+        </p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <h3 class="text-base font-semibold text-gray-900 pr-4">
+            Samlar ni in min e-post eller säljer data?
+          </h3>
+          <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-gray-500 leading-relaxed">
+          Nej. Gratisscanningen kräver ingen e-post och ingen registrering. Vi lagrar din
+          rapport i 24 timmar så att du kan komma tillbaka till den, sedan raderas den.
+        </p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <h3 class="text-base font-semibold text-gray-900 pr-4">
+            Hur lång tid tar det att fixa problemen?
+          </h3>
+          <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-gray-500 leading-relaxed">
+          De flesta åtgärder tar mellan 30 minuter och 2 timmar att genomföra. Schema markup,
+          metabeskrivningar och robots.txt-ändringar är ofta klara på under en timme.
+          Att bygga bra innehåll (FAQ-sidor, guider) tar längre men ger störst effekt på sikt.
+        </p>
+      </details>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════════════ -->
+<footer class="py-10 border-t border-gray-200">
+  <div class="max-w-4xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p class="text-sm text-gray-400">
+      AI Search Scanner — byggd för svenska företag
+    </p>
+    <div class="flex items-center gap-4 text-sm text-gray-400">
+      <a href="https://analyze.pipod.net" class="hover:text-gray-600 transition-colors">analyze.pipod.net</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -37,8 +37,14 @@ export async function POST(req: NextRequest) {
       reviews = placeDetails?.reviews || []
     }
 
+    // Slå samman _domainMatch från place-sökningen till placeDetails
+    // (getPlaceDetails returnerar rå API-data utan våra custom-fält)
+    const placeForPremium = placeDetails
+      ? { ...placeDetails, _domainMatch: place._domainMatch, _warning: place._warning }
+      : place
+
     // 3. Premium-analys
-    const premiumPrompt = buildPremiumPrompt(freeReport, placeDetails || place, reviews)
+    const premiumPrompt = buildPremiumPrompt(freeReport, placeForPremium, reviews)
     const premiumReport = await analyzeWithPro(premiumPrompt)
 
     // 4. Spara premium-cache

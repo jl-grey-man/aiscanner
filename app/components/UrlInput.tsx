@@ -1,16 +1,17 @@
 import { useState, type FormEvent } from 'react'
 
 interface Props {
-  onSubmit: (url: string) => void
+  onSubmit: (url: string, city: string) => void
   disabled?: boolean
 }
 
 export function UrlInput({ onSubmit, disabled }: Props) {
   const [url, setUrl] = useState('')
+  const [city, setCity] = useState('')
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (url.trim()) onSubmit(url.trim())
+    if (url.trim()) onSubmit(url.trim(), city.trim())
   }
 
   return (
@@ -23,6 +24,16 @@ export function UrlInput({ onSubmit, disabled }: Props) {
           placeholder="https://dittforetag.se"
           disabled={disabled}
           className="flex-1 bg-surface border border-border rounded-xl px-5 py-4 text-lg
+                     text-gray-900 placeholder-gray-400 focus:outline-none focus:border-accent
+                     focus:ring-2 focus:ring-accent/20 transition-all disabled:opacity-50 shadow-sm"
+        />
+        <input
+          type="text"
+          value={city}
+          onChange={e => setCity(e.target.value)}
+          placeholder="Stad (t.ex. Göteborg)"
+          disabled={disabled}
+          className="w-48 bg-surface border border-border rounded-xl px-4 py-4 text-lg
                      text-gray-900 placeholder-gray-400 focus:outline-none focus:border-accent
                      focus:ring-2 focus:ring-accent/20 transition-all disabled:opacity-50 shadow-sm"
         />

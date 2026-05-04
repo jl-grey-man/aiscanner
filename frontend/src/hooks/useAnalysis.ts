@@ -54,7 +54,10 @@ export interface FreeReportData {
     cityFound: boolean
     cityName: string | null
     hasLocalBusinessSchema: boolean
+    hasRestaurantSchema: boolean
     schemaType: string | null
+    languageWarning: string | null
+    pagesScanned: number
   }
 }
 

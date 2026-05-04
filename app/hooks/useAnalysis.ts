@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import type { ScanResult } from '@/app/lib/scanResult'
 
 const STEP_MESSAGES = [
   'Hämtar hemsidan...',
@@ -95,12 +96,90 @@ export interface PremiumReportData {
   }>
 }
 
+export interface EnhancedReportData {
+  url: string
+  city: string
+  timestamp: string
+  synthesis: string
+  technical: {
+    aiCrawlers: { status: string; blocked: string[]; finding: string; fix: string }
+    ogTags: { status: string; missing: string[]; finding: string; fix: string; codeExample?: string }
+    socialPresence: { status: string; found: string[]; finding: string; fix: string }
+    hreflang: { status: string; finding: string; fix: string }
+  }
+  faqContent: {
+    faqSchema: { status: string; finding: string; fix: string; codeExample?: string }
+    contentDepth: { status: string; pageCount: number; hasBlog: boolean; finding: string; fix: string }
+    serviceSchema: { status: string; finding: string; fix: string; codeExample?: string }
+  }
+  eat: {
+    eatSignals: { status: string; found: string[]; missing: string[]; finding: string; fix: string }
+    orgNumber: { status: string; finding: string }
+    certifications: { status: string; found: string[]; finding: string; fix: string }
+  }
+  directories: {
+    foundCount: number
+    totalChecked: number
+    directories: Array<{
+      name: string
+      found: boolean
+      source: string
+      profileUrl?: string
+      nap?: { phone?: string; address?: string }
+    }>
+    napConsistency: {
+      checked: boolean
+      consistent: boolean
+      finding: string
+      fix: string
+      phone: { values: Array<{ directory: string; value: string }>; consistent: boolean }
+      address: { values: Array<{ directory: string; value: string }>; consistent: boolean }
+    }
+    status: string
+    finding: string
+    fix: string
+  }
+  reviewReplies: {
+    total: number
+    withReply: number
+    responseRate: number
+    status: string
+    finding: string
+    fix: string
+    sampleNote: string
+  }
+  aiMentions: {
+    entityQuery: string
+    entityResponse: string
+    entityKnows: boolean
+    entitySentiment: string
+    extractedNiche: string
+    categoryQuery: string
+    categoryResponse: string
+    categoryMentioned: boolean
+    status: string
+    finding: string
+    fix: string
+  } | null
+  hasPlaceData: boolean
+  placeData: {
+    name: string
+    address: string
+    phone: string
+    rating: number
+    reviewCount: number
+    verified: boolean
+  } | null
+}
+
 export type AnalysisState = 'idle' | 'scanning' | 'done' | 'error' | 'premium-loading' | 'premium-done'
 
 export function useAnalysis() {
   const [state, setState] = useState<AnalysisState>('idle')
   const [freeReport, setFreeReport] = useState<FreeReportData | null>(null)
   const [premiumReport, setPremiumReport] = useState<PremiumReportData | null>(null)
+  const [enhancedReport, setEnhancedReport] = useState<EnhancedReportData | null>(null)
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [analysisLog, setAnalysisLog] = useState<LogEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [stepIndex, setStepIndex] = useState(0)
@@ -128,41 +207,42 @@ export function useAnalysis() {
         setStepIndex(i)
       } else if (i === LAST_REAL_STEP) {
         setStepIndex(LAST_REAL_STEP)
-        // Start creeping progress from 88% toward 99%
+        // Start creeping progress from 88% toward 99% — slows down as it approaches 99%
+        // Designed for ~90s total scan time: reaches ~93% at 30s, ~96% at 60s, ~98% at 90s
         let p = 88
         clearInterval(intervalRef.current!)
         intervalRef.current = setInterval(() => {
-          p += Math.random() * 1.5 + 0.3 // 0.3–1.8% per tick
-          if (p >= 99) {
-            p = 99
-            clearInterval(intervalRef.current!)
-            intervalRef.current = null
-          }
+          const remaining = 99 - p
+          // Each tick moves 1.5-3% of the remaining distance — asymptotic approach
+          p += remaining * (0.015 + Math.random() * 0.015)
+          if (p >= 98.9) p = 98.9 // Never quite reach 99% until actually done
           setSimulatedProgress(p)
-        }, 400)
+        }, 1000)
       }
     }, 1100)
   }, [clearTimers])
 
-  const analyze = useCallback(async (url: string) => {
+  const analyze = useCallback(async (url: string, city?: string) => {
     clearTimers()
     setState('scanning')
     setFreeReport(null)
     setPremiumReport(null)
+    setEnhancedReport(null)
+    setScanResult(null)
     setError(null)
     setSimulatedProgress(null)
     simulateSteps()
 
     try {
-      const res = await fetch('/api/scan', {
+      const res = await fetch('/api/enhanced-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, city }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
-      setFreeReport(json.data)
-      setAnalysisLog(json.log || null)
+      setEnhancedReport(json as EnhancedReportData)
+      setScanResult(json as ScanResult)
       setStepIndex(STEP_MESSAGES.length - 1)
       setSimulatedProgress(100)
       setState('done')
@@ -210,6 +290,8 @@ export function useAnalysis() {
     setState('idle')
     setFreeReport(null)
     setPremiumReport(null)
+    setEnhancedReport(null)
+    setScanResult(null)
     setAnalysisLog(null)
     setError(null)
     setStepIndex(0)
@@ -227,6 +309,8 @@ export function useAnalysis() {
     state,
     freeReport,
     premiumReport,
+    enhancedReport,
+    scanResult,
     analysisLog,
     error,
     currentStep,

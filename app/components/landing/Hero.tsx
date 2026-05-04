@@ -5,10 +5,7 @@ import { R } from './utils'
 export function Hero() {
   return (
     <section className="hero-section">
-      {/* Giant decorative "?" */}
-      <div className="hero-glyph" aria-hidden="true">?</div>
-
-      <div className="hero-inner">
+<div className="hero-inner">
         <R>
           <p className="hero-tag">AI Search Scanner</p>
         </R>
@@ -34,12 +31,6 @@ export function Hero() {
         </R>
       </div>
 
-      <R delay={6}>
-        <p className="hero-footnote">
-          Förra året svarade Google med en länklista.<br/>
-          I år svarar ChatGPT med ett namn.
-        </p>
-      </R>
     </section>
   )
 }
