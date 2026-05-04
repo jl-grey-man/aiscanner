@@ -1,6 +1,7 @@
 'use client'
 
 import { R } from './utils'
+import { APP_DOMAIN, APP_URL } from '@/app/lib/config'
 
 export function ReportExample() {
   return (
@@ -22,7 +23,7 @@ export function ReportExample() {
             {/* Header */}
             <div className="report-header">
               <div>
-                <span className="report-mono">analyze.pipod.net</span>
+                <span className="report-mono">{APP_DOMAIN}</span>
                 <h3 className="report-name">Bjurfors</h3>
                 <span className="report-meta">bjurfors.se · Fastighetsmäklare</span>
               </div>
@@ -99,7 +100,7 @@ export function ReportExample() {
 
             <div style={{ padding: '16px 28px 20px', borderTop: '1px solid var(--c-border)', textAlign: 'center' }}>
               <span style={{ fontSize: 13, color: 'var(--c-muted)' }}>Detta är ett utdrag. </span>
-              <a href="https://analyze.pipod.net/bjurfors" style={{ fontSize: 13, color: 'var(--c-accent)', fontWeight: 600, textDecoration: 'none' }}>Se hela Bjurfors-rapporten →</a>
+              <a href={`${APP_URL}/bjurfors`} style={{ fontSize: 13, color: 'var(--c-accent)', fontWeight: 600, textDecoration: 'none' }}>Se hela Bjurfors-rapporten →</a>
             </div>
           </div>
         </div>

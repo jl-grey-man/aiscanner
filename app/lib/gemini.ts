@@ -63,13 +63,15 @@ async function sleep(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms))
 }
 
+import { APP_URL } from './config'
+
 async function callWithModel(model: string, prompt: string): Promise<any> {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://analyze.pipod.net',
+      'HTTP-Referer': APP_URL,
       'X-Title': 'AI Search Scanner',
     },
     body: JSON.stringify({

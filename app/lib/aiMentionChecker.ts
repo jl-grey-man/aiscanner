@@ -1,3 +1,5 @@
+import { APP_URL } from './config'
+
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // GPT-4o-mini: cheap, has broad web training data — good for simulating ChatGPT user queries
 const AI_MENTION_MODEL = 'openai/gpt-4o-mini'
@@ -32,7 +34,7 @@ async function callGPT(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://analyze.pipod.net',
+        'HTTP-Referer': APP_URL,
         'X-Title': 'AI Search Scanner - AI Mention Check',
       },
       body: JSON.stringify({

@@ -9,6 +9,7 @@ import SolutionCard from './SolutionCard'
 import CheckTable from './CheckTable'
 import Glossary from './Glossary'
 import { renderMarkdown } from './RichMarkdown'
+import { APP_DOMAIN } from '@/app/lib/config'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -111,7 +112,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
 
         {/* ==================== 1. HEADER ==================== */}
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-gray-500 text-sm">analyze.pipod.net</span>
+          <span className="text-gray-500 text-sm">{APP_DOMAIN}</span>
           <span className="text-gray-400">/</span>
           <span className="text-gray-600 text-sm">{meta.domain}</span>
         </div>
@@ -362,7 +363,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
 
         {/* ==================== 10. FOOTER ==================== */}
         <p className="text-center text-gray-400 text-xs pb-8">
-          Genererad av analyze.pipod.net &middot; Rapport-ID: {meta.scanId} &middot; Data hamtad {meta.scanDate}
+          Genererad av {APP_DOMAIN} &middot; Rapport-ID: {meta.scanId} &middot; Data hamtad {meta.scanDate}
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import React from 'react'
 import type { ScanResult, CheckResult, CheckRegistryEntry } from '@/app/lib/scanResult'
 import { CHECK_REGISTRY } from '@/app/lib/scanResult'
 import { ScoreCircle, PriorityCard, SolutionCard, LockedSection, CheckTable, Glossary } from '@/app/components/report'
+import { APP_DOMAIN } from '@/app/lib/config'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -130,7 +131,7 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
 
         {/* ==================== 1. HEADER ==================== */}
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-gray-500 text-sm">analyze.pipod.net</span>
+          <span className="text-gray-500 text-sm">{APP_DOMAIN}</span>
           <span className="text-gray-400">/</span>
           <span className="text-gray-600 text-sm">{meta.domain}</span>
         </div>
@@ -416,7 +417,7 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
         </div>
 
         <p className="text-center text-gray-400 text-xs pb-8">
-          Genererad av analyze.pipod.net &middot; Rapport-ID: {meta.scanId} &middot; Data hämtad {meta.scanDate}
+          Genererad av {APP_DOMAIN} &middot; Rapport-ID: {meta.scanId} &middot; Data hämtad {meta.scanDate}
         </p>
       </div>
     </div>

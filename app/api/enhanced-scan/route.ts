@@ -9,6 +9,7 @@ import { buildCheckResults } from '@/app/lib/checkBuilder'
 import { calculateScores, ScanResultSchema } from '@/app/lib/scanResult'
 import type { ScanResult } from '@/app/lib/scanResult'
 import { enrichChecksWithReportWriter } from '@/app/lib/reportWriter'
+import { APP_URL } from '@/app/lib/config'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -65,7 +66,7 @@ async function callOpenRouter(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://analyze.pipod.net',
+        'HTTP-Referer': APP_URL,
         'X-Title': 'AI Search Scanner Enhanced',
       },
       body: JSON.stringify({
