@@ -5,7 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8010',
+      '/api': {
+        target: 'https://aiscanner-production.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
   base: '/',

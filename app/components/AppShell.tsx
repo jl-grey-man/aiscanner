@@ -39,7 +39,7 @@ export function AppShell() {
   if (state === 'idle') {
     return (
       <>
-        <Hero />
+        <Hero onAnalyze={analyze} />
         <SearchChanged />
         <ConcreteExample />
         <WhatAILooksAt />

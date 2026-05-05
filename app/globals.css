@@ -50,7 +50,7 @@ em { font-family: var(--font-serif); font-style: italic; }
   min-height: 100vh;
   display: flex; flex-direction: column; justify-content: center;
   padding: 80px 32px 60px;
-  position: relative; overflow: hidden;
+  position: relative;
   background: url('/header.webp') center center / cover no-repeat;
 }
 .hero-glyph {
@@ -60,6 +60,41 @@ em { font-family: var(--font-serif); font-style: italic; }
   pointer-events: none; user-select: none;
 }
 .hero-inner { max-width: 740px; position: relative; z-index: 1; }
+.hero-grid {
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .hero-grid > div:first-child {
+    background: rgba(250,248,245,0.82);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    padding: 28px;
+    margin: 0 -8px;
+  }
+}
+.hero-form-card {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.hero-form-label {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--c-ink);
+  margin-bottom: 20px;
+}
 .hero-tag {
   font-family: var(--font-display); font-size: 13px; font-weight: 600;
   letter-spacing: 0.1em; text-transform: uppercase;
@@ -78,6 +113,7 @@ em { font-family: var(--font-serif); font-style: italic; }
   background: var(--c-accent);
   display: inline-block;
   padding: 6px 12px 10px;
+  white-space: nowrap;
 }
 .hero-body {
   font-size: 18px; line-height: 1.7; color: var(--c-ink);
@@ -89,8 +125,64 @@ em { font-family: var(--font-serif); font-style: italic; }
   color: var(--c-accent); text-decoration: none;
   padding-bottom: 3px; border-bottom: 2px solid var(--c-accent);
   transition: gap 0.3s;
+  flex-shrink: 0;
 }
 .hero-cta:hover { gap: 16px; }
+
+.hero-action-wrap {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  padding: 0 32px;
+  position: relative;
+  z-index: 1;
+}
+.hero-action-row {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 52px;
+}
+.hero-form-box {
+  margin: 0 auto;
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 20px 28px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  max-width: 540px;
+  width: 100%;
+}
+/* CTA sits on the left, outside the box */
+.hero-action-row .hero-cta {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 900px) {
+  .hero-action-wrap {
+    padding: 0 20px;
+    margin-top: 12px;
+  }
+  .hero-action-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    min-height: auto;
+  }
+  .hero-action-row .hero-cta {
+    position: static;
+    align-self: flex-start;
+  }
+  .hero-form-box {
+    margin: 0;
+    max-width: none;
+    padding: 20px;
+  }
+}
+
 .hero-footnote {
   position: absolute; bottom: 48px; left: 32px;
   font-size: 13px; line-height: 1.6; color: var(--c-ink);
@@ -301,7 +393,7 @@ em { font-family: var(--font-serif); font-style: italic; }
    CTA SECTION
    ══════════════════════════════════════════════════ */
 .cta-section {
-  padding: clamp(100px,14vw,180px) 0;
+  padding: clamp(100px,14vw,180px) 0 0;
   background: var(--c-bg-alt);
   text-align: center;
   position: relative;

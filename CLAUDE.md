@@ -18,10 +18,12 @@ AI Search Scanner — Swedish-language tool that analyzes how well a website is 
 - **AI:** OpenRouter API — Gemini 2.5 Flash (free), Gemini 2.5 Pro (premium)
 - **Scraping:** Node.js `node-fetch` + `cheerio` (NOT Python, NOT BeautifulSoup)
 - **Google Places:** New Places API (Text Search + Place Details)
-- **Deploy:** systemd + nginx on PiPod (port 8010)
+- **Deploy:** Railway (nixpacks, standalone output) + auto-deploy from GitHub
 
 > **Note:** The old `backend/` (Python FastAPI) and `frontend/` (React/Vite) directories are DEAD CODE.
 > The entire app lives in `app/`. Do not read or modify backend/ or frontend/.
+>
+> **Config helper:** `app/lib/config.ts` exports `APP_URL` and `APP_DOMAIN` from `NEXT_PUBLIC_APP_URL`. Never hardcode domains — always import from config.ts.
 
 ## Architecture
 
@@ -175,38 +177,39 @@ The scraper extracts these fields per page:
 
 ```bash
 # Development
-cd /mnt/storage/aiscanner
-npm run dev          # dev server on port 3000
+npm run dev          # Next.js dev server on port 3000
 
-# Production build + restart
-# IMPORTANT: standalone output does NOT copy public/ automatically — always run both steps:
-npm run build && cp -r public .next/standalone/public && sudo systemctl restart ai-scanner-api
+# Production build (Railway runs this automatically)
+npm run build        # outputs to .next/standalone/
 
-# Service management
-sudo systemctl restart ai-scanner-api
-sudo journalctl -u ai-scanner-api -f
-
-# Test enhanced scan
-curl -s -X POST http://localhost:8010/api/enhanced-scan \
+# Test enhanced scan locally
+curl -s -X POST http://localhost:3000/api/enhanced-scan \
   -H "Content-Type: application/json" \
   -d '{"url":"https://example.se","city":"Göteborg"}' \
   --max-time 140 | python3 -m json.tool
+
+# Railway CLI (requires login)
+railway login
+railway link -p "AI SCANNER"
+railway service aiscanner
+railway variables               # view/set env vars
+railway deployment list         # view deployments
+railway deployment redeploy     # trigger redeploy
 ```
 
 ## URLs
 
-- **Production:** https://analyze.pipod.net
-- **Local (Tailscale):** http://100.72.180.20:8010
-- **Main API:** POST http://localhost:8010/api/enhanced-scan (city param optional)
-- **Demo reports:** http://100.72.180.20/aiscanner-demos/
+- **Production:** https://aiscanner-production.up.railway.app
+- **Local:** http://localhost:3000
+- **Main API:** POST /api/enhanced-scan (city param optional)
+- **Legacy API:** POST /api/scan, POST /api/full-scan
 
 ## Environment
 
-- `.env` at project root — contains `OPENROUTER_API_KEY`, `GOOGLE_PLACES_API_KEY`, `TAVILY_API_KEY`
-- Port: **8010** (registered in PiPod port registry)
-- systemd: `ai-scanner-api.service`
-- Cloudflare Tunnel: `analyze-tunnel.service` → `analyze.pipod.net`
-- nginx: proxies `analyze.pipod.net` → port 8010
+- `.env.local` at project root — synced from Railway variables: `OPENROUTER_API_KEY`, `GOOGLE_PLACES_API_KEY`, `TAVILY_API_KEY`, `NEXT_PUBLIC_APP_URL`
+- `railway.toml`: nixpacks build, standalone start command, healthcheck
+- Railway auto-deploys on push to GitHub master
+- `HOSTNAME=0.0.0.0` required in Railway env for Next.js standalone to bind correctly
 
 ## Overseer-regler för implementationsplaner
 
@@ -219,6 +222,18 @@ När du agerar som overseer och exekverar en implementationsplan (t.ex. IMPLEMEN
 5. **"Agent said success" är INTE verifiering** — overseern måste oberoende bekräfta genom att köra kommandon eller granska agent-output mot PASS-kriterierna.
 6. **Modellval i planen är krav, inte förslag** — se tabellen "Modellval per steg".
 
+## UI / Frontend Verification Rules
+
+Every frontend change MUST pass the following gate before being presented to the user:
+
+1. **All changes must work on mobile, tablet, and desktop.**
+2. **All changes must be checked by you through screenshots on mobile AND desktop** before saying anything to the user.
+3. **At every screenshot, ask yourself:**
+   - *"Är detta en bra design?"* — Does the layout work, is it readable, balanced?
+   - *"Följer den resten av UI:t?"* — Do colors, typography, spacing and style match the rest of the site?
+   - *"Ser det snyggt ut?"* — Contrast, proportions, details — is it visually appealing?
+4. **If the answer to any of the three questions is NO — redo it and run a new screenshot.** Do not present imperfect results.
+
 ## Coding rules
 
 - TypeScript strict, no `any` unless unavoidable
@@ -228,6 +243,8 @@ När du agerar som overseer och exekverar en implementationsplan (t.ex. IMPLEMEN
 - Scraper runs server-side only (API route)
 - Hard body text limit: 800 chars per page (keeps AI prompt manageable)
 - Never modify `backend/` or `frontend/` — dead code, do not touch
+- **Never hardcode domains** — always use `APP_URL` / `APP_DOMAIN` from `app/lib/config.ts`
+- `NEXT_PUBLIC_*` env vars are inlined at build time — must be set in Railway BEFORE deploy
 
 ## Fragile areas
 

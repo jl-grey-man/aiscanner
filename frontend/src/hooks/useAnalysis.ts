@@ -100,6 +100,8 @@ export interface PremiumReportData {
 
 export type AnalysisState = 'idle' | 'scanning' | 'done' | 'error' | 'premium-loading' | 'premium-done'
 
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
 export function useAnalysis() {
   const [state, setState] = useState<AnalysisState>('idle')
   const [freeReport, setFreeReport] = useState<FreeReportData | null>(null)
@@ -157,7 +159,7 @@ export function useAnalysis() {
     simulateSteps()
 
     try {
-      const res = await fetch('/api/scan', {
+      const res = await fetch(`${API_BASE}/api/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -187,7 +189,7 @@ export function useAnalysis() {
     simulateSteps()
 
     try {
-      const res = await fetch('/api/full-scan', {
+      const res = await fetch(`${API_BASE}/api/full-scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),

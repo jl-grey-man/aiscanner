@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Syne, DM_Sans, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import { Header } from '@/app/components/navigation/Header'
 
 const syne = Syne({ subsets: ['latin'], weight: ['400', '700', '800'], variable: '--font-display', display: 'swap' })
 const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-body', display: 'swap' })
@@ -19,7 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="sv" className={`${syne.variable} ${dmSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <Header />
+        <main>{children}</main>
+      </body>
     </html>
   )
 }
