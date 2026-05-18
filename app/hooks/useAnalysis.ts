@@ -1,6 +1,47 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ScanResult } from '@/app/lib/scanResult'
 
+/**
+ * Fetch wrapper that retries on transient failures (network drops, 5xx).
+ *
+ * - Network error (TypeError "Failed to fetch") → retry
+ * - HTTP 5xx → retry
+ * - HTTP 4xx → no retry (client error, won't fix itself)
+ * - JSON-level errors handled by caller (we still return the Response)
+ *
+ * Backoff: 3s, 8s, 15s between attempts. Max 2 retries (3 attempts total).
+ */
+async function fetchWithRetry(
+  input: string,
+  init: RequestInit,
+  maxRetries = 2,
+  label = 'fetch',
+): Promise<Response> {
+  const backoffMs = [3000, 8000, 15000]
+  let lastErr: unknown = null
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(input, init)
+      if (res.status >= 500 && res.status < 600 && attempt < maxRetries) {
+        console.warn(`[${label}] got ${res.status}, retrying in ${backoffMs[attempt]}ms (attempt ${attempt + 1}/${maxRetries})`)
+        await new Promise((r) => setTimeout(r, backoffMs[attempt]))
+        continue
+      }
+      return res
+    } catch (err: unknown) {
+      lastErr = err
+      const msg = err instanceof Error ? err.message : String(err)
+      if (attempt < maxRetries) {
+        console.warn(`[${label}] network error (${msg}), retrying in ${backoffMs[attempt]}ms (attempt ${attempt + 1}/${maxRetries})`)
+        await new Promise((r) => setTimeout(r, backoffMs[attempt]))
+        continue
+      }
+      throw err
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(`${label} failed`)
+}
+
 const STEP_MESSAGES = [
   'Hämtar hemsidan...',
   'Analyserar teknisk struktur...',
@@ -240,11 +281,16 @@ export function useAnalysis() {
     simulateSteps()
 
     try {
-      const res = await fetch('/api/enhanced-scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, city, tier: 'free' }),
-      })
+      const res = await fetchWithRetry(
+        '/api/enhanced-scan',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, city, tier: 'free' }),
+        },
+        2,
+        'free-scan',
+      )
       const json = await res.json()
       if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
       setEnhancedReport(json as EnhancedReportData)
@@ -271,11 +317,16 @@ export function useAnalysis() {
     setPaidError(null)
     try {
       console.log('[useAnalysis] starting paid scan for', url)
-      const res = await fetch('/api/enhanced-scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, city, tier: 'paid' }),
-      })
+      const res = await fetchWithRetry(
+        '/api/enhanced-scan',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, city, tier: 'paid' }),
+        },
+        2,
+        'paid-scan',
+      )
       const json = await res.json()
       if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
       console.log('[useAnalysis] paid scan done')
