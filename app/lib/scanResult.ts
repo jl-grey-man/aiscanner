@@ -250,7 +250,7 @@ export const CHECK_REGISTRY: CheckRegistryEntry[] = [
   { id: 7,  key: 'ogTags',         label: 'Open Graph-taggar',         category: 'technical',    tier: 'free',    weight: { free: 3, full: 2 } },
   { id: 8,  key: 'socialPresence', label: 'Social närvaro / sameAs',   category: 'technical',    tier: 'premium', weight: { free: 0, full: 3 } },
   { id: 9,  key: 'hreflang',       label: 'hreflang-taggar',           category: 'technical',    tier: 'premium', weight: { free: 0, full: 2 } },
-  { id: 10, key: 'cwv',            label: 'Sidhastighet / CWV',        category: 'technical',    tier: 'free',    weight: { free: 0, full: 0 } },
+  { id: 10, key: 'cwv',            label: 'Sidhastighet / CWV',        category: 'technical',    tier: 'free',    weight: { free: 3, full: 2 } },
 
   // B. Lokal synlighet
   { id: 11, key: 'phone',          label: 'Telefonnummer synligt',     category: 'local',        tier: 'free',    weight: { free: 3, full: 2 } },

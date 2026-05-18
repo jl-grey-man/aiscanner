@@ -17,6 +17,7 @@ import type { ScrapedData, PageSummary } from './scraper'
 import type { EnhancedData } from './enhancedScraper'
 import type { DirectoryResult } from './directoryChecker'
 import type { AIMentionResult } from './aiMentionChecker'
+import type { CwvMetrics } from './pageSpeed'
 
 // ---------------------------------------------------------------------------
 // Types for function params
@@ -42,6 +43,8 @@ export interface BuildCheckResultsParams {
   placeData: Record<string, unknown> | null
   url: string
   isHttps: boolean
+  cwvMetrics?: CwvMetrics | null
+  competitorList?: Array<{ name: string; rating: number | null; userRatingCount: number | null; distanceMeters: number }> | null
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +141,8 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     reviewReplyResult,
     placeData,
     isHttps,
+    cwvMetrics,
+    competitorList,
   } = params
 
   const page: PageSummary | undefined = scraperData.pages[0]
@@ -294,14 +299,31 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     techHreflang.data,
   ))
 
-  // #10 cwv (not implemented, weight=0)
-  checks.push(makeCheck(
-    'cwv',
-    'notMeasured',
-    'computed',
-    'Sidhastighet/CWV ar inte implementerad i denna version.',
-    null,
-  ))
+  // #10 cwv (PageSpeed Insights API)
+  if (cwvMetrics) {
+    checks.push(makeCheck(
+      'cwv',
+      cwvMetrics.status,
+      'api',
+      cwvMetrics.finding,
+      cwvMetrics.fix,
+      {
+        lcp: cwvMetrics.lcp,
+        cls: cwvMetrics.cls,
+        inp: cwvMetrics.inp,
+        performanceScore: cwvMetrics.performanceScore,
+        source: cwvMetrics.source,
+      },
+    ))
+  } else {
+    checks.push(makeCheck(
+      'cwv',
+      'notMeasured',
+      'api',
+      'Sidhastighet (Core Web Vitals) kunde inte hämtas från PageSpeed Insights.',
+      null,
+    ))
+  }
 
   // #11 phone (scraper)
   {
@@ -897,14 +919,35 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     }
   }
 
-  // #36 competitors (computed -- no real competitor data)
-  checks.push(makeCheck(
-    'competitors',
-    'notMeasured',
-    'computed',
-    'Konkurrentanalys baseras pa AI-syntes -- ingen oberoende datakalla tillganglig.',
-    null,
-  ))
+  // #36 competitors (Google Places Nearby Search)
+  if (competitorList && competitorList.length >= 1) {
+    const top = competitorList.slice(0, 5)
+    const summary = top
+      .map(c => {
+        const rating = c.rating !== null ? `${c.rating.toFixed(1)}/5` : 'utan betyg'
+        const reviews = c.userRatingCount !== null ? `${c.userRatingCount} recensioner` : ''
+        const distance = c.distanceMeters > 0 ? `${c.distanceMeters} m bort` : ''
+        const meta = [rating, reviews, distance].filter(Boolean).join(', ')
+        return `${c.name} (${meta})`
+      })
+      .join('; ')
+    checks.push(makeCheck(
+      'competitors',
+      'ok',
+      'api',
+      `Närliggande konkurrenter (Google Places, ≤1,5 km): ${summary}.`,
+      null,
+      { competitors: top },
+    ))
+  } else {
+    checks.push(makeCheck(
+      'competitors',
+      'notMeasured',
+      'api',
+      'Närliggande konkurrenter kunde inte hämtas — Google Business Profile eller positionsdata saknas.',
+      null,
+    ))
+  }
 
   // #37 synthesis (not scored, not applicable)
   checks.push(makeCheck(

@@ -9,7 +9,8 @@ AI Search Scanner — Swedish-language tool that analyzes how well a website is 
 | **Checklist.md** | `./Checklist.md` | Feature checklist — [x] done, [ ] pending |
 | **IMPLEMENTATION-PLAN.md** | `./IMPLEMENTATION-PLAN.md` | 4-fas implementation plan with MANDATORY-TESTS per step |
 | **OVERSEER-PROMPT.md** | `./OVERSEER-PROMPT.md` | Generic overseer prompt — copy after /clear + specify fas |
-| **SCANNER_VERIFICATION.md** | `./SCANNER_VERIFICATION.md` | QA test results against real businesses |
+| **SCANNER_VERIFICATION.md** | `./SCANNER_VERIFICATION.md` | QA test results against real businesses (Apr 26) |
+| **QA-FIX-PLAN.md** | `./docs/QA-FIX-PLAN.md` | Fix plan for 5 remaining QA problems — root causes, files, fixes |
 
 ## Stack (current — Next.js 15 App Router)
 
@@ -65,7 +66,8 @@ app/
     scraper.ts                # Basic scraping + PageSummary extraction
     directoryChecker.ts       # Swedish directory check via Tavily API (Eniro, Hitta) + NAP consistency
     aiMentionChecker.ts       # Two-step AI mention test: entity query → niche extraction → category query
-    places.ts                 # Google Places API — Text Search + Place Details (max 5 reviews)
+    places.ts                 # Google Places API — Text Search + Place Details (max 5 reviews) + findNearbyCompetitors (Nearby Search for check #36)
+    pageSpeed.ts              # Google PageSpeed Insights API — getCwvMetrics() returns LCP/CLS/INP for check #10 (prefers CrUX field data)
     prompts.ts                # buildFreePrompt() / buildPremiumPrompt() (legacy)
     gemini.ts                 # OpenRouter API wrapper for Gemini Flash/Pro calls
     redis.ts                  # In-memory result cache (24h TTL, stub Redis)
@@ -75,9 +77,9 @@ app/
 ### Enhanced scan flow (`/api/enhanced-scan`)
 
 1. Parallel: `scrapeEnhanced()` + `scrapeWebsite()` + `findBusinessByUrl(url, city)`
-2. `getPlaceDetails()` — single Places call → up to 5 reviews (API max)
+2. `getPlaceDetails()` — single Places call → up to 5 reviews (API max), plus `location` + `primaryType` (needed for Nearby Search)
 3. City priority: user input → Places formattedAddress (regex `\d{5}\s+([A-ZÅÄÖ][a-zåäö]+)`) → scraped cities
-4. Parallel: 3× Gemini Flash (technical, FAQ, E-A-T) + Tavily directory check + AI mention test
+4. Parallel: 3× Gemini Flash (technical, FAQ, E-A-T) + Tavily directory check + AI mention test + PageSpeed Insights (`getCwvMetrics`) + Places Nearby Search (`findNearbyCompetitors`)
 5. `analyzeReviewReplies()` — uses merged reviews + totalReviewCount for disclaimer (`sampleNote`)
 6. `buildCheckResults()` — assembles all raw data into 37 typed `CheckResult` objects
 7. **Parallel:** Gemini Pro synthesis + Report Writer (3-4 Pro batch calls for bad/warning checks)
@@ -254,7 +256,10 @@ Every frontend change MUST pass the following gate before being presented to the
 - **Canonical:** Extracted BEFORE cheerio removes `<head>` elements (step 2 in extractSummary).
 - **Google Maps:** Detected BEFORE iframes are removed (step 3 in extractSummary). Order matters.
 - **Port 8010 collision:** If another service starts on 8010, the scanner silently fails. Check registry before deploying.
-- **Enhanced scan timeout:** Takes ~90s total (scraping + 3 Flash + Pro). Cloudflare tunnel drops at 100s — scan must stay under that. If Pro synthesis times out (90s limit), it falls back to a stub message.
+- **Enhanced scan timeout:** Takes ~70-150s total (scraping + 3 Flash + PSI + Places Nearby + Pro). Production runs on Railway (`robotbyran.com`) which has no per-request HTTP timeout — long scans complete fine. PiPod-via-Cloudflare-Tunnel (`analyze.pipod.net`) DOES have a 100s edge timeout on the free plan, so use Railway for prod and Tailscale-direct (`http://100.72.180.20:8010`) for dev. If Pro synthesis times out (90s limit), it falls back to a stub message.
+- **Dev toggle:** `AppShell.tsx` line 18 `IS_DEV` is intentionally hardcoded `true` during development so Jens can manually flip between free/premium views on the live site. Change to `process.env.NODE_ENV === 'development'` only at launch.
+- **PageSpeed Insights (CWV check #10):** Uses `GOOGLE_PLACES_API_KEY` (same key as Places API — PSI must be enabled on the Google Cloud project AND added to the key's API restrictions list). Falls back to `notMeasured` with a 403/timeout finding if the API call fails — never blocks the scan. Prefers CrUX field data over Lighthouse lab data.
+- **Competitors check #36:** Uses Places API (New) Nearby Search with the business's `location.latitude/longitude` + `primaryType` (radius 1.5 km, max 6 results, deduped on normalized name). Returns `notMeasured` if no GBP match. The synthesis prompt is given the verified list and instructed to NEVER invent competitor names — when the list is empty it falls back to industry-generic insights.
 - **Tavily directory check:** Uses `TAVILY_API_KEY`. If missing, directory check returns warning status with empty results. Gulasidorna removed from ACTIVE_CHECK_DIRS — do not add back (rate-limiting issues).
 - **AI mention city guard:** Category query is skipped entirely if no city is resolved. Never use "Sverige" as fallback — it produces meaningless national-level results.
 - **Places API reviews:** Returns max 5 reviews per call. The New Places API REST endpoint has no `reviewSort` parameter or pagination — what you get is what you get.

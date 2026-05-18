@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeWebsite } from '@/app/lib/scraper'
 import { scrapeEnhanced } from '@/app/lib/enhancedScraper'
-import { findBusinessByUrl, getPlaceDetails } from '@/app/lib/places'
+import { findBusinessByUrl, getPlaceDetails, findNearbyCompetitors } from '@/app/lib/places'
+import type { NearbyCompetitor } from '@/app/lib/places'
 import { checkSwedishDirectories } from '@/app/lib/directoryChecker'
 import { checkAIMentions } from '@/app/lib/aiMentionChecker'
+import { getCwvMetrics } from '@/app/lib/pageSpeed'
 import { buildCheckResults } from '@/app/lib/checkBuilder'
 import { calculateScores, ScanResultSchema } from '@/app/lib/scanResult'
 import type { ScanResult } from '@/app/lib/scanResult'
@@ -374,8 +376,33 @@ function buildSynthesisPrompt(
   url: string,
   directoryResult: any,
   reviewReplyResult: any,
-  aiMentionResult: any
+  aiMentionResult: any,
+  competitorList: NearbyCompetitor[] | null,
+  cwvMetrics: any
 ): string {
+  const competitorBlock = competitorList && competitorList.length > 0
+    ? `NÄRLIGGANDE KONKURRENTER (Google Places, ≤1,5 km — VERIFIERAD data):
+${JSON.stringify(competitorList.map(c => ({
+        namn: c.name,
+        betyg: c.rating,
+        antalRecensioner: c.userRatingCount,
+        avstandMeter: c.distanceMeters,
+      })), null, 2)}`
+    : 'NÄRLIGGANDE KONKURRENTER: Ingen verifierad data tillgänglig.'
+
+  const cwvBlock = cwvMetrics
+    ? `SIDHASTIGHET (PageSpeed Insights):
+${JSON.stringify({
+        status: cwvMetrics.status,
+        lcp: cwvMetrics.lcp,
+        cls: cwvMetrics.cls,
+        inp: cwvMetrics.inp,
+        performanceScore: cwvMetrics.performanceScore,
+        källa: cwvMetrics.source,
+        finding: cwvMetrics.finding,
+      }, null, 2)}`
+    : 'SIDHASTIGHET: Ej mätt.'
+
   return `Du är en senior svensk AI-sökningsstrateg. Skapa en prioriterad åtgärdsplan baserad på alla analyser.
 
 WEBBPLATS: ${url}
@@ -419,6 +446,10 @@ ${JSON.stringify({
   finding: aiMentionResult?.finding,
 }, null, 2)}
 
+${competitorBlock}
+
+${cwvBlock}
+
 GOOGLE BUSINESS PROFILE:
 ${placeData ? JSON.stringify({
     namn: placeData.displayName?.text,
@@ -443,7 +474,7 @@ Returnera ett JSON-objekt med exakt dessa 4 nycklar:
 
 {
   "actionPlan": "Markdown-formaterad prioriterad åtgärdsplan. Använd ### Kritiskt, ### Viktigt, ### Bra att ha. Numrerade åtgärder med konkreta steg. Inkludera kodexempel där relevant.",
-  "competitorNote": "Markdown-text om branschlandskapet. VIKTIGT: Du har INGEN verifierad data om specifika konkurrenter. Skriv ALDRIG konkreta företagsnamn. Beskriv istället vad typiska konkurrenter i branschen tenderar att göra bra/dåligt gällande AI-synlighet.",
+  "competitorNote": "Markdown-text om konkurrenslandskapet. Om NÄRLIGGANDE KONKURRENTER ovan listar verifierade företagsnamn — använd EXAKT de namnen (skriv aldrig om dem, hitta inte på andra). Kommentera betyg/recensionsantal och vad det säger om marknadspositionen. Om listan är tom: beskriv branschtypiska konkurrentmönster utan att hitta på företagsnamn.",
   "reviewAnalysis": "Markdown-text med recensionsanalys: betyg, svarsfrekvens, teman, styrkor/svagheter. null om ingen recensionsdata finns.",
   "summary": "3-5 meningar sammanfattning av sajtens AI-beredskap och viktigaste nästa steg."
 }
@@ -452,7 +483,7 @@ REGLER:
 - Returnera ENBART giltig JSON — inga markdown-kodblock, ingen text utanför JSON
 - actionPlan MÅSTE börja med "### Kritiskt" (inte ##)
 - actionPlan: inga tidsramar ("denna vecka", "denna månad", "inom X dagar" etc.)
-- competitorNote: ALDRIG specifika företagsnamn — bara branschinsikter
+- competitorNote: använd ENDAST företagsnamn som finns i NÄRLIGGANDE KONKURRENTER-listan ovan. Hitta ALDRIG på namn. Om listan är tom — skriv branschinsikter utan namn.
 - reviewAnalysis: null om reviewReplyResult visar 0 recensioner
 - summary: max 5 meningar, konkret och handlingsbar
 - Alla texter på svenska
@@ -542,7 +573,7 @@ export async function POST(req: NextRequest) {
     // Run 3 Flash calls + directory check + AI mention check in parallel
     const flashSystem = 'Du är en svensk AI-sökningsanalytiker. Svara ENDAST i giltig JSON. Ingen markdown, ingen text utanför JSON.'
 
-    const [technicalResult, faqResult, eatResult, directoryResult, aiMentionResult] = await Promise.all([
+    const [technicalResult, faqResult, eatResult, directoryResult, aiMentionResult, cwvMetrics, competitorList] = await Promise.all([
       callOpenRouter(
         FLASH_MODEL,
         flashSystem,
@@ -641,6 +672,20 @@ export async function POST(req: NextRequest) {
         console.error('[Enhanced Scan] AI mention check failed:', err.message)
         return null
       }),
+      getCwvMetrics(url).catch((err) => {
+        console.error('[Enhanced Scan] PSI failed:', err.message)
+        return null
+      }),
+      (async (): Promise<NearbyCompetitor[]> => {
+        const lat = placeForAnalysis?.location?.latitude
+        const lng = placeForAnalysis?.location?.longitude
+        const ptype = placeForAnalysis?.primaryType
+        if (typeof lat !== 'number' || typeof lng !== 'number' || !ptype || !placeForAnalysis?.id) return []
+        return findNearbyCompetitors(lat, lng, ptype, placeForAnalysis.id).catch((err) => {
+          console.error('[Enhanced Scan] Nearby competitors failed:', err.message)
+          return []
+        })
+      })(),
     ])
 
     console.log(`[Enhanced Scan] Alla anrop klara. Startar Pro-syntes + Report Writer...`)
@@ -659,6 +704,8 @@ export async function POST(req: NextRequest) {
       placeData: placeForAnalysis,
       url,
       isHttps,
+      cwvMetrics,
+      competitorList,
     })
 
     // Run Pro synthesis + Report Writer in parallel
@@ -671,7 +718,9 @@ export async function POST(req: NextRequest) {
       url,
       directoryResult,
       reviewReplyResult,
-      aiMentionResult
+      aiMentionResult,
+      competitorList,
+      cwvMetrics
     )
 
     const SynthesisResponseSchema = z.object({
