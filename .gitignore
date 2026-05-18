@@ -2,7 +2,18 @@
 backend/venv/
 __pycache__/
 *.pyc
+
+# Env / secrets — NEVER commit these
 .env
+.env.local
+.env.*.local
+secrets.env
+
+# SQLite checkout-db (created at runtime, never committed)
+data/
+*.db
+*.db-shm
+*.db-wal
 
 # Node.js / Next.js
 node_modules/
@@ -10,6 +21,7 @@ node_modules/
 out/
 dist/
 *.log
+tsconfig.tsbuildinfo
 
 # System
 .DS_Store

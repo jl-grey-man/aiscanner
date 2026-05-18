@@ -6,12 +6,21 @@ interface LockedSectionProps {
   title: string
   children: React.ReactNode
   ctaText?: string
+  /** Callback när användaren klickar "Lås upp" — om satt anropas den, annars är knappen disabled */
+  onUnlock?: () => void
+  /** Visas på knappen när onUnlock pågår (t.ex. när vi väntar på Stripe-redirect) */
+  loading?: boolean
+  /** Felmeddelande visat under knappen */
+  error?: string | null
 }
 
 export default function LockedSection({
   title,
   children,
   ctaText = 'Lås upp med fullständig rapport — 499 kr',
+  onUnlock,
+  loading,
+  error,
 }: LockedSectionProps) {
   return (
     <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm mb-8">
@@ -54,10 +63,15 @@ export default function LockedSection({
 
             <button
               type="button"
-              className="mt-1 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+              onClick={onUnlock}
+              disabled={loading || !onUnlock}
+              className="mt-1 px-5 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
             >
-              Lås upp fullständig rapport
+              {loading ? 'Laddar betalning...' : 'Lås upp fullständig rapport'}
             </button>
+            {error && (
+              <p className="text-red-600 text-xs mt-1 max-w-xs">{error}</p>
+            )}
           </div>
         </div>
       </div>

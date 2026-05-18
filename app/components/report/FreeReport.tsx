@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import type { ScanResult, CheckResult, CheckRegistryEntry } from '@/app/lib/scanResult'
 import { CHECK_REGISTRY } from '@/app/lib/scanResult'
 import { ScoreCircle, PriorityCard, SolutionCard, LockedSection, CheckTable, Glossary } from '@/app/components/report'
@@ -124,6 +124,32 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
   const topBad = getTopBadChecks(freeChecks, 3)
   const allSolutions = getAllFreeSolutionChecks(checks)
   const premiumPriority = getPremiumPriorityChecks(checks)
+
+  // Stripe checkout handler — POST:ar url+city till /api/checkout, redirectar till Stripe
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const startCheckout = async () => {
+    if (checkoutLoading) return
+    setCheckoutLoading(true)
+    setCheckoutError(null)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: meta.url, city: meta.city }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.url) {
+        throw new Error(json.error || json.detail || `HTTP ${res.status}`)
+      }
+      window.location.href = json.url
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Något gick fel'
+      console.error('[FreeReport] checkout failed:', msg)
+      setCheckoutError(msg)
+      setCheckoutLoading(false)
+    }
+  }
 
   // Running counter for priority cards across all groups
   let priorityIndex = 0
@@ -329,10 +355,15 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
               </p>
               <button
                 type="button"
-                className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+                onClick={startCheckout}
+                disabled={checkoutLoading}
+                className="px-5 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
               >
-                Lås upp fullständig rapport — 499 kr
+                {checkoutLoading ? 'Laddar betalning...' : 'Lås upp fullständig rapport — 499 kr'}
               </button>
+              {checkoutError && (
+                <p className="text-red-600 text-xs mt-2">{checkoutError}</p>
+              )}
             </div>
           </div>
         )}
@@ -356,7 +387,13 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
         <Glossary />
 
         {/* ==================== 8. KONKURRENTANALYS — LÅST ==================== */}
-        <LockedSection title="Konkurrentanalys" ctaText="Lås upp konkurrentanalys med fullständig rapport — 499 kr">
+        <LockedSection
+          title="Konkurrentanalys"
+          ctaText="Lås upp konkurrentanalys med fullständig rapport — 499 kr"
+          onUnlock={startCheckout}
+          loading={checkoutLoading}
+          error={checkoutError}
+        >
           <p className="text-gray-500 text-sm mb-4">
             Vi jämför er AI-synlighet med era tre största konkurrenter baserat på samma kontroller.
             Se vem som leder, var ni ligger efter, och exakt vad som krävs för att gå om.
@@ -386,7 +423,13 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
         </LockedSection>
 
         {/* ==================== 9. RECENSIONSANALYS — LÅST ==================== */}
-        <LockedSection title="Recensionsanalys" ctaText="Lås upp recensionsanalys med fullständig rapport — 499 kr">
+        <LockedSection
+          title="Recensionsanalys"
+          ctaText="Lås upp recensionsanalys med fullständig rapport — 499 kr"
+          onUnlock={startCheckout}
+          loading={checkoutLoading}
+          error={checkoutError}
+        >
           <p className="text-gray-500 text-sm mb-3">
             AI-sökmotorer som ChatGPT läser era Google-recensioner för att bedöma er tjänstekvalitet.
             Den fullständiga rapporten analyserar era recensioner, identifierar nyckelord och ger konkreta
@@ -413,10 +456,15 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
           </p>
           <button
             type="button"
-            className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+            onClick={startCheckout}
+            disabled={checkoutLoading}
+            className="px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
           >
-            Beställ fullständig analys — 499 kr
+            {checkoutLoading ? 'Laddar betalning...' : 'Beställ fullständig analys — 499 kr'}
           </button>
+          {checkoutError && (
+            <p className="text-red-600 text-xs mt-2">{checkoutError}</p>
+          )}
         </div>
 
         <p className="text-center text-gray-400 text-xs pb-8">
