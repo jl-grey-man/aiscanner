@@ -89,8 +89,13 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
   // Global index counter for action plan numbering
   let actionIndex = 0
 
-  // ---- Section 5: Solutions — all checks with fix ----
-  const checksWithFix = checks.filter(c => c.fix !== null && c.key !== 'synthesis')
+  // ---- Section 5: Solutions — bara checks som behöver fixas (bad/warning) ----
+  // OK-checks ska INTE visas här, även om de råkar ha en fix-text.
+  const checksWithFix = checks.filter(c =>
+    c.key !== 'synthesis' &&
+    (c.status === 'bad' || c.status === 'warning') &&
+    c.fix !== null
+  )
 
   // Group solutions by category
   const solutionsByCategory = SOLUTION_CATEGORY_CONFIG.map(cat => {

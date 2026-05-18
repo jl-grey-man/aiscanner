@@ -59,42 +59,72 @@ app/
     full-scan/route.ts        # POST /api/full-scan — legacy premium
   lib/
     scanResult.ts             # ScanResult Zod schema — 37 CheckKeys, CheckResult, CHECK_REGISTRY, calculateScores()
-    checkBuilder.ts           # buildCheckResults() — maps raw scan data → 37 typed CheckResult objects
-    checkExplanations.ts      # Hardcoded "Vad är detta?" texts per check key (used by SolutionCard)
-    reportWriter.ts           # enrichChecksWithReportWriter() — parallel Pro calls for rich report content
+    checkBuilder.ts           # buildCheckResults() — maps raw scan data → 37 typed CheckResult objects, attaches genericSteps/genericCodeTemplate
+    checkExplanations.ts      # Hardcoded "Vad är detta?" texts per check key (used by SolutionCard header)
+    genericFixes.ts           # Hardcoded generic fix templates for all 29 free-tier checks (steps + codeTemplate with <PLACEHOLDERS>) — used in free reports, no LLM call needed
+    reportWriter.ts           # enrichChecksWithReportWriter() — parallel Pro calls for rich report content; sanitizeCodeExample() strips ANPASSA/PLACEHOLDER lines defensively
     enhancedScraper.ts        # Enhanced scraping: robots.txt, OG, FAQ schema, sitemap, E-A-T
     scraper.ts                # Basic scraping + PageSummary extraction
     directoryChecker.ts       # Swedish directory check via Tavily API (Eniro, Hitta) + NAP consistency
     aiMentionChecker.ts       # Two-step AI mention test: entity query → niche extraction → category query
     places.ts                 # Google Places API — Text Search + Place Details (max 5 reviews) + findNearbyCompetitors (Nearby Search for check #36)
     pageSpeed.ts              # Google PageSpeed Insights API — getCwvMetrics() returns LCP/CLS/INP for check #10 (prefers CrUX field data)
+    mockScan.json             # Frozen ScanResult fixture used by /preview route
     prompts.ts                # buildFreePrompt() / buildPremiumPrompt() (legacy)
     gemini.ts                 # OpenRouter API wrapper for Gemini Flash/Pro calls
     redis.ts                  # In-memory result cache (24h TTL, stub Redis)
     mockData.ts               # Dev/test mock data
+  preview/
+    page.tsx                  # /preview — DEV-ONLY route that renders FreeReport/PremiumReport with fake data so designers can iterate without scanning
 ```
 
 ### Enhanced scan flow (`/api/enhanced-scan`)
+
+Request body: `{ url, city?, tier?: 'free' | 'paid' }` — default `tier='free'`.
 
 1. Parallel: `scrapeEnhanced()` + `scrapeWebsite()` + `findBusinessByUrl(url, city)`
 2. `getPlaceDetails()` — single Places call → up to 5 reviews (API max), plus `location` + `primaryType` (needed for Nearby Search)
 3. City priority: user input → Places formattedAddress (regex `\d{5}\s+([A-ZÅÄÖ][a-zåäö]+)`) → scraped cities
 4. Parallel: 3× Gemini Flash (technical, FAQ, E-A-T) + Tavily directory check + AI mention test + PageSpeed Insights (`getCwvMetrics`) + Places Nearby Search (`findNearbyCompetitors`)
 5. `analyzeReviewReplies()` — uses merged reviews + totalReviewCount for disclaimer (`sampleNote`)
-6. `buildCheckResults()` — assembles all raw data into 37 typed `CheckResult` objects
-7. **Parallel:** Gemini Pro synthesis + Report Writer (3-4 Pro batch calls for bad/warning checks)
-8. Merge rich data (richRelevance, richSteps, richCodeExample) back into checks
+6. `buildCheckResults()` — assembles all raw data into 37 typed `CheckResult` objects, then attaches `genericSteps` + `genericCodeTemplate` from `genericFixes.ts` to every bad/warning check
+7. **Tier branch:**
+   - `tier='free'` — **skip Pro entirely**. Build synthesis deterministically from check findings via `buildFreeSynthesis()`. ~10–20s scan, ~$0.10 cost.
+   - `tier='paid'` — Pro synthesis + Report Writer in parallel. ~60–90s scan, ~$0.35 cost. Synthesis uses **parallel-race fallback** (Pro 120s primary + Flash 45s backup always ready).
+8. Merge rich data (richRelevance, richSteps, richCodeExample) back into checks (paid only)
 9. `calculateScores()` — weighted scoring → `scores.free` (29 checks) + `scores.full` (36 checks)
 10. Zod-validate → return `ScanResult`
 
-### Report Writer (`reportWriter.ts`)
+### Free vs Paid tier model
 
-Runs in parallel with Pro synthesis (zero extra latency). Enriches bad/warning checks with:
+The same scan runs in two modes, differing only in the synthesis/Pro stage:
+
+| Field | Free | Paid |
+|-------|------|------|
+| `finding` (personalized) | ✅ from scraper/Flash | ✅ from scraper/Flash |
+| `fix` (short, deterministic) | ✅ | ✅ |
+| `genericSteps` + `genericCodeTemplate` (hardcoded templates with `<PLACEHOLDERS>`) | ✅ shown in UI | ✅ used as fallback |
+| `richRelevance` + `richSteps` + `richCodeExample` (Pro-generated with company data) | ❌ skipped | ✅ shown in UI |
+| `synthesis.actionPlan` | Deterministic markdown from `finding`s | Pro-generated with competitor analysis |
+| Latency | ~15s | ~70s |
+| Cost | ~$0.10 (Places + Tavily) | ~$0.35 (+ Pro tokens) |
+
+The UI renders generic templates with `<PLACEHOLDERS>` only when there is no rich content. In free reports, the "Kod att kopiera"-block is hidden entirely (data is still present in scanResult, just not displayed) — the user only sees "Så här fixar ni det" with generic steps. **Paid reports show real code with the company's actual address/phone/openingHours filled in.**
+
+### Report Writer (`reportWriter.ts`) — paid only
+
+Runs in parallel with Pro synthesis (zero extra latency) when `tier='paid'`. Enriches bad/warning checks with:
 - `richRelevance`: Company-specific explanation of why the check matters
 - `richSteps`: Numbered step-by-step fix instructions
 - `richCodeExample`: Copy-paste-ready code with actual company data
 
+Receives a rich `BusinessMeta` (companyName, bransch, city, streetAddress, postalCode, formattedAddress, email, lat/lng, primaryType, googleRating, weekdayHours, schemaTypes, socialLinks, title, h1, …) so Pro can fill in real values. Prompt explicitly forbids `<!-- ANPASSA -->`, `<PLACEHOLDER>`, `<DITT FÖRETAGSNAMN>` etc. — those belong in free templates only. As a safety net, `sanitizeCodeExample()` strips any placeholder lines that Pro still produces (e.g. when data genuinely isn't available — the fix is to **omit the field**, not leave a placeholder).
+
 Batches checks by category (technical, local, ai-readiness, content+other) and calls Gemini 2.5 Pro for each batch. Falls back silently if any batch fails — checks keep their original finding/fix.
+
+### Synthesis Flash-fallback (paid)
+
+The paid synthesis call uses a **parallel race**: Pro (120s timeout) AND Flash (45s timeout) fire against the same prompt at the same time. Pro is primary; if Pro succeeds within timeout we use Pro. If Pro errors or times out, we use the Flash result which is already complete (~10–15s old). Only if both fail do we return a stub. Cost: ~$0.0015 extra per paid scan; guarantees real synthesis content even when Pro is slow or rate-limited.
 
 ### ScanResult contract (`scanResult.ts`)
 
@@ -115,8 +145,17 @@ page.tsx → AppShell (client component)
   → scanning: Progress component
   → done: report/FreeReport (29 free checks, locked premium) OR report/PremiumReport (36 checks, all unlocked)
   → error: error message + retry
-Dev-toggle (NODE_ENV=development only) switches between free/premium view.
 ```
+
+In development (`NODE_ENV=development`) AppShell auto-triggers a paid scan in the background after the free scan completes, so the free↔premium toggle is instant. In production no paid scan runs unless explicitly invoked by a payment flow — see Fragile areas.
+
+### /preview route (dev-only)
+
+`http://<host>/preview` renders FreeReport + PremiumReport using a frozen ScanResult from `app/lib/mockScan.json`. Lets us iterate on card design, spacing, typography without burning real scan cost. Returns `notFound()` in production. Toggle in the amber sticky bar switches between free/premium views.
+
+### useAnalysis fetch retry
+
+`useAnalysis.ts` uses a `fetchWithRetry()` wrapper that retries on transient failures (network reset / HTTP 5xx). Max 2 retries with 3s + 8s backoff. Logs `[free-scan]` / `[paid-scan] got 502, retrying in 3000ms...` to console. Skips retry on HTTP 4xx (client error) and app-level JSON errors.
 
 ### AI mention checker (`aiMentionChecker.ts`)
 
@@ -184,11 +223,20 @@ npm run dev          # Next.js dev server on port 3000
 # Production build (Railway runs this automatically)
 npm run build        # outputs to .next/standalone/
 
-# Test enhanced scan locally
+# Design preview (dev only) — mock data, no real scan
+# Open http://localhost:3000/preview (or http://100.72.180.20:3000/preview via Tailscale)
+
+# Test free scan locally (default tier)
 curl -s -X POST http://localhost:3000/api/enhanced-scan \
   -H "Content-Type: application/json" \
   -d '{"url":"https://example.se","city":"Göteborg"}' \
-  --max-time 140 | python3 -m json.tool
+  --max-time 60 | python3 -m json.tool
+
+# Test paid scan locally
+curl -s -X POST http://localhost:3000/api/enhanced-scan \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.se","city":"Göteborg","tier":"paid"}' \
+  --max-time 180 | python3 -m json.tool
 
 # Railway CLI (requires login)
 railway login
@@ -247,6 +295,8 @@ Every frontend change MUST pass the following gate before being presented to the
 - Never modify `backend/` or `frontend/` — dead code, do not touch
 - **Never hardcode domains** — always use `APP_URL` / `APP_DOMAIN` from `app/lib/config.ts`
 - `NEXT_PUBLIC_*` env vars are inlined at build time — must be set in Railway BEFORE deploy
+- **Svenska strängar måste ha Å/Ä/Ö** — aldrig ASCII-versioner som "Lagg till", "Anvand", "namns pa". Skriv `Lägg till`, `Använd`, `nämns på`. Tidigare hade `checkBuilder.ts` ~30 sådana fel som har städats.
+- **Paid placeholders förbjudna** — Pro-genererad `richCodeExample` får ALDRIG innehålla `<!-- ANPASSA -->`, `<DITT FÖRETAGSNAMN>`, `<PLACEHOLDER>`. Om data saknas: utelämna fältet helt ur koden. `sanitizeCodeExample()` är säkerhetsnätet.
 
 ## Fragile areas
 
@@ -256,10 +306,13 @@ Every frontend change MUST pass the following gate before being presented to the
 - **Canonical:** Extracted BEFORE cheerio removes `<head>` elements (step 2 in extractSummary).
 - **Google Maps:** Detected BEFORE iframes are removed (step 3 in extractSummary). Order matters.
 - **Port 8010 collision:** If another service starts on 8010, the scanner silently fails. Check registry before deploying.
-- **Enhanced scan timeout:** Takes ~70-150s total (scraping + 3 Flash + PSI + Places Nearby + Pro). Production runs on Railway (`robotbyran.com`) which has no per-request HTTP timeout — long scans complete fine. PiPod-via-Cloudflare-Tunnel (`analyze.pipod.net`) DOES have a 100s edge timeout on the free plan, so use Railway for prod and Tailscale-direct (`http://100.72.180.20:8010`) for dev. If Pro synthesis times out (90s limit), it falls back to a stub message.
-- **Dev toggle:** `AppShell.tsx` line 18 `IS_DEV` is intentionally hardcoded `true` during development so Jens can manually flip between free/premium views on the live site. Change to `process.env.NODE_ENV === 'development'` only at launch.
+- **Enhanced scan timeout:** Free ~15s, paid ~70s. Production on Railway (`robotbyran.com`) has no per-request HTTP timeout. If paid Pro synthesis times out at 120s, the parallel Flash-fallback takes over automatically (see synthesis fallback above).
+- **Dev toggle + auto-paid:** `AppShell.tsx` binds `IS_DEV = process.env.NODE_ENV === 'development'`. In dev: paid scan auto-triggers in background after free completes, so toggle is instant. **In production: paid scan only runs if explicitly invoked.** This avoids burning ~$0.35 per public scan. When a payment flow is added it should call `analyzePaid(url, city)` from `useAnalysis` after the purchase confirms. To preview the paid layout without paying, use the `/preview` route (mock data).
+- **cityMentioned (#12) search surface:** The scraper strips `<header>`/`<nav>`/`<footer>` before extracting `bodyText`. Cities therefore search a wider haystack: `[title, metaDescription, h1, h2s, bodyText]`. Important so cities written only in title or header/logo area (common pattern) still match. Stad-listan i `SWEDISH_CITIES` är ~50 ord — uppdatera vid behov.
 - **PageSpeed Insights (CWV check #10):** Uses `GOOGLE_PLACES_API_KEY` (same key as Places API — PSI must be enabled on the Google Cloud project AND added to the key's API restrictions list). Falls back to `notMeasured` with a 403/timeout finding if the API call fails — never blocks the scan. Prefers CrUX field data over Lighthouse lab data.
-- **Competitors check #36:** Uses Places API (New) Nearby Search with the business's `location.latitude/longitude` + `primaryType` (radius 1.5 km, max 6 results, deduped on normalized name). Returns `notMeasured` if no GBP match. The synthesis prompt is given the verified list and instructed to NEVER invent competitor names — when the list is empty it falls back to industry-generic insights.
+- **Competitors check #36:** Uses Places API (New) Nearby Search with the business's `location.latitude/longitude` + `primaryType` (radius 1.5 km, max 6 results, deduped on normalized name). Returns `notMeasured` if no GBP match. The synthesis prompt is given the verified list and instructed to NEVER invent competitor names — when the list is empty it falls back to industry-generic insights. Konkurrenternas hemsidor scannas INTE — bara namn/betyg/recensioner via Places.
+- **sanitizeCodeExample (paid):** Defensive line-based strip in `reportWriter.ts` that removes `<!-- ANPASSA -->`, `<DITT ...>`, `<PLACEHOLDER>` and similar placeholder patterns from Pro's `richCodeExample`. Pro's prompt forbids placeholders but it sometimes ignores the rule. The strip cleans trailing commas, collapses excess newlines, and returns null if nothing substantial remains (UI falls back to `genericCodeTemplate`).
+- **Generic fixes coverage:** `app/lib/genericFixes.ts` has hardcoded `steps` + `codeTemplate` for all 29 free-tier checks (43 fix variants, 26 with code templates). When adding a new check to `CHECK_REGISTRY`, also add a generic fix here for free-tier UX. Placeholders use the convention `<FÖRETAGSNAMN>`, `<TJÄNST>`, `<STAD>`, `<GATUADRESS>`, `<TELEFONNUMMER>`, `<DOMÄN>`, etc.
 - **Tavily directory check:** Uses `TAVILY_API_KEY`. If missing, directory check returns warning status with empty results. Gulasidorna removed from ACTIVE_CHECK_DIRS — do not add back (rate-limiting issues).
 - **AI mention city guard:** Category query is skipped entirely if no city is resolved. Never use "Sverige" as fallback — it produces meaningless national-level results.
 - **Places API reviews:** Returns max 5 reviews per call. The New Places API REST endpoint has no `reviewSort` parameter or pagination — what you get is what you get.

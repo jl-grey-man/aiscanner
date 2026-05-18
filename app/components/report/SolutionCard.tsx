@@ -105,13 +105,13 @@ export default function SolutionCard({ check }: SolutionCardProps) {
           {checkLabel}
         </h3>
 
-        {/* "Vad är detta?" — synlig direkt i headern */}
+        {/* "Vad är detta?" — synlig direkt i headern, läsligt typsnitt */}
         {explanation && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+          <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">
               Vad är detta?
             </p>
-            <p className="text-gray-700 text-sm leading-relaxed">{explanation}</p>
+            <p className="text-gray-900 text-base leading-relaxed">{explanation}</p>
           </div>
         )}
       </div>
