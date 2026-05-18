@@ -298,19 +298,20 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
 
         {/* ==================== 5. DETALJERADE LÖSNINGAR ==================== */}
         {allSolutions.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8" id="losningar">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Detaljerade lösningar</h2>
-            <p className="text-gray-400 text-sm mb-5">
-              För varje problem ovan — färdiga kodexempel och steg du följer själv.
-              Vill ni ha exakt kod fylld med era riktiga uppgifter? Det ingår i den fullständiga rapporten.
-            </p>
+          <div className="mb-8" id="losningar">
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Detaljerade lösningar</h2>
+              <p className="text-gray-500 text-sm">
+                Ett kort per problem — vad det är, varför det spelar roll och hur ni fixar det.
+              </p>
+            </div>
 
             {allSolutions.map((check) => (
               <SolutionCard key={check.key} check={check} />
             ))}
 
             {/* CTA: uppgradera för personligt anpassad kod */}
-            <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col items-center text-center">
+            <div className="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"

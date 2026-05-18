@@ -15,7 +15,10 @@ import { Premium } from '@/app/components/landing/Premium'
 import { FaqSection } from '@/app/components/landing/FaqSection'
 import { Footer } from '@/app/components/landing/Footer'
 
-const IS_DEV = true // TEMP: enable dev toggle in production for testing
+// Toggle:n + auto-trigger av paid-scan är BARA i dev — i prod kostar varje paid-scan ~$0.35
+// och ska bara köras när någon faktiskt betalar (framtida payment-flow triggar analyzePaid).
+// För att se paid-rapporten utan att betala: /preview (mock-data) eller npm run dev lokalt.
+const IS_DEV = process.env.NODE_ENV === 'development'
 
 export function AppShell() {
   const {

@@ -236,19 +236,19 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           ))}
         </div>
 
-        {/* ==================== 5. DETALJERADE LOSNINGAR ==================== */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-amber-700">&#9733;</span>
-            <h2 className="text-xl font-bold text-gray-900">Detaljerade losningar</h2>
-            <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
-              Premiumfunktion
+        {/* ==================== 5. DETALJERADE LÖSNINGAR ==================== */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-5">
+            <span className="text-amber-600">&#9733;</span>
+            <h2 className="text-2xl font-bold text-gray-900">Detaljerade lösningar</h2>
+            <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+              Premiumrapport
             </span>
           </div>
 
           {solutionsByCategory.map((cat) => (
-            <div key={cat.category}>
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider pt-4 pb-2">
+            <div key={cat.category} className="mb-6 last:mb-0">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
                 {cat.label}
               </h3>
               {cat.items.map((check) => (
