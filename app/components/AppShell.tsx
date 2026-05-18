@@ -23,6 +23,7 @@ export function AppShell() {
     scanResult,
     scanResultPaid,
     paidLoading,
+    paidError,
     error,
     currentStep,
     progressPct,
@@ -122,20 +123,36 @@ export function AppShell() {
               Ny analys
             </button>
             {IS_DEV && (
-              <button
-                type="button"
-                onClick={() => setShowPremium((v) => !v)}
-                disabled={!scanResultPaid && !paidLoading && showPremium === false}
-                className="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-200 disabled:opacity-60 transition-colors"
-              >
-                {showPremium
-                  ? 'Visa gratisrapport'
-                  : paidLoading
-                    ? 'Premium laddar... [DEV]'
-                    : scanResultPaid
-                      ? 'Visa premiumrapport [DEV]'
-                      : 'Premium laddar... [DEV]'}
-              </button>
+              <div className="flex items-center gap-2">
+                {paidError && !scanResultPaid && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      paidTriggeredRef.current = false
+                      analyzePaid(scanResult.meta.url, scanResult.meta.city ?? undefined)
+                    }}
+                    className="text-xs bg-red-100 text-red-800 border border-red-300 px-3 py-1.5 rounded-lg font-medium hover:bg-red-200 transition-colors"
+                  >
+                    Premium misslyckades — försök igen [DEV]
+                  </button>
+                )}
+                {!paidError && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPremium((v) => !v)}
+                    disabled={!scanResultPaid}
+                    className="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {showPremium
+                      ? 'Visa gratisrapport'
+                      : scanResultPaid
+                        ? 'Visa premiumrapport [DEV]'
+                        : paidLoading
+                          ? 'Premium laddar... [DEV]'
+                          : 'Premium ej startad [DEV]'}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

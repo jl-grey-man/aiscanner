@@ -182,6 +182,7 @@ export function useAnalysis() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [scanResultPaid, setScanResultPaid] = useState<ScanResult | null>(null)
   const [paidLoading, setPaidLoading] = useState(false)
+  const [paidError, setPaidError] = useState<string | null>(null)
   const [analysisLog, setAnalysisLog] = useState<LogEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [stepIndex, setStepIndex] = useState(0)
@@ -233,6 +234,7 @@ export function useAnalysis() {
     setScanResult(null)
     setScanResultPaid(null)
     setPaidLoading(false)
+    setPaidError(null)
     setError(null)
     setSimulatedProgress(null)
     simulateSteps()
@@ -266,7 +268,9 @@ export function useAnalysis() {
   const analyzePaid = useCallback(async (url: string, city?: string) => {
     if (paidLoading) return
     setPaidLoading(true)
+    setPaidError(null)
     try {
+      console.log('[useAnalysis] starting paid scan for', url)
       const res = await fetch('/api/enhanced-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -274,9 +278,12 @@ export function useAnalysis() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
+      console.log('[useAnalysis] paid scan done')
       setScanResultPaid(json as ScanResult)
-    } catch (e) {
-      console.error('[useAnalysis] paid scan failed:', e)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Något gick fel'
+      console.error('[useAnalysis] paid scan failed:', msg)
+      setPaidError(msg)
     } finally {
       setPaidLoading(false)
     }
@@ -321,6 +328,7 @@ export function useAnalysis() {
     setScanResult(null)
     setScanResultPaid(null)
     setPaidLoading(false)
+    setPaidError(null)
     setAnalysisLog(null)
     setError(null)
     setStepIndex(0)
@@ -342,6 +350,7 @@ export function useAnalysis() {
     scanResult,
     scanResultPaid,
     paidLoading,
+    paidError,
     analysisLog,
     error,
     currentStep,

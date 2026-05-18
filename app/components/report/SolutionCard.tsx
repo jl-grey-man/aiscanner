@@ -27,7 +27,8 @@ export default function SolutionCard({ check }: SolutionCardProps) {
   const checkLabel = registryEntry?.label ?? check.key
 
   const explanation = CHECK_EXPLANATIONS[check.key]
-  const codeToShow = check.richCodeExample || check.genericCodeTemplate || check.codeExample || null
+  const codeCandidate = check.richCodeExample || check.genericCodeTemplate || check.codeExample || null
+  const codeToShow = codeCandidate && codeCandidate.trim().length > 0 ? codeCandidate : null
 
   const handleCopy = () => {
     if (codeToShow) {

@@ -800,24 +800,49 @@ export async function POST(req: NextRequest) {
     let synthesis: { actionPlan: string; competitorNote: string; reviewAnalysis: string | null; summary: string }
 
     if (tier === 'paid') {
-      // PAID flow — full Pro pipeline (synthesis + Report Writer in parallel)
+      // PAID flow — full Pro pipeline (synthesis + Report Writer in parallel).
+      // Synthesis uses parallel race: Pro is primary, Flash is always-ready backup.
+      // If Pro succeeds → use Pro. If Pro times out/fails → use Flash (already ~10s old).
+      // Both running in parallel adds ~$0.0015 per scan but guarantees real synthesis.
+      const synthesisSystemPrompt = 'Du är en senior svensk AI-sökningsstrateg. Returnera ENBART giltig JSON med nycklarna: actionPlan, competitorNote, reviewAnalysis, summary. Ingen text utanför JSON.'
+
+      const proPromise = callOpenRouter(
+        PRO_MODEL,
+        synthesisSystemPrompt,
+        synthesisPrompt,
+        120000, // bumped from 90s → 120s
+        false,
+        12000
+      )
+      const flashFallbackPromise = callOpenRouter(
+        FLASH_MODEL,
+        synthesisSystemPrompt,
+        synthesisPrompt,
+        45000,
+        false,
+        8000
+      ).catch((err) => {
+        console.warn('[Synthesis] Flash backup failed:', err.message)
+        return null
+      })
+
       const [synthesisRaw, richData] = await Promise.all([
-        callOpenRouter(
-          PRO_MODEL,
-          'Du är en senior svensk AI-sökningsstrateg. Returnera ENBART giltig JSON med nycklarna: actionPlan, competitorNote, reviewAnalysis, summary. Ingen text utanför JSON.',
-          synthesisPrompt,
-          90000,
-          false, // JSON mode — callOpenRouter will parse via extractJson()
-          12000 // synthesis needs more tokens than default 6000 (JSON-wrapped markdown)
-        ).catch((err) => {
-          console.error('[Enhanced Scan] Pro synthesis failed:', err.message)
-          return {
-            actionPlan: '### Syntesfel\n\nKunde inte generera åtgärdsplan. Individuella analyser finns tillgängliga.',
-            competitorNote: 'Kunde inte generera branschanalys.',
-            reviewAnalysis: null,
-            summary: 'Syntesen misslyckades — se individuella kontroller.',
-          }
-        }),
+        proPromise
+          .catch(async (err) => {
+            console.warn(`[Synthesis] Pro failed (${err.message}) — using Flash fallback`)
+            const flashResult = await flashFallbackPromise
+            if (flashResult) {
+              console.log('[Synthesis] Flash fallback succeeded')
+              return flashResult
+            }
+            console.error('[Synthesis] BOTH Pro and Flash failed')
+            return {
+              actionPlan: '### Syntesfel\n\nKunde inte generera åtgärdsplan. Individuella analyser finns tillgängliga.',
+              competitorNote: 'Kunde inte generera branschanalys.',
+              reviewAnalysis: null,
+              summary: 'Syntesen misslyckades — se individuella kontroller.',
+            }
+          }),
         enrichChecksWithReportWriter(checks, reportWriterMeta, callOpenRouter).catch((err) => {
           console.error('[Enhanced Scan] Report Writer failed:', err.message)
           return {} as Record<string, any>
