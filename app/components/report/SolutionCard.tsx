@@ -27,7 +27,7 @@ export default function SolutionCard({ check }: SolutionCardProps) {
   const checkLabel = registryEntry?.label ?? check.key
 
   const explanation = CHECK_EXPLANATIONS[check.key]
-  const codeToShow = check.richCodeExample || check.codeExample || null
+  const codeToShow = check.richCodeExample || check.genericCodeTemplate || check.codeExample || null
 
   const handleCopy = () => {
     if (codeToShow) {
@@ -87,6 +87,14 @@ export default function SolutionCard({ check }: SolutionCardProps) {
           <div
             className="prose-sm"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(check.richSteps) }}
+          />
+        </div>
+      ) : check.genericSteps ? (
+        <div className="bg-white rounded-lg p-4 mb-3 border border-gray-100">
+          <p className="text-gray-700 text-sm font-medium mb-2">Så här fixar ni det</p>
+          <div
+            className="prose-sm"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(check.genericSteps) }}
           />
         </div>
       ) : check.fix ? (

@@ -8,8 +8,8 @@ import { checkSwedishDirectories } from '@/app/lib/directoryChecker'
 import { checkAIMentions } from '@/app/lib/aiMentionChecker'
 import { getCwvMetrics } from '@/app/lib/pageSpeed'
 import { buildCheckResults } from '@/app/lib/checkBuilder'
-import { calculateScores, ScanResultSchema } from '@/app/lib/scanResult'
-import type { ScanResult } from '@/app/lib/scanResult'
+import { calculateScores, ScanResultSchema, CHECK_REGISTRY } from '@/app/lib/scanResult'
+import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
 import { enrichChecksWithReportWriter } from '@/app/lib/reportWriter'
 import { APP_URL } from '@/app/lib/config'
 
@@ -492,6 +492,63 @@ REGLER:
 - Lyft fram AI-omnämnanden som en nyckelinsikt`
 }
 
+/**
+ * Deterministisk åtgärdsplan för free-tier — ingen Pro-modell.
+ * Bygger personlig markdown från check.finding-texterna (som redan är
+ * genererade av Flash + scraper-data, så de är specifika per företag).
+ */
+function buildFreeSynthesis(checks: CheckResult[]): {
+  actionPlan: string
+  competitorNote: string
+  reviewAnalysis: string | null
+  summary: string
+} {
+  const labelByKey = new Map<string, string>(
+    CHECK_REGISTRY.map(e => [e.key, e.label])
+  )
+
+  // Only free-tier checks contribute to free synthesis
+  const freeChecks = checks.filter(c => c.tier === 'free')
+  const critical = freeChecks.filter(c => c.priority === 'critical')
+  const important = freeChecks.filter(c => c.priority === 'important')
+
+  const lines: string[] = []
+  if (critical.length > 0) {
+    lines.push('### Kritiskt')
+    lines.push('')
+    critical.forEach((c, i) => {
+      const label = labelByKey.get(c.key) ?? c.key
+      lines.push(`${i + 1}. **${label}** — ${c.finding}`)
+    })
+    lines.push('')
+  }
+  if (important.length > 0) {
+    lines.push('### Viktigt')
+    lines.push('')
+    important.forEach((c, i) => {
+      const label = labelByKey.get(c.key) ?? c.key
+      lines.push(`${i + 1}. **${label}** — ${c.finding}`)
+    })
+    lines.push('')
+  }
+  if (lines.length === 0) {
+    lines.push('### Bra jobbat!')
+    lines.push('')
+    lines.push('Inga kritiska eller viktiga problem hittades i gratisanalysen. Köp en fullständig rapport för djupare analys av AI-omnämnande, recensionssvar och konkurrentintelligens.')
+  }
+
+  return {
+    actionPlan: lines.join('\n'),
+    competitorNote: 'Detaljerad konkurrentjämförelse med betyg och AI-synlighetspoäng ingår i den fullständiga rapporten.',
+    reviewAnalysis: null,
+    summary: critical.length > 0
+      ? `Vi hittade ${critical.length} kritiska och ${important.length} viktiga åtgärder. Fixa de kritiska först — de har störst påverkan på er AI-synlighet.`
+      : important.length > 0
+        ? `Vi hittade ${important.length} viktiga åtgärder. De flesta är tekniska och kan fixas på några timmar.`
+        : 'Er sajt har en stark grund för AI-sökmotorer. Den fullständiga rapporten visar hur ni ligger till mot konkurrenter och om AI faktiskt känner till er.',
+  }
+}
+
 export async function POST(req: NextRequest) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -504,12 +561,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { url, city: cityInput } = await req.json()
+    const { url, city: cityInput, tier: tierInput } = await req.json()
     if (!url || !url.startsWith('http')) {
       return NextResponse.json({ error: 'Ogiltig URL' }, { status: 400, headers: corsHeaders })
     }
+    const tier: 'free' | 'paid' = tierInput === 'paid' ? 'paid' : 'free'
 
-    console.log(`[Enhanced Scan] Startar för ${url}${cityInput ? ` (stad: ${cityInput})` : ''}`)
+    console.log(`[Enhanced Scan] Startar för ${url}${cityInput ? ` (stad: ${cityInput})` : ''} [tier=${tier}]`)
 
     // Run enhanced scrape + normal scrape + places lookup in parallel
     const [enhancedData, scrapedData] = await Promise.all([
@@ -739,72 +797,78 @@ export async function POST(req: NextRequest) {
       phone: placeForAnalysis?.nationalPhoneNumber || mainPage?.phones?.[0] || undefined,
     }
 
-    const [synthesisRaw, richData] = await Promise.all([
-      callOpenRouter(
-        PRO_MODEL,
-        'Du är en senior svensk AI-sökningsstrateg. Returnera ENBART giltig JSON med nycklarna: actionPlan, competitorNote, reviewAnalysis, summary. Ingen text utanför JSON.',
-        synthesisPrompt,
-        90000,
-        false, // JSON mode — callOpenRouter will parse via extractJson()
-        12000 // synthesis needs more tokens than default 6000 (JSON-wrapped markdown)
-      ).catch((err) => {
-        console.error('[Enhanced Scan] Pro synthesis failed:', err.message)
-        return {
-          actionPlan: '### Syntesfel\n\nKunde inte generera åtgärdsplan. Individuella analyser finns tillgängliga.',
-          competitorNote: 'Kunde inte generera branschanalys.',
-          reviewAnalysis: null,
-          summary: 'Syntesen misslyckades — se individuella kontroller.',
-        }
-      }),
-      enrichChecksWithReportWriter(checks, reportWriterMeta, callOpenRouter).catch((err) => {
-        console.error('[Enhanced Scan] Report Writer failed:', err.message)
-        return {} as Record<string, any>
-      }),
-    ])
-
-    // Merge rich data back into checks
-    for (const check of checks) {
-      const rich = richData[check.key]
-      if (rich) {
-        check.richRelevance = rich.richRelevance
-        check.richSteps = rich.richSteps
-        check.richCodeExample = rich.richCodeExample
-      }
-    }
-
-    // Validate synthesis with Zod, fallback gracefully
     let synthesis: { actionPlan: string; competitorNote: string; reviewAnalysis: string | null; summary: string }
 
-    try {
-      synthesis = SynthesisResponseSchema.parse(synthesisRaw)
+    if (tier === 'paid') {
+      // PAID flow — full Pro pipeline (synthesis + Report Writer in parallel)
+      const [synthesisRaw, richData] = await Promise.all([
+        callOpenRouter(
+          PRO_MODEL,
+          'Du är en senior svensk AI-sökningsstrateg. Returnera ENBART giltig JSON med nycklarna: actionPlan, competitorNote, reviewAnalysis, summary. Ingen text utanför JSON.',
+          synthesisPrompt,
+          90000,
+          false, // JSON mode — callOpenRouter will parse via extractJson()
+          12000 // synthesis needs more tokens than default 6000 (JSON-wrapped markdown)
+        ).catch((err) => {
+          console.error('[Enhanced Scan] Pro synthesis failed:', err.message)
+          return {
+            actionPlan: '### Syntesfel\n\nKunde inte generera åtgärdsplan. Individuella analyser finns tillgängliga.',
+            competitorNote: 'Kunde inte generera branschanalys.',
+            reviewAnalysis: null,
+            summary: 'Syntesen misslyckades — se individuella kontroller.',
+          }
+        }),
+        enrichChecksWithReportWriter(checks, reportWriterMeta, callOpenRouter).catch((err) => {
+          console.error('[Enhanced Scan] Report Writer failed:', err.message)
+          return {} as Record<string, any>
+        }),
+      ])
 
-      // Validate actionPlan has at least one heading
-      if (!synthesis.actionPlan.includes('###')) {
-        console.warn('[Enhanced Scan] actionPlan missing ### headings, adding structure')
-        synthesis.actionPlan = '### Kritiskt\n\n' + synthesis.actionPlan
-      }
-    } catch (parseErr) {
-      console.error('[Enhanced Scan] Synthesis parse failed:', parseErr)
-      // If the raw response is a string (old format), wrap it
-      if (typeof synthesisRaw === 'string') {
-        const cleaned = synthesisRaw.replace(/^[\s\S]*?(###?\s)/m, '$1').trim()
-        synthesis = {
-          actionPlan: cleaned || '### Syntesfel\n\nKunde inte generera åtgärdsplan.',
-          competitorNote: 'Branschanalys kunde inte genereras.',
-          reviewAnalysis: null,
-          summary: 'Analys delvis genomförd — se individuella kontroller ovan.',
-        }
-      } else {
-        synthesis = {
-          actionPlan: '### Syntesfel\n\nKunde inte generera åtgärdsplan.',
-          competitorNote: 'Branschanalys kunde inte genereras.',
-          reviewAnalysis: null,
-          summary: 'Analys delvis genomförd — se individuella kontroller ovan.',
+      // Merge rich data back into checks
+      for (const check of checks) {
+        const rich = richData[check.key]
+        if (rich) {
+          check.richRelevance = rich.richRelevance
+          check.richSteps = rich.richSteps
+          check.richCodeExample = rich.richCodeExample
         }
       }
+
+      // Validate synthesis with Zod, fallback gracefully
+      try {
+        synthesis = SynthesisResponseSchema.parse(synthesisRaw)
+
+        // Validate actionPlan has at least one heading
+        if (!synthesis.actionPlan.includes('###')) {
+          console.warn('[Enhanced Scan] actionPlan missing ### headings, adding structure')
+          synthesis.actionPlan = '### Kritiskt\n\n' + synthesis.actionPlan
+        }
+      } catch (parseErr) {
+        console.error('[Enhanced Scan] Synthesis parse failed:', parseErr)
+        // If the raw response is a string (old format), wrap it
+        if (typeof synthesisRaw === 'string') {
+          const cleaned = synthesisRaw.replace(/^[\s\S]*?(###?\s)/m, '$1').trim()
+          synthesis = {
+            actionPlan: cleaned || '### Syntesfel\n\nKunde inte generera åtgärdsplan.',
+            competitorNote: 'Branschanalys kunde inte genereras.',
+            reviewAnalysis: null,
+            summary: 'Analys delvis genomförd — se individuella kontroller ovan.',
+          }
+        } else {
+          synthesis = {
+            actionPlan: '### Syntesfel\n\nKunde inte generera åtgärdsplan.',
+            competitorNote: 'Branschanalys kunde inte genereras.',
+            reviewAnalysis: null,
+            summary: 'Analys delvis genomförd — se individuella kontroller ovan.',
+          }
+        }
+      }
+    } else {
+      // FREE flow — no Pro calls. Build a deterministic action plan from check findings.
+      synthesis = buildFreeSynthesis(checks)
     }
 
-    console.log(`[Enhanced Scan] Klar för ${url}`)
+    console.log(`[Enhanced Scan] Klar för ${url} [tier=${tier}]`)
 
     // ---- Phase 2.8: Assemble ScanResult ----
     const scanId = `scan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`

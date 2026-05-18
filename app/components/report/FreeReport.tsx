@@ -82,12 +82,16 @@ function getPremiumPriorityChecks(checks: CheckResult[]): CheckResult[] {
   )
 }
 
-/** Get top N free-tier critical checks that have a fix */
-function getTopFreeSolutionChecks(checks: CheckResult[], n: number): CheckResult[] {
+/** Get ALL free-tier bad/warning checks that have a fix (steg eller text), sorted by priority then weight */
+function getAllFreeSolutionChecks(checks: CheckResult[]): CheckResult[] {
   const registryMap = buildRegistryMap()
   const freeKeys = new Set(FREE_CHECKS.map((r) => r.key))
   return checks
-    .filter((c) => freeKeys.has(c.key) && c.fix && (c.priority === 'critical' || c.priority === 'important'))
+    .filter((c) =>
+      freeKeys.has(c.key) &&
+      (c.priority === 'critical' || c.priority === 'important') &&
+      (c.fix || c.genericSteps || c.richSteps)
+    )
     .sort((a, b) => {
       // critical before important
       const pa = a.priority === 'critical' ? 0 : 1
@@ -98,7 +102,6 @@ function getTopFreeSolutionChecks(checks: CheckResult[], n: number): CheckResult
       const wb = registryMap.get(b.key)?.weight.free ?? 0
       return wb - wa
     })
-    .slice(0, n)
 }
 
 /** Render star rating as text characters */
@@ -119,7 +122,7 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
   const { meta, scores, checks, synthesis } = scanResult
   const freeChecks = getFreeChecks(checks)
   const topBad = getTopBadChecks(freeChecks, 3)
-  const topSolutions = getTopFreeSolutionChecks(checks, 2)
+  const allSolutions = getAllFreeSolutionChecks(checks)
   const premiumPriority = getPremiumPriorityChecks(checks)
 
   // Running counter for priority cards across all groups
@@ -293,22 +296,21 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
           )}
         </div>
 
-        {/* ==================== 5. DETALJERADE LÖSNINGAR — LÅST ==================== */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-5">Detaljerade lösningar</h2>
+        {/* ==================== 5. DETALJERADE LÖSNINGAR ==================== */}
+        {allSolutions.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8" id="losningar">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Detaljerade lösningar</h2>
+            <p className="text-gray-400 text-sm mb-5">
+              För varje problem ovan — färdiga kodexempel och steg du följer själv.
+              Vill ni ha exakt kod fylld med era riktiga uppgifter? Det ingår i den fullständiga rapporten.
+            </p>
 
-          {/* Show 2 solution cards, slightly faded */}
-          {topSolutions.length > 0 && (
-            <div className="opacity-60 pointer-events-none select-none mb-4">
-              {topSolutions.map((check) => (
-                <SolutionCard key={check.key} check={check} />
-              ))}
-            </div>
-          )}
+            {allSolutions.map((check) => (
+              <SolutionCard key={check.key} check={check} />
+            ))}
 
-          {/* Lock overlay */}
-          <div className="relative border border-gray-200 rounded-xl overflow-hidden">
-            <div className="flex flex-col items-center justify-center py-10 bg-white/90 backdrop-blur-sm">
+            {/* CTA: uppgradera för personligt anpassad kod */}
+            <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col items-center text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -321,18 +323,18 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
                 <rect x="3" y="11" width="18" height="11" rx="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <p className="text-gray-700 font-medium text-sm max-w-xs text-center mb-3">
-                Lås upp alla lösningar med steg-för-steg-instruktioner och kodexempel
+              <p className="text-gray-700 font-medium text-sm max-w-md mb-3">
+                Vill ni slippa fylla i {'<PLACEHOLDERS>'} själva? Den fullständiga rapporten ger er färdig kod med era exakta uppgifter, plus AI-omnämnande-test, recensionsanalys och konkurrentjämförelse.
               </p>
               <button
                 type="button"
                 className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
               >
-                Lås upp alla lösningar — 499 kr
+                Lås upp fullständig rapport — 499 kr
               </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* ==================== 6. KONTROLLER ==================== */}
         <div className="mb-8">

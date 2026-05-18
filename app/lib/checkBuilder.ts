@@ -18,6 +18,7 @@ import type { EnhancedData } from './enhancedScraper'
 import type { DirectoryResult } from './directoryChecker'
 import type { AIMentionResult } from './aiMentionChecker'
 import type { CwvMetrics } from './pageSpeed'
+import { getGenericFix } from './genericFixes'
 
 // ---------------------------------------------------------------------------
 // Types for function params
@@ -973,6 +974,17 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         `Check at index ${i} has id=${checks[i].id} key=${checks[i].key}, ` +
         `expected id=${CHECK_REGISTRY[i].id} key=${CHECK_REGISTRY[i].key}`
       )
+    }
+  }
+
+  // Attach generic fixes to bad/warning checks (free + paid both get these)
+  for (const c of checks) {
+    if (c.status === 'bad' || c.status === 'warning') {
+      const gf = getGenericFix(c.key, c.status)
+      if (gf) {
+        c.genericSteps = gf.steps
+        c.genericCodeTemplate = gf.codeTemplate
+      }
     }
   }
 

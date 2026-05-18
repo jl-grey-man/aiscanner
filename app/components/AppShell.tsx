@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAnalysis } from '@/app/hooks/useAnalysis'
 import { Progress } from '@/app/components/Progress'
 import { FreeReport } from '@/app/components/report/FreeReport'
@@ -21,19 +21,38 @@ export function AppShell() {
   const {
     state,
     scanResult,
+    scanResultPaid,
+    paidLoading,
     error,
     currentStep,
     progressPct,
     stepIndex,
     analyze,
+    analyzePaid,
     reset,
   } = useAnalysis()
 
   const [showPremium, setShowPremium] = useState(false)
+  const paidTriggeredRef = useRef(false)
 
   const isLoading = state === 'scanning'
   const isDone = state === 'done'
   const isError = state === 'error'
+
+  // In dev: auto-kick off paid scan after free completes, so toggle is instant.
+  useEffect(() => {
+    if (IS_DEV && isDone && scanResult && !scanResultPaid && !paidLoading && !paidTriggeredRef.current) {
+      paidTriggeredRef.current = true
+      analyzePaid(scanResult.meta.url, scanResult.meta.city ?? undefined)
+    }
+  }, [isDone, scanResult, scanResultPaid, paidLoading, analyzePaid])
+
+  // Reset the trigger flag when scan resets
+  useEffect(() => {
+    if (state === 'idle' || state === 'scanning') {
+      paidTriggeredRef.current = false
+    }
+  }, [state])
 
   // Landing page — show when idle or not yet started
   if (state === 'idle') {
@@ -106,17 +125,24 @@ export function AppShell() {
               <button
                 type="button"
                 onClick={() => setShowPremium((v) => !v)}
-                className="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-200 transition-colors"
+                disabled={!scanResultPaid && !paidLoading && showPremium === false}
+                className="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-200 disabled:opacity-60 transition-colors"
               >
-                {showPremium ? 'Visa gratisrapport' : 'Visa premiumrapport [DEV]'}
+                {showPremium
+                  ? 'Visa gratisrapport'
+                  : paidLoading
+                    ? 'Premium laddar... [DEV]'
+                    : scanResultPaid
+                      ? 'Visa premiumrapport [DEV]'
+                      : 'Premium laddar... [DEV]'}
               </button>
             )}
           </div>
         </div>
 
-        {/* Report */}
-        {showPremium && IS_DEV ? (
-          <PremiumReport scanResult={scanResult} />
+        {/* Report — premium if dev-toggle on AND paid result loaded, else free */}
+        {showPremium && IS_DEV && scanResultPaid ? (
+          <PremiumReport scanResult={scanResultPaid} />
         ) : (
           <FreeReport scanResult={scanResult} />
         )}

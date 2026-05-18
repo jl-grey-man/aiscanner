@@ -180,6 +180,8 @@ export function useAnalysis() {
   const [premiumReport, setPremiumReport] = useState<PremiumReportData | null>(null)
   const [enhancedReport, setEnhancedReport] = useState<EnhancedReportData | null>(null)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
+  const [scanResultPaid, setScanResultPaid] = useState<ScanResult | null>(null)
+  const [paidLoading, setPaidLoading] = useState(false)
   const [analysisLog, setAnalysisLog] = useState<LogEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [stepIndex, setStepIndex] = useState(0)
@@ -229,6 +231,8 @@ export function useAnalysis() {
     setPremiumReport(null)
     setEnhancedReport(null)
     setScanResult(null)
+    setScanResultPaid(null)
+    setPaidLoading(false)
     setError(null)
     setSimulatedProgress(null)
     simulateSteps()
@@ -237,7 +241,7 @@ export function useAnalysis() {
       const res = await fetch('/api/enhanced-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, city }),
+        body: JSON.stringify({ url, city, tier: 'free' }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
@@ -254,6 +258,29 @@ export function useAnalysis() {
       clearTimers()
     }
   }, [clearTimers, simulateSteps])
+
+  /**
+   * Fetches a paid-tier scan in the background and stores it as scanResultPaid.
+   * Used in dev for instant free↔paid toggling without re-scanning.
+   */
+  const analyzePaid = useCallback(async (url: string, city?: string) => {
+    if (paidLoading) return
+    setPaidLoading(true)
+    try {
+      const res = await fetch('/api/enhanced-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, city, tier: 'paid' }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
+      setScanResultPaid(json as ScanResult)
+    } catch (e) {
+      console.error('[useAnalysis] paid scan failed:', e)
+    } finally {
+      setPaidLoading(false)
+    }
+  }, [paidLoading])
 
   const runPremium = useCallback(async (url: string) => {
     clearTimers()
@@ -292,6 +319,8 @@ export function useAnalysis() {
     setPremiumReport(null)
     setEnhancedReport(null)
     setScanResult(null)
+    setScanResultPaid(null)
+    setPaidLoading(false)
     setAnalysisLog(null)
     setError(null)
     setStepIndex(0)
@@ -311,12 +340,15 @@ export function useAnalysis() {
     premiumReport,
     enhancedReport,
     scanResult,
+    scanResultPaid,
+    paidLoading,
     analysisLog,
     error,
     currentStep,
     progressPct,
     stepIndex,
     analyze,
+    analyzePaid,
     runPremium,
     reset,
   }

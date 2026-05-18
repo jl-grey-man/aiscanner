@@ -87,10 +87,13 @@ export const CheckResultSchema = z.object({
   codeExample: z.string().nullable(),
   priority: z.enum(['critical', 'important', 'nice']).nullable(),
   tier: z.enum(['free', 'premium']),
-  // Rich report writer fields (populated by reportWriter.ts for bad/warning checks)
+  // Rich report writer fields (populated by reportWriter.ts for bad/warning checks — paid tier only)
   richRelevance: z.string().nullable().optional(),
   richSteps: z.string().nullable().optional(),
   richCodeExample: z.string().nullable().optional(),
+  // Generic fix fields (populated by genericFixes.ts for bad/warning checks — both tiers)
+  genericSteps: z.string().nullable().optional(),
+  genericCodeTemplate: z.string().nullable().optional(),
 })
 
 export type CheckResult = z.infer<typeof CheckResultSchema>
