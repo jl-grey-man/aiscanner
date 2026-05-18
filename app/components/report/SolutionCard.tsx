@@ -27,8 +27,21 @@ export default function SolutionCard({ check }: SolutionCardProps) {
   const checkLabel = registryEntry?.label ?? check.key
 
   const explanation = CHECK_EXPLANATIONS[check.key]
-  const codeCandidate = check.richCodeExample || check.genericCodeTemplate || check.codeExample || null
-  const codeToShow = codeCandidate && codeCandidate.trim().length > 0 ? codeCandidate : null
+
+  // Välj kod-källa i prioritetsordning: rich (paid, riktig data) > generic (mall) > flash (varierar).
+  // codeIsTemplate = true betyder att koden har <PLACEHOLDERS> som användaren själv måste fylla i.
+  let codeToShow: string | null = null
+  let codeIsTemplate = false
+  if (check.richCodeExample && check.richCodeExample.trim().length > 0) {
+    codeToShow = check.richCodeExample
+    codeIsTemplate = false
+  } else if (check.genericCodeTemplate && check.genericCodeTemplate.trim().length > 0) {
+    codeToShow = check.genericCodeTemplate
+    codeIsTemplate = true
+  } else if (check.codeExample && check.codeExample.trim().length > 0) {
+    codeToShow = check.codeExample
+    codeIsTemplate = false
+  }
 
   const handleCopy = () => {
     if (codeToShow) {
@@ -105,8 +118,9 @@ export default function SolutionCard({ check }: SolutionCardProps) {
         </div>
       ) : null}
 
-      {/* Block 4: Kod att kopiera */}
-      {codeToShow && (
+      {/* Block 4: Kod att kopiera — döljs i gratisrapporten (codeIsTemplate=true).
+          Datan finns kvar i scanResult, vi visar bara inte den för free-tier. */}
+      {codeToShow && !codeIsTemplate && (
         <div className="bg-white rounded-lg p-4 border border-gray-100">
           <div className="flex items-center justify-between mb-2">
             <p className="text-gray-700 text-sm font-medium">Kod att kopiera</p>

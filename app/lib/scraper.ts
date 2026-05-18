@@ -383,8 +383,20 @@ export function extractSummary(html: string, url: string): PageSummary {
   }
   const phones = Array.from(new Set([...bodyPhones, ...schemaPhones]))
 
+  // Extrahera title/meta/h1/h2s EXTRA tidigt så stad-matchningen kan söka i dem.
+  // (De extraheras igen i return-objektet — billigt och tydligt, behåller original-strukturen.)
+  const titleText = $('title').text()
+  const metaDescText = $('meta[name="description"]').attr('content') || ''
+  const h1Text = $('h1').first().text()
+  const h2Texts = $('h2').map((_, el) => $(el).text()).get().slice(0, 3)
+
   // Stad: case-insensitive (GÖTEBORG, göteborg, Göteborg alla matchar)
-  const cities = Array.from(bodyText.matchAll(new RegExp(`(?<![a-zA-ZåäöÅÄÖ])(?:${SWEDISH_CITIES.join('|')})(?![a-zA-ZåäöÅÄÖ])`, 'gi'))).map(m => m[0])
+  // Sök i title + meta + h1 + h2:s + bodyText så vi inte missar städer som står i header/logo-area
+  // (header/nav/footer strippas innan bodyText, men title/meta/h1 hämtas från <head> + första H1).
+  const cityHaystack = [titleText, metaDescText, h1Text, ...h2Texts, bodyText].filter(Boolean).join(' \n ')
+  const cities = Array.from(new Set(
+    Array.from(cityHaystack.matchAll(new RegExp(`(?<![a-zA-ZåäöÅÄÖ])(?:${SWEDISH_CITIES.join('|')})(?![a-zA-ZåäöÅÄÖ])`, 'gi'))).map(m => m[0])
+  ))
 
   const menuSummary = bodyText.includes('kr') && (bodyText.includes('menu') || bodyText.includes('meny') || bodyText.includes('rätt') || bodyText.includes('ratt'))
     ? 'Innehåller meny med priser'

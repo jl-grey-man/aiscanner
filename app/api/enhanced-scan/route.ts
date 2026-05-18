@@ -788,6 +788,17 @@ export async function POST(req: NextRequest) {
       summary: z.string().min(1),
     })
 
+    // Extrahera postnummer och gatuadress ur Places formattedAddress (svenskt format)
+    // "Gatuadress 12, 411 36 Göteborg" → streetAddress="Gatuadress 12", postalCode="411 36"
+    const formattedAddress: string | undefined = placeForAnalysis?.formattedAddress
+    const addrMatch = formattedAddress?.match(/^(.+?),\s*(\d{3}\s?\d{2})\s+/)
+    const streetAddress = addrMatch?.[1]?.trim() || null
+    const postalCode = addrMatch?.[2]?.trim() || null
+
+    // Försök hitta e-post i scrapad bodyText
+    const emailMatch = mainPage?.bodyText?.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
+    const email = emailMatch?.[0] || null
+
     const reportWriterMeta = {
       companyName,
       bransch,
@@ -795,6 +806,22 @@ export async function POST(req: NextRequest) {
       url,
       domain,
       phone: placeForAnalysis?.nationalPhoneNumber || mainPage?.phones?.[0] || undefined,
+      // Utökad data så Pro kan generera komplett kod utan ANPASSA-kommentarer
+      streetAddress,
+      postalCode,
+      formattedAddress: formattedAddress || null,
+      email,
+      latitude: placeForAnalysis?.location?.latitude ?? null,
+      longitude: placeForAnalysis?.location?.longitude ?? null,
+      placeId: placeForAnalysis?.id ?? null,
+      primaryType: placeForAnalysis?.primaryType ?? null,
+      googleRating: placeForAnalysis?.rating ?? null,
+      reviewCount: placeForAnalysis?.userRatingCount ?? null,
+      weekdayHours: placeForAnalysis?.regularOpeningHours?.weekdayDescriptions ?? null,
+      schemaTypes: mainPage?.schemaTypes ?? [],
+      socialLinks: enhancedData.sameAsLinks ?? [],
+      title: mainPage?.title ?? null,
+      h1: mainPage?.h1 ?? null,
     }
 
     let synthesis: { actionPlan: string; competitorNote: string; reviewAnalysis: string | null; summary: string }

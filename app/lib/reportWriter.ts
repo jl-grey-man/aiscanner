@@ -29,6 +29,23 @@ interface BusinessMeta {
   url: string
   domain: string
   phone?: string
+  // Extra fält så Pro kan generera komplett kod utan placeholders.
+  // Alla är optional — om de saknas måste Pro UTELÄMNA fältet (inte skriva ANPASSA).
+  streetAddress?: string | null
+  postalCode?: string | null
+  formattedAddress?: string | null
+  email?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  placeId?: string | null
+  primaryType?: string | null
+  googleRating?: number | null
+  reviewCount?: number | null
+  weekdayHours?: string[] | null
+  schemaTypes?: string[]
+  socialLinks?: string[]
+  title?: string | null
+  h1?: string | null
 }
 
 type CallOpenRouterFn = (
@@ -52,6 +69,38 @@ const BATCH_CATEGORIES: string[][] = [
 ]
 
 const PRO_MODEL = 'google/gemini-2.5-pro-preview-03-25'
+
+/**
+ * Defensiv tvätt av Pro-genererad richCodeExample. Pro envisas ibland med att
+ * skriva `<!-- ANPASSA: ... -->`-platshållare i kod trots att vi instruerat
+ * den att utelämna fält där data saknas. Vi rensar bort sådana rader så
+ * paid-koden inte innehåller dem.
+ *
+ * - Tar bort hela rader som innehåller platshållare-mönster.
+ * - Städar trailing commas som blir kvar.
+ * - Returnerar null om det knappt finns något substantiellt kvar.
+ */
+function sanitizeCodeExample(code: string | null): string | null {
+  if (!code) return null
+  const placeholderRegex = /<!--\s*(ANPASSA|TODO|FYLL)[\s\S]*?-->|<(DITT|DIN|ANGE|LÄGG|PLACEHOLDER|FÖRETAGSNAMN|TJÄNST|STAD|GATUADRESS|POSTNUMMER|TELEFONNUMMER|DOMÄN|FACEBOOKSIDA|INSTAGRAMKONTO|LATITUD|LONGITUD|EPOST|ORGNUMMER|PERSONNAMN|VERKSAMHETSTYP|BESKRIVNING|TITEL|NY[ -]?FRÅGA|NY[ -]?SVAR|SVAR \d|FRÅGA \d|KORT|ERBJUDANDE|SPECIALITET|ANTAL|EXAMPLE|YOUR_)[^>]*>/i
+
+  const lines = code.split('\n')
+  const kept: string[] = []
+  for (const line of lines) {
+    if (placeholderRegex.test(line)) continue
+    kept.push(line)
+  }
+  // Städa trailing commas före } eller ]
+  let cleaned = kept.join('\n').replace(/,(\s*[}\]])/g, '$1')
+  // Städa tomma "key": "" eller "key": ,
+  cleaned = cleaned.replace(/^\s*"[^"]+"\s*:\s*"",?\s*$/gm, '')
+  // Komprimera 3+ tomma rader till max 2
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n')
+
+  // Substantiell innehåll-check: minst 20 alfanumeriska tecken
+  if (cleaned.replace(/[\s{}\[\],"':]/g, '').length < 20) return null
+  return cleaned.trim()
+}
 
 // ---------------------------------------------------------------------------
 // Main export
@@ -125,13 +174,37 @@ async function runBatch(
     }
   })
 
-  const userPrompt = `Företagsinformation:
-- Namn: ${meta.companyName}
-- Bransch: ${meta.bransch}
-- Stad: ${meta.city || 'okänd'}
-- URL: ${meta.url}
-- Domän: ${meta.domain}
-${meta.phone ? `- Telefon: ${meta.phone}` : ''}
+  // Bygg en kompakt företags-fakta-block där vi tar med ENDAST kända fält.
+  // Saknade fält listas inte alls — då vet Pro att de inte finns, och utelämnar dem ur koden
+  // (istället för att skriva ANPASSA-platshållare).
+  const knownFacts: string[] = [
+    `- Namn: ${meta.companyName}`,
+    `- Bransch: ${meta.bransch}`,
+    `- URL: ${meta.url}`,
+    `- Domän: ${meta.domain}`,
+  ]
+  if (meta.city) knownFacts.push(`- Stad: ${meta.city}`)
+  if (meta.streetAddress) knownFacts.push(`- Gatuadress: ${meta.streetAddress}`)
+  if (meta.postalCode) knownFacts.push(`- Postnummer: ${meta.postalCode}`)
+  if (meta.formattedAddress) knownFacts.push(`- Komplett adress (Google Places): ${meta.formattedAddress}`)
+  if (meta.phone) knownFacts.push(`- Telefon: ${meta.phone}`)
+  if (meta.email) knownFacts.push(`- E-post: ${meta.email}`)
+  if (typeof meta.latitude === 'number' && typeof meta.longitude === 'number') {
+    knownFacts.push(`- Koordinater: lat=${meta.latitude}, lng=${meta.longitude}`)
+  }
+  if (meta.placeId) knownFacts.push(`- Google Place ID: ${meta.placeId}`)
+  if (meta.primaryType) knownFacts.push(`- Google primaryType: ${meta.primaryType}`)
+  if (typeof meta.googleRating === 'number') knownFacts.push(`- Google-betyg: ${meta.googleRating}/5 (${meta.reviewCount ?? 0} recensioner)`)
+  if (meta.weekdayHours && meta.weekdayHours.length > 0) {
+    knownFacts.push(`- Öppettider (Google):\n${meta.weekdayHours.map(h => `    ${h}`).join('\n')}`)
+  }
+  if (meta.schemaTypes && meta.schemaTypes.length > 0) knownFacts.push(`- Befintliga schema-typer på sajten: ${meta.schemaTypes.join(', ')}`)
+  if (meta.socialLinks && meta.socialLinks.length > 0) knownFacts.push(`- Sociala länkar/sameAs: ${meta.socialLinks.join(', ')}`)
+  if (meta.title) knownFacts.push(`- Sidans <title>: "${meta.title}"`)
+  if (meta.h1) knownFacts.push(`- Sidans <h1>: "${meta.h1}"`)
+
+  const userPrompt = `Företagsinformation (allt nedan är verifierad data — använd EXAKT dessa värden, hitta inte på):
+${knownFacts.join('\n')}
 
 Dessa kontroller har problem. Skriv FÖR VARJE en rapport-text med tre delar:
 
@@ -142,7 +215,7 @@ Returnera JSON med varje check-key som nyckel:
   "[check-key]": {
     "richRelevance": "1-3 meningar, nämn företagsnamnet (${meta.companyName}), förklara varför just DETTA företag påverkas.",
     "richSteps": "Numrerade steg (1. 2. 3.), max 6 steg, konkreta och handlingsbara. Markdown-format.",
-    "richCodeExample": "Komplett, copy-paste-ready kod med företagets faktiska data (domän: ${meta.domain}, namn: ${meta.companyName}, stad: ${meta.city || 'okänd'}). null om checken inte lämpar sig för kodexempel (t.ex. NAP, directories, recensionssvar)."
+    "richCodeExample": "Komplett, copy-paste-ready kod med företagets faktiska data. UTELÄMNA helt fält där data saknas — skriv ALDRIG ANPASSA-platshållare. null om checken inte lämpar sig för kodexempel."
   }
 }
 
@@ -150,7 +223,9 @@ REGLER:
 - Om en check har ett "data"-fält, ANVÄND den råa datan i din analys. Nämn specifika värden (t.ex. "Eniro har adressen Stampgatan 8 medan Hitta har Syster Estrids Gata 13").
 - richRelevance: Kort, personligt, nämn ALLTID "${meta.companyName}" i texten
 - richSteps: Numrerade 1-6 steg, varje steg en konkret handling. Skriv i imperativ form ("Lägg till...", "Skapa...", "Kontrollera...")
-- richCodeExample: Komplett JSON-LD, HTML eller konfiguration med RÄTT data (domän, namn, stad). Använd <!-- ANPASSA: ... --> BARA där värden inte kan härledas. null om kodexempel inte är relevant
+- richCodeExample: KRITISKT — använd ENDAST data som finns i "Företagsinformation" ovan. Om gatuadress, postnummer, e-post, image-URL, cuisine-typ eller annat värde INTE finns där: TA BORT FÄLTET HELT ur JSON/HTML/kod. SKRIV ALDRIG \`<!-- ANPASSA: ... -->\`, \`<!-- TODO -->\`, \`<DITT FÖRETAGSNAMN>\`, \`<PLACEHOLDER>\`, \`<ange ...>\`, \`<lägg till ...>\` eller liknande platshållare i paid-rapporten — de hör hemma i gratis-mallar, inte här.
+- KONKRET EXEMPEL: om openingHours saknas i META → utelämna hela "openingHoursSpecification"-arrayen, inkludera den INTE med ANPASSA-värden. Om "image" saknas → utelämna "image"-fältet helt. Om "servesCuisine" saknas → utelämna det.
+- Bättre att lämna ett kort men 100% korrekt schema än ett långt med fyllnadstexter.
 - Svara ENBART med giltig JSON — inga kodblock-markeringar, ingen text utanför JSON
 - Alla texter på svenska`
 
@@ -172,7 +247,7 @@ REGLER:
         parsed[check.key] = {
           richRelevance: typeof data.richRelevance === 'string' ? data.richRelevance : null,
           richSteps: typeof data.richSteps === 'string' ? data.richSteps : null,
-          richCodeExample: typeof data.richCodeExample === 'string' ? data.richCodeExample : null,
+          richCodeExample: sanitizeCodeExample(typeof data.richCodeExample === 'string' ? data.richCodeExample : null),
         }
       }
     }

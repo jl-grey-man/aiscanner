@@ -239,7 +239,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasSitemap
         ? `Sitemap.xml hittades med ${scraperData.sitemapUrlCount} URL:er.`
         : 'Sitemap.xml saknas eller ar tom.',
-      hasSitemap ? null : 'Skapa en sitemap.xml och lankar till den fran robots.txt.',
+      hasSitemap ? null : 'Skapa en sitemap.xml och länkar till den från robots.txt.',
       hasSitemap ? { urlCount: scraperData.sitemapUrlCount } : null,
     ))
   }
@@ -264,7 +264,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasCanonical
         ? `Canonical-tagg pekar pa: ${page!.canonical}`
         : 'Ingen canonical-tagg hittades.',
-      hasCanonical ? null : 'Lagg till <link rel="canonical" href="..."> i <head>.',
+      hasCanonical ? null : 'Lägg till <link rel="canonical" href="..."> i <head>.',
       hasCanonical ? { canonical: page!.canonical } : null,
     ))
   }
@@ -351,8 +351,8 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasCities ? 'ok' : 'bad',
       'scraper',
       hasCities
-        ? `Stad namns pa sidan: ${page!.cities.join(', ')}`
-        : 'Ingen stad namns pa sidan.',
+        ? `Stad nämns på sidan: ${page!.cities.join(', ')}`
+        : 'Ingen stad nämns på sidan.',
       hasCities ? null : 'Namn staden i rubriker, meta-beskrivning och brodtext.',
       hasCities ? { cities: page!.cities } : null,
     ))
@@ -383,7 +383,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasLB
         ? `LocalBusiness-schema hittades. Typer: ${page!.schemaTypes.join(', ')}`
         : 'Inget LocalBusiness-schema hittades.',
-      hasLB ? null : 'Lagg till JSON-LD med @type: "LocalBusiness" (eller relevant subtyp).',
+      hasLB ? null : 'Lägg till JSON-LD med @type: "LocalBusiness" (eller relevant subtyp).',
       hasLB ? { schemaTypes: page!.schemaTypes } : null,
     ))
   }
@@ -395,7 +395,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       'directories',
       dirStatus,
       'api',
-      directoryResult.finding || `Hittades pa ${directoryResult.foundCount}/${directoryResult.totalChecked} kataloger.`,
+      directoryResult.finding || `Hittades på ${directoryResult.foundCount}/${directoryResult.totalChecked} kataloger.`,
       directoryResult.fix || null,
       {
         foundCount: directoryResult.foundCount,
@@ -439,9 +439,9 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasHours ? 'ok' : 'notMeasured',
       'api',
       hasHours
-        ? `Oppettider fran Google Business Profile: ${descriptions!.slice(0, 2).join(', ')}...`
+        ? `Öppettider från Google Business Profile: ${descriptions!.slice(0, 2).join(', ')}...`
         : 'Inga oppettider tillgangliga (krav Google Business Profile).',
-      hasHours ? null : 'Lagg till oppettider i din Google Business Profile.',
+      hasHours ? null : 'Lägg till öppettider i din Google Business Profile.',
       hasHours ? { weekdayDescriptions: descriptions } : null,
     ))
   }
@@ -456,7 +456,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasSchema
         ? `Schema markup hittades: ${page!.schemaTypes.join(', ')}`
         : 'Ingen schema markup hittades.',
-      hasSchema ? null : 'Lagg till JSON-LD schema markup (minst Organization eller LocalBusiness).',
+      hasSchema ? null : 'Lägg till JSON-LD schema markup (minst Organization eller LocalBusiness).',
       hasSchema ? { schemaTypes: page!.schemaTypes } : null,
     ))
   }
@@ -471,7 +471,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasSubtype
         ? 'LocalBusiness-subtyp hittades i schema markup.'
         : 'Ingen specifik LocalBusiness-subtyp hittades.',
-      hasSubtype ? null : 'Anvand en specifik subtyp (t.ex. Restaurant, Dentist, Plumber) istallet for bara LocalBusiness.',
+      hasSubtype ? null : 'Använd en specifik subtyp (t.ex. Restaurant, Dentist, Plumber) istället för bara LocalBusiness.',
     ))
   }
 
@@ -483,9 +483,9 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasJsonLd ? 'ok' : 'bad',
       'scraper',
       hasJsonLd
-        ? `${page!.schemaScripts.length} JSON-LD-block hittades pa sidan.`
+        ? `${page!.schemaScripts.length} JSON-LD-block hittades på sidan.`
         : 'Inga JSON-LD-block hittades.',
-      hasJsonLd ? null : 'Lagg till JSON-LD (application/ld+json) istallet for microdata -- AI-modeller foredrar JSON-LD.',
+      hasJsonLd ? null : 'Lägg till JSON-LD (application/ld+json) istället för microdata -- AI-modeller föredrar JSON-LD.',
       hasJsonLd ? { blockCount: page!.schemaScripts.length } : null,
     ))
   }
@@ -507,12 +507,12 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         ? 'Title-tagg finns men meta-beskrivning saknas.'
         : 'Meta-beskrivning finns men title-tagg saknas.'
       mtFix = hasTitle
-        ? 'Lagg till en meta-beskrivning (150-160 tecken) med relevanta nyckelord.'
-        : 'Lagg till en title-tagg (50-60 tecken) med foretagsnamn och tjanst.'
+        ? 'Lägg till en meta-beskrivning (150-160 tecken) med relevanta nyckelord.'
+        : 'Lägg till en title-tagg (50-60 tecken) med företagsnamn och tjänst.'
     } else {
       mtStatus = 'bad'
       mtFinding = 'Varken title-tagg eller meta-beskrivning hittades.'
-      mtFix = 'Lagg till bade <title> och <meta name="description"> i <head>.'
+      mtFix = 'Lägg till både <title> och <meta name="description"> i <head>.'
     }
     checks.push(makeCheck(
       'metaTags',
@@ -681,11 +681,11 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         if (!hasMain) missing.push('<main>')
         if (!hasNav) missing.push('<nav>')
         semFinding = `Delvis semantisk HTML: ${tagCount} element hittades men ${missing.join(' och ')} saknas.`
-        semFix = `Lagg till ${missing.join(' och ')} for battre AI-tolkning av sidstrukturen.`
+        semFix = `Lägg till ${missing.join(' och ')} för bättre AI-tolkning av sidstrukturen.`
       } else {
         semStatus = 'bad'
         semFinding = 'Inga semantiska HTML-element hittades (main, nav, article, section).'
-        semFix = 'Anvand semantiska HTML5-element: <main> for huvudinnehall, <nav> for navigation, <article> for fristaaende innehall.'
+        semFix = 'Använd semantiska HTML5-element: <main> för huvudinnehåll, <nav> för navigation, <article> för fristående innehåll.'
       }
       checks.push(makeCheck(
         'semanticHtml',
@@ -709,7 +709,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasH1 ? 'ok' : 'bad',
       'scraper',
       hasH1 ? `H1-rubrik: "${page!.h1}"` : 'Ingen H1-rubrik hittades.',
-      hasH1 ? null : 'Lagg till en H1-rubrik med foretagsnamn och tjanst/plats.',
+      hasH1 ? null : 'Lägg till en H1-rubrik med företagsnamn och tjänst/plats.',
       hasH1 ? { h1: page!.h1 } : null,
     ))
   }
@@ -722,7 +722,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasTitle ? 'ok' : 'bad',
       'scraper',
       hasTitle ? `Title-tagg: "${page!.title}"` : 'Ingen title-tagg hittades.',
-      hasTitle ? null : 'Lagg till en <title>-tagg med foretagsnamn, tjanst och stad.',
+      hasTitle ? null : 'Lägg till en <title>-tagg med företagsnamn, tjänst och stad.',
       hasTitle ? { title: page!.title } : null,
     ))
   }
@@ -737,7 +737,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasDesc
         ? `Metabeskrivning: "${page!.metaDescription.slice(0, 120)}${page!.metaDescription.length > 120 ? '...' : ''}"`
         : 'Ingen metabeskrivning hittades.',
-      hasDesc ? null : 'Lagg till <meta name="description" content="..."> med 150-160 tecken.',
+      hasDesc ? null : 'Lägg till <meta name="description" content="..."> med 150-160 tecken.',
       hasDesc ? { metaDescription: page!.metaDescription } : null,
     ))
   }
@@ -750,9 +750,9 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       hasContact ? 'ok' : 'bad',
       'scraper',
       hasContact
-        ? 'Kontaktinformation hittades pa sidan.'
+        ? 'Kontaktinformation hittades på sidan.'
         : 'Ingen kontaktinformation hittades.',
-      hasContact ? null : 'Lagg till telefonnummer, e-post och adress synligt pa sidan.',
+      hasContact ? null : 'Lägg till telefonnummer, e-post och adress synligt på sidan.',
     ))
   }
 
@@ -773,7 +773,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       let altFix: string | null
       if (alt.total === 0) {
         altStatus = 'ok'
-        altFinding = 'Inga bilder hittades pa sidan (inget att bedoma).'
+        altFinding = 'Inga bilder hittades på sidan (inget att bedöma).'
         altFix = null
       } else if (alt.percentage >= 80) {
         altStatus = 'ok'
@@ -782,11 +782,11 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       } else if (alt.percentage >= 50) {
         altStatus = 'warning'
         altFinding = `${alt.percentage}% av bilderna har alt-text (${alt.withAlt}/${alt.total}) -- bor forbattras.`
-        altFix = `Lagg till beskrivande alt-texter pa de ${alt.total - alt.withAlt} bilder som saknar det.`
+        altFix = `Lägg till beskrivande alt-texter pa de ${alt.total - alt.withAlt} bilder som saknar det.`
       } else {
         altStatus = 'bad'
         altFinding = `Bara ${alt.percentage}% av bilderna har alt-text (${alt.withAlt}/${alt.total}).`
-        altFix = `Lagg till beskrivande alt-texter pa alla bilder -- AI-modeller anvander alt-texter for att forsta sidinnehall.`
+        altFix = `Lägg till beskrivande alt-texter pa alla bilder -- AI-modeller anvander alt-texter for att forsta sidinnehall.`
       }
       checks.push(makeCheck(
         'altTexts',
@@ -807,7 +807,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         'internalLinks',
         'notMeasured',
         'scraper',
-        'Internlankning kunde inte analyseras.',
+        'Internlänkning kunde inte analyseras.',
         null,
       ))
     } else {
@@ -816,16 +816,16 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       let linkFix: string | null
       if (links.uniquePages >= 5) {
         linkStatus = 'ok'
-        linkFinding = `Bra internlankning: ${links.uniquePages} unika sidor lankas fran startsidan (${links.total} lankar totalt).`
+        linkFinding = `Bra internlänkning: ${links.uniquePages} unika sidor länkas från startsidan (${links.total} länkar totalt).`
         linkFix = null
       } else if (links.uniquePages >= 2) {
         linkStatus = 'warning'
-        linkFinding = `Begransad internlankning: ${links.uniquePages} unika sidor lankas (${links.total} lankar totalt).`
-        linkFix = 'Lagg till fler interna lankar till viktiga undersidor (tjanster, om oss, kontakt).'
+        linkFinding = `Begränsad internlänkning: ${links.uniquePages} unika sidor länkas (${links.total} länkar totalt).`
+        linkFix = 'Lägg till fler interna länkar till viktiga undersidor (tjänster, om oss, kontakt).'
       } else {
         linkStatus = 'bad'
-        linkFinding = `Mycket svag internlankning: bara ${links.uniquePages} unika sidor lankas.`
-        linkFix = 'Skapa en tydlig navigationsstruktur med lankar till alla viktiga undersidor.'
+        linkFinding = `Mycket svag internlänkning: bara ${links.uniquePages} unika sidor länkas.`
+        linkFix = 'Skapa en tydlig navigationsstruktur med länkar till alla viktiga undersidor.'
       }
       checks.push(makeCheck(
         'internalLinks',
@@ -851,7 +851,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         'aiMentions',
         'notMeasured',
         'api',
-        'AI-omnamnandetest kunde inte koras (ingen stad identifierad eller tjanst otillganglig).',
+        'AI-omnämnandetest kunde inte köras (ingen stad identifierad eller tjänst otillgänglig).',
         null,
       ))
     } else {
@@ -895,7 +895,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         'gbpData',
         'notMeasured',
         'api',
-        'Google Business Profile-data kunde inte hamtas.',
+        'Google Business Profile-data kunde inte hämtas.',
         'Skapa en Google Business Profile pa business.google.com.',
       ))
     } else {
@@ -908,7 +908,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         hasRating ? 'ok' : 'warning',
         'api',
         hasRating
-          ? `Google Business Profile: ${name || 'Foretag'} -- betyg ${rating}/5 (${reviewCount ?? 0} recensioner).`
+          ? `Google Business Profile: ${name || 'Företag'} -- betyg ${rating}/5 (${reviewCount ?? 0} recensioner).`
           : `Google Business Profile hittades (${name || 'okant namn'}) men saknar betyg.`,
         hasRating ? null : 'Se till att din Google Business Profile har recensioner och aktuell information.',
         {
