@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { getCheckout, markPaid, saveScanResult, markFailed, getScanResult } from '@/app/lib/checkoutDb'
+import { createCheckout, getCheckout, markPaid, saveScanResult, markFailed, getScanResult } from '@/app/lib/checkoutDb'
 import { APP_URL } from '@/app/lib/config'
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY!, { typescript: true })
@@ -54,31 +54,33 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 3. Hämta checkout-state från vår DB
-    const checkout = getCheckout(sessionId)
-    if (!checkout) {
-      // Fallback: använd metadata från Stripe (om vår DB tappat data, t.ex. efter deploy)
-      const url = (session.metadata?.url as string) || ''
-      const city = (session.metadata?.city as string) || null
-      if (!url) {
+    // 3. Hämta url + city — DB är cachen, Stripe metadata är källan (överlever deploy)
+    let targetUrl: string
+    let targetCity: string | null
+
+    const storedCheckout = getCheckout(sessionId)
+    if (storedCheckout) {
+      targetUrl = storedCheckout.url
+      targetCity = storedCheckout.city
+    } else {
+      // DB saknar raden (t.ex. SQLite raderades vid Railway-deploy)
+      // Stripe metadata är alltid tillgänglig och innehåller url + city
+      targetUrl = (session.metadata?.url as string) ?? ''
+      targetCity = (session.metadata?.city as string) ?? null
+      if (!targetUrl) {
         return NextResponse.json(
           { error: 'Hittar inte scan-parametrar för denna session' },
           { status: 500, headers: corsHeaders },
         )
       }
-      // Återskapa DB-rad så fortsatta retries fungerar
-      try {
-        const { createCheckout } = await import('@/app/lib/checkoutDb')
-        createCheckout(sessionId, url, city)
-      } catch {
-        // Om create misslyckas (redan finns), strunta i det
-      }
+      // Återskapa DB-rad så fortsatta retries kan cacha scan-resultatet
+      try { createCheckout(sessionId, targetUrl, targetCity) } catch {}
     }
 
-    const finalCheckout = getCheckout(sessionId)!
+    // markPaid är en UPDATE — gör ingenting om raden av någon anledning saknas
     markPaid(sessionId)
 
-    // 4. Cachat resultat?
+    // 4. Cachat resultat? (försvinner vid deploy, men scan körs om automatiskt)
     const cached = getScanResult(sessionId)
     if (cached) {
       console.log(`[Finalize] returning cached scan for ${sessionId}`)
@@ -89,13 +91,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Kör paid-scan via vår egen endpoint
-    console.log(`[Finalize] running paid scan for ${finalCheckout.url}`)
+    console.log(`[Finalize] running paid scan for ${targetUrl}`)
     const scanRes = await fetch(`${APP_URL}/api/enhanced-scan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        url: finalCheckout.url,
-        city: finalCheckout.city || undefined,
+        url: targetUrl,
+        city: targetCity || undefined,
         tier: 'paid',
       }),
     })
