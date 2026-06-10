@@ -440,7 +440,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       'api',
       hasHours
         ? `Öppettider från Google Business Profile: ${descriptions!.slice(0, 2).join(', ')}...`
-        : 'Inga oppettider tillgangliga (krav Google Business Profile).',
+        : 'Inga öppettider tillgängliga (kräver Google Business Profile).',
       hasHours ? null : 'Lägg till öppettider i din Google Business Profile.',
       hasHours ? { weekdayDescriptions: descriptions } : null,
     ))
