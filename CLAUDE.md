@@ -12,6 +12,23 @@ AI Search Scanner — Swedish-language tool that analyzes how well a website is 
 | **SCANNER_VERIFICATION.md** | `./SCANNER_VERIFICATION.md` | QA test results against real businesses (Apr 26) |
 | **QA-FIX-PLAN.md** | `./docs/QA-FIX-PLAN.md` | Fix plan for 5 remaining QA problems — root causes, files, fixes |
 
+## Multi-machine sync (Mac ↔ pipod)
+
+This repo is worked on from two machines that are both clones of `github.com:jl-grey-man/aiscanner`. **GitHub is the single source of truth** — never copy files between machines by hand.
+
+- **Pipod:** `/mnt/storage/aiscanner` — `ssh -i ~/.ssh/id_ed25519_pipod jens@100.72.180.20`
+- **Mac:** `~/aiscanner`
+
+**Golden rule: `git pull` before you start, commit + `git push` before you switch machines.**
+
+```bash
+git pull                          # start of every session
+# ...work, commit...
+git add -p && git commit -m "..." && git push   # before leaving the machine
+```
+
+If both machines edit the same file before pushing, GitHub resolves it as a normal merge — but pulling first avoids it. `node_modules/`, `.next/`, `.env*` are gitignored and stay local per machine.
+
 ## Stack (current — Next.js 15 App Router)
 
 - **Framework:** Next.js 15 App Router, TypeScript, standalone output
