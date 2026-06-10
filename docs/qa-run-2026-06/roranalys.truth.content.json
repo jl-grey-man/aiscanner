@@ -1,0 +1,38 @@
+[
+  {
+    "key": "h1",
+    "verdict": "good",
+    "evidence": "Startsidans råa HTML innehåller <h1 class=\"spottext\">Bevara, renovera och ta hand om det befintliga</h1> — icke-tom, server-renderad utan JS.",
+    "confidence": "high"
+  },
+  {
+    "key": "title",
+    "verdict": "good",
+    "evidence": "Startsidan har <title>Relining, rörinspektion &amp; stamspolning i Stockholm</title> i råa HTML-svaret — relevant och icke-tom.",
+    "confidence": "high"
+  },
+  {
+    "key": "metaDescription",
+    "verdict": "good",
+    "evidence": "Startsidan har <meta name=\"description\" content=\"Svensk Röranalys hjälper BRF och fastighetsägare i Storstockholm med relining (strumpmetoden), rörinspektion och stamspolning. Serviceavtal &amp; snabb jour.\"> i råa HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "contactInfo",
+    "verdict": "good",
+    "evidence": "Telefonnummer 08-599 098 00 finns explicit i brödtexten i Jour-sektionen (utanför header/footer): \"kan du kontakta oss på telefonnummer … 08-599 098 00\". Finns också i JSON-LD som \"telephone\":\"08-599 098 00\".",
+    "confidence": "high"
+  },
+  {
+    "key": "altTexts",
+    "verdict": "warning",
+    "evidence": "Sajten använder lazy loading — varje bild syns dubbelt i HTML:en (1×1 platshållare + noscript-version), totalt 16 img-taggar. 6 har alt=\"\" (tom), 4 har alt=\"undefined\" (icke-tom sträng men semantiskt meningslös), 6 har beskrivande alt-text. Andel icke-tomma: 10/16 = 62,5 % — faller i intervallet 50–79 %.",
+    "confidence": "medium"
+  },
+  {
+    "key": "internalLinks",
+    "verdict": "good",
+    "evidence": "Startsidans råa HTML innehåller 13 unika interna sökvägar (bl.a. /tjanster, /relining, /roerinspektion, /stamspolning, /jour, /kontakt, /om-oss, /blogg) — klart över gränsen på ≥5.",
+    "confidence": "high"
+  }
+]

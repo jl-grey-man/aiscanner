@@ -1,0 +1,56 @@
+[
+  {
+    "key": "schemaAny",
+    "verdict": "bad",
+    "evidence": "Startsidans HTML innehåller noll (0) block av typen <script type=\"application/ld+json\"> — ingen strukturerad data av något slag finns implementerad.",
+    "confidence": "high"
+  },
+  {
+    "key": "localSubtype",
+    "verdict": "bad",
+    "evidence": "Ingen JSON-LD alls på startsidan, varken LocalBusiness, HairSalon, BeautySalon eller någon annan subtyp — identisk slutsats som schemaAny.",
+    "confidence": "high"
+  },
+  {
+    "key": "jsonLd",
+    "verdict": "bad",
+    "evidence": "Grep på 'application/ld+json' ger 0 träffar i startsidans rå-HTML — inga JSON-LD-block existerar överhuvudtaget.",
+    "confidence": "high"
+  },
+  {
+    "key": "metaTags",
+    "verdict": "good",
+    "evidence": "<title>Sprej Hårstudio Sundsvall</title> och <meta name=\"description\" content=\"Sprej Hårstudio ligger mitt i centrala Sundsvall på Varvsgränd 2...\"> finns båda med icke-tomt innehåll i startsidans rå-HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "faqSchema",
+    "verdict": "bad",
+    "evidence": "Varken FAQPage-schema i JSON-LD (ingen JSON-LD alls) eller FAQ-liknande HTML-mönster (dl/dt, details/summary, accordion, class/id med 'faq') hittades på startsidan — ingen FAQ-sida existerar heller (/faq returnerar 404).",
+    "confidence": "high"
+  },
+  {
+    "key": "contentDepth",
+    "verdict": "bad",
+    "evidence": "sitemap.xml returnerar 404; sajten är en ensidesapp (single-page, alla interna länkar är ankarlänkar som #behandlingar/#salongen) utan blogg, guide eller nyhetssektion — Google indexerar bara en enda URL (www.sprej.nu/).",
+    "confidence": "high"
+  },
+  {
+    "key": "serviceSchema",
+    "verdict": "bad",
+    "evidence": "Ingen JSON-LD på startsidan eller på några undersidor (sitemap saknas, inga riktiga undersidor finns) — varken Service, BeautySalon, HairSalon, Product, Offer eller Menu-schema är implementerat.",
+    "confidence": "high"
+  },
+  {
+    "key": "eatSignals",
+    "verdict": "bad",
+    "evidence": "Ingen separat Om oss-URL (/om-oss returnerar 404, sektionen finns bara som ankarlänk #about), inget organisationsnummer i brödtext, inga certifieringsord (auktoriserad/certifierad etc.), ingen Person- eller Organization-schema — 4 av 4 E-A-T-signaler saknas.",
+    "confidence": "high"
+  },
+  {
+    "key": "semanticHtml",
+    "verdict": "bad",
+    "evidence": "Grep på <main|nav|article|section|aside> ger noll träffar — sajten använder W3.CSS-ramverket med enbart <div>-baserade klasser (w3-bar, w3-content etc.) utan semantiska HTML5-element.",
+    "confidence": "high"
+  }
+]

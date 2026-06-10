@@ -1,0 +1,56 @@
+[
+  {
+    "key": "schemaAny",
+    "verdict": "good",
+    "evidence": "Startsidans JSON-LD innehåller ett block med @graph med fyra typer: BreadcrumbList, Organization, WebPage, WebSite — minst en parsebar @type finns.",
+    "confidence": "high"
+  },
+  {
+    "key": "localSubtype",
+    "verdict": "bad",
+    "evidence": "Startsidans JSON-LD har @type Organization, WebPage, WebSite och BreadcrumbList — ingen är LocalBusiness eller subtyp (t.ex. Restaurant) trots att det är en restaurang.",
+    "confidence": "high"
+  },
+  {
+    "key": "jsonLd",
+    "verdict": "good",
+    "evidence": "Startsidan har exakt ett <script type=\"application/ld+json\">-block med innehåll (>10 tecken) — kravet på minst ett block uppfyllt.",
+    "confidence": "high"
+  },
+  {
+    "key": "metaTags",
+    "verdict": "good",
+    "evidence": "<title>Restaurang Tvåkanten</title> och <meta name=\"description\" content=\"Restaurang på Avenyn i Göteborg med svensk mat & personlig service...\"> — båda fält finns och är icke-tomma.",
+    "confidence": "high"
+  },
+  {
+    "key": "faqSchema",
+    "verdict": "bad",
+    "evidence": "Inget FAQPage-schema i JSON-LD på startsidan, /om-oss/, /menyer/, /catering-3/, /boka-bord/ eller /hitta-till-oss/. Inga FAQ-element i HTML (dl/dt, details/summary, faq-klasser, accordion) hittades på någon sida.",
+    "confidence": "high"
+  },
+  {
+    "key": "contentDepth",
+    "verdict": "warning",
+    "evidence": "Sitemap.xml (urlset, ej index) har 19 <loc>-poster — faller i 10–50-intervallet. Ingen URL matchar blogg/guide/nyheter/artikel-mönstren; sajten saknar helt blogg- eller guidesektion.",
+    "confidence": "high"
+  },
+  {
+    "key": "serviceSchema",
+    "verdict": "bad",
+    "evidence": "Inget Service, Menu, MenuItem, Product eller Offer i JSON-LD på någon av de granskade sidorna (startsida, /menyer/, /catering-3/, /om-oss/, /hitta-till-oss/) — menyer och catering beskrivs bara i löptext utan strukturerad data.",
+    "confidence": "high"
+  },
+  {
+    "key": "eatSignals",
+    "verdict": "warning",
+    "evidence": "Om oss-sida finns (/om-oss/). Inget organisationsnummer (\\d{6}-\\d{4}) hittat på någon sida. Inga certifieringsord (auktoriserad/certifierad/ISO m.fl.) hittades. Ingen Person-schema; ägarna nämns inte vid namn i JSON-LD. Två av fyra signaler saknas → warning.",
+    "confidence": "high"
+  },
+  {
+    "key": "semanticHtml",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML innehåller 1× <main> och 6× <nav> samt 11× <section> — protokollets krav att både <main> och <nav> finns är uppfyllt.",
+    "confidence": "high"
+  }
+]

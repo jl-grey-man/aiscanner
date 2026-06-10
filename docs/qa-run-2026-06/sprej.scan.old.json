@@ -1,0 +1,785 @@
+{
+    "meta": {
+        "url": "https://www.sprej.nu",
+        "domain": "sprej.nu",
+        "city": "Sundsvall",
+        "bransch": "fris\u00f6r",
+        "companyName": "Sprej H\u00e5rstudio",
+        "scanDate": "2026-06-10T11:05:13.907Z",
+        "scanId": "scan-1781089513907-bfbv4w"
+    },
+    "scores": {
+        "free": 51,
+        "full": 52,
+        "google": 4.8,
+        "googleCount": 33
+    },
+    "checks": [
+        {
+            "id": 1,
+            "key": "https",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Webbplatsen anvander HTTPS -- sakerhetscertifikat finns.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 2,
+            "key": "robotsTxt",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Robots.txt finns och kan lasa av AI-crawlers.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 3,
+            "key": "aiCrawlers",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "blocked": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 4,
+            "key": "sitemap",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Sitemap.xml saknas eller ar tom.",
+            "fix": "Skapa en sitemap.xml och l\u00e4nkar till den fr\u00e5n robots.txt.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Om ni har WordPress: installera ett SEO-plugin (Yoast SEO, RankMath eller All in One SEO) \u2014 de genererar sitemap automatiskt p\u00e5 `https://<DOM\u00c4N>/sitemap.xml`.\n2. Om ni inte har WordPress: skapa en sitemap.xml manuellt med koden nedan eller anv\u00e4nd en gratis tj\u00e4nst som `https://www.xml-sitemaps.com`.\n3. L\u00e4gg sitemap.xml i webbplatsens rot.\n4. L\u00e4gg till `Sitemap: https://<DOM\u00c4N>/sitemap.xml` i er robots.txt.\n5. Skicka in sitemap till Google Search Console (`https://search.google.com/search-console`).",
+            "genericCodeTemplate": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://<DOM\u00c4N>/</loc>\n    <lastmod>2026-01-01</lastmod>\n    <priority>1.0</priority>\n  </url>\n  <url>\n    <loc>https://<DOM\u00c4N>/om-oss</loc>\n    <lastmod>2026-01-01</lastmod>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://<DOM\u00c4N>/tjanster</loc>\n    <lastmod>2026-01-01</lastmod>\n    <priority>0.9</priority>\n  </url>\n  <url>\n    <loc>https://<DOM\u00c4N>/kontakt</loc>\n    <lastmod>2026-01-01</lastmod>\n    <priority>0.7</priority>\n  </url>\n</urlset>",
+            "richRelevance": "En sitemap.xml hj\u00e4lper s\u00f6kmotorer att snabbt och effektivt hitta alla viktiga sidor p\u00e5 Sprej H\u00e5rstudios webbplats, som prislistor och bokningsinformation. Utan en sitemap riskerar ni att potentiella kunder i Sundsvall inte hittar alla era tj\u00e4nster via Google, vilket kan leda till f\u00f6rlorade aff\u00e4rsm\u00f6jligheter.",
+            "richSteps": "1. Generera en `sitemap.xml`-fil som listar alla sidor p\u00e5 `sprej.nu` som ska indexeras av s\u00f6kmotorer. Detta kan g\u00f6ras med ett onlineverktyg eller plugin till ert publiceringssystem.\n2. Ladda upp filen till webbplatsens rotmapp s\u00e5 att den blir tillg\u00e4nglig p\u00e5 `https://www.sprej.nu/sitemap.xml`.\n3. \u00d6ppna eller skapa filen `robots.txt` i rotmappen.\n4. L\u00e4gg till en rad i `robots.txt` som pekar ut var sitemapen finns.\n5. Logga in p\u00e5 Google Search Console och skicka in er sitemap-URL f\u00f6r att p\u00e5skynda indexeringen.",
+            "richCodeExample": "User-agent: *\nAllow: /\n\nSitemap: https://www.sprej.nu/sitemap.xml"
+        },
+        {
+            "id": 5,
+            "key": "llmsTxt",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "exists": false,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 6,
+            "key": "canonical",
+            "status": "warning",
+            "source": "scraper",
+            "finding": "Ingen canonical-tagg hittades.",
+            "fix": "L\u00e4gg till <link rel=\"canonical\" href=\"...\"> i <head>.",
+            "data": null,
+            "codeExample": null,
+            "priority": "important",
+            "tier": "free",
+            "richRelevance": "En canonical-tagg \u00e4r avg\u00f6rande f\u00f6r Sprej H\u00e5rstudio eftersom den f\u00f6rhindrar problem med duplicerat inneh\u00e5ll, vilket kan uppst\u00e5 om samma sida \u00e4r tillg\u00e4nglig via flera URL:er. Genom att specificera en f\u00f6redragen URL s\u00e4kerst\u00e4ller ni att all s\u00f6kmotorstyrka koncentreras till en enda version, vilket st\u00e4rker er synlighet i s\u00f6kresultaten.",
+            "richSteps": "1. Best\u00e4m den prim\u00e4ra (kanoniska) URL:en f\u00f6r varje sida p\u00e5 er webbplats. F\u00f6r startsidan \u00e4r det `https://www.sprej.nu/`.\n2. F\u00f6r varje enskild sida, l\u00e4gg till en `<link>`-tagg i `<head>`-sektionen i HTML-koden.\n3. Ange attributet `rel=\"canonical\"` i taggen.\n4. Ange attributet `href` till den fullst\u00e4ndiga, absoluta URL:en f\u00f6r den sidan.\n5. Kontrollera att implementeringen \u00e4r korrekt p\u00e5 alla viktiga sidor.",
+            "richCodeExample": "<link rel=\"canonical\" href=\"https://www.sprej.nu/\">"
+        },
+        {
+            "id": 7,
+            "key": "ogTags",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 8,
+            "key": "socialPresence",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 9,
+            "key": "hreflang",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 10,
+            "key": "cwv",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "PageSpeed Insights kunde inte m\u00e4tas: tog f\u00f6r l\u00e5ng tid (timeout).",
+            "fix": null,
+            "data": {
+                "lcp": null,
+                "cls": null,
+                "inp": null,
+                "performanceScore": null,
+                "source": null
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 11,
+            "key": "phone",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inget telefonnummer hittades p\u00e5 sidan, eller s\u00e5 \u00e4r det skrivet i ett format som AI-s\u00f6kmotorer inte kan l\u00e4sa.",
+            "fix": "L\u00e4gg till telefonnummer i JSON-LD structured data (schema.org \"telephone\"-f\u00e4ltet) och/eller synligt som text p\u00e5 startsidan i formatet +46 31 220 30 05 eller 031-220 30 05. Undvik att bara visa numret som bild eller inuti JavaScript-renderade element.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. L\u00e4gg till ert telefonnummer synligt p\u00e5 startsidan och i footern p\u00e5 alla sidor.\n2. Anv\u00e4nd ett klickbart `tel:`-l\u00e4nk s\u00e5 bes\u00f6kare p\u00e5 mobil kan ringa direkt.\n3. Skriv numret i internationellt format: `+46 31 220 30 05` eller nationellt med bindestreck: `031-220 30 05`.\n4. L\u00e4gg ocks\u00e5 in numret i ert JSON-LD-schema (LocalBusiness-f\u00e4ltet `telephone`).\n5. Undvik att visa telefonnumret som bild eller inuti JavaScript \u2014 AI-crawlers kan inte l\u00e4sa s\u00e5dant.",
+            "genericCodeTemplate": "<!-- I footern eller header -->\n<a href=\"tel:<TELEFONNUMMER>\" class=\"phone-link\">\n  <TELEFONNUMMER>\n</a>\n\n<!-- I JSON-LD-schemat -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"telephone\": \"<TELEFONNUMMER>\"\n}\n</script>",
+            "richRelevance": "F\u00f6r en lokal tj\u00e4nst som Sprej H\u00e5rstudio \u00e4r det avg\u00f6rande att potentiella kunder enkelt kan ringa och boka en tid. Om telefonnumret inte \u00e4r synligt eller klickbart, s\u00e4rskilt p\u00e5 mobila enheter, skapas en on\u00f6dig barri\u00e4r som kan leda till f\u00f6rlorade kunder i Sundsvall.",
+            "richSteps": "1. L\u00e4gg till telefonnumret `060-61 45 00` som text i sidhuvudet och/eller sidfoten p\u00e5 er webbplats.\n2. S\u00e4kerst\u00e4ll att numret \u00e4r formaterat som en klickbar l\u00e4nk f\u00f6r mobilanv\u00e4ndare.\n3. Undvik att presentera telefonnumret som en bild, d\u00e5 s\u00f6kmotorer och hj\u00e4lpmedelsverktyg inte kan l\u00e4sa det.\n4. Inkludera numret i er strukturerade data f\u00f6r `LocalBusiness` (se separat punkt) f\u00f6r att ytterligare f\u00f6rst\u00e4rka informationen f\u00f6r Google.",
+            "richCodeExample": "<a href=\"tel:+4660614500\">060-61 45 00</a>"
+        },
+        {
+            "id": 12,
+            "key": "cityMentioned",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Stad n\u00e4mns p\u00e5 sidan: Sundsvall",
+            "fix": null,
+            "data": {
+                "cities": [
+                    "Sundsvall"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 13,
+            "key": "googleMaps",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Google Maps-inb\u00e4ddning hittades p\u00e5 /.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 14,
+            "key": "localBusiness",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inget LocalBusiness-schema hittades.",
+            "fix": "L\u00e4gg till JSON-LD med @type: \"LocalBusiness\" (eller relevant subtyp).",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Identifiera er specifika verksamhetstyp p\u00e5 schema.org/docs/full.html under \"LocalBusiness\" \u2014 t.ex. `Restaurant`, `Plumber`, `Dentist`, `HairSalon`, `AutoRepair` eller `AccountingService`.\n2. Kopiera mallen nedan och fyll i alla `<PLACEHOLDERS>` med era riktiga uppgifter.\n3. L\u00e4gg in koden mellan `<head>` och `</head>` p\u00e5 er startsida \u2014 om ni har WordPress: anv\u00e4nd ett plugin som \"Insert Headers and Footers\" eller redigera `header.php`.\n4. Validera resultatet p\u00e5 `https://validator.schema.org/` \u2014 klistra in er URL och kontrollera att inga fel rapporteras.\n5. Testa \u00e4ven Googles \"Rich Results Test\" (`https://search.google.com/test/rich-results`) \u2014 det visar hur Google ser er strukturerade data.",
+            "genericCodeTemplate": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"image\": \"https://<DOM\u00c4N>/logo.png\",\n  \"@id\": \"https://<DOM\u00c4N>/#business\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"telephone\": \"<TELEFONNUMMER>\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"<GATUADRESS>\",\n    \"addressLocality\": \"<STAD>\",\n    \"postalCode\": \"<POSTNUMMER>\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": <LATITUD>,\n    \"longitude\": <LONGITUD>\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"],\n      \"opens\": \"09:00\",\n      \"closes\": \"17:00\"\n    }\n  ],\n  \"sameAs\": [\n    \"https://www.facebook.com/<FACEBOOKSIDA>\",\n    \"https://www.instagram.com/<INSTAGRAMKONTO>\"\n  ]\n}\n</script>",
+            "richRelevance": "Utan strukturerad data f\u00f6r LocalBusiness missar Sprej H\u00e5rstudio en viktig m\u00f6jlighet att tydligt kommunicera sin verksamhetsinformation till Google. Korrekt schema kan leda till en mer framtr\u00e4dande informationsruta (Knowledge Panel) i s\u00f6kresultaten och f\u00f6rb\u00e4ttrad synlighet p\u00e5 Google Maps, vilket \u00e4r kritiskt f\u00f6r att attrahera lokala kunder.",
+            "richSteps": "1. Kopiera nedanst\u00e5ende JSON-LD-kodblock.\n2. Klistra in kodblocket i `<head>`-sektionen p\u00e5 er startsida, https://www.sprej.nu.\n3. Verifiera att koden \u00e4r korrekt implementerad med hj\u00e4lp av Googles verktyg f\u00f6r test av rich results.\n4. \u00d6vervaka Google Search Console f\u00f6r eventuella fel eller f\u00f6rb\u00e4ttringsf\u00f6rslag relaterade till strukturerad data.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"HairSalon\",\n  \"name\": \"Sprej H\u00e5rstudio\",\n  \"url\": \"https://www.sprej.nu\",\n  \"telephone\": \"+4660614500\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Varvsgr\u00e4nd 2\",\n    \"addressLocality\": \"Sundsvall\",\n    \"postalCode\": \"852 32\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 62.391354,\n    \"longitude\": 17.3025904\n  },\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.8\",\n    \"reviewCount\": \"33\"\n  },\n  \"sameAs\": [\n    \"https://www.google.com/maps?cid=ChIJH0z0ml5nZEYRwy7tjXqlzf4\"\n  ]\n}\n</script>"
+        },
+        {
+            "id": 15,
+            "key": "directories",
+            "status": "ok",
+            "source": "api",
+            "finding": "F\u00f6retaget hittades p\u00e5 2/2 kataloger (Eniro, Hitta) med konsekvent NAP-data.",
+            "fix": null,
+            "data": {
+                "foundCount": 2,
+                "totalChecked": 2,
+                "directories": [
+                    {
+                        "name": "Eniro",
+                        "found": true,
+                        "source": "tavily",
+                        "profileUrl": "https://www.eniro.se/wicktoria+bystr%C3%B6m+h%C3%A5rstudio+sundsvall/32639760/firma",
+                        "nap": {
+                            "address": "Varvsgr\u00e4nd 2, 85232 Sundsvall"
+                        }
+                    },
+                    {
+                        "name": "Hitta",
+                        "found": true,
+                        "source": "tavily",
+                        "profileUrl": "https://www.hitta.se/sprej+sweden+ab/sundsvall/igbeejac",
+                        "nap": {
+                            "phone": "060-61 45 00"
+                        }
+                    }
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 16,
+            "key": "napConsistency",
+            "status": "ok",
+            "source": "api",
+            "finding": "NAP-data (namn, adress, telefon) \u00e4r konsekvent \u00f6ver kataloger \u2014 bra f\u00f6r AI-entitetsmatchning.",
+            "fix": null,
+            "data": {
+                "checked": true,
+                "consistent": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 17,
+            "key": "openingHours",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "Inga oppettider tillgangliga (krav Google Business Profile).",
+            "fix": "L\u00e4gg till \u00f6ppettider i din Google Business Profile.",
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 18,
+            "key": "schemaAny",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen schema markup hittades.",
+            "fix": "L\u00e4gg till JSON-LD schema markup (minst Organization eller LocalBusiness).",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Schema markup \u00e4r strukturerad data som hj\u00e4lper s\u00f6kmotorer och AI-modeller f\u00f6rst\u00e5 er sajt maskinellt.\n2. B\u00f6rja med minst `Organization` eller `LocalBusiness`-schema i `<head>` p\u00e5 startsidan.\n3. Anv\u00e4nd JSON-LD-format (rekommenderat av Google), inte microdata eller RDFa.\n4. Validera p\u00e5 `https://validator.schema.org/` efter implementation.\n5. F\u00f6r specifika rekommendationer per bransch: se `#14 LocalBusiness-schema`-fixen.",
+            "genericCodeTemplate": "<!-- Minst Organization-schema som f\u00f6rsta steg -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"logo\": \"https://<DOM\u00c4N>/logo.png\",\n  \"contactPoint\": {\n    \"@type\": \"ContactPoint\",\n    \"telephone\": \"<TELEFONNUMMER>\",\n    \"contactType\": \"customer service\",\n    \"areaServed\": \"SE\",\n    \"availableLanguage\": [\"Swedish\"]\n  }\n}\n</script>",
+            "richRelevance": "Utan strukturerad data (schema markup) missar s\u00f6kmotorer och AI-modeller viktig kontext om Sprej H\u00e5rstudio, vilket kan leda till s\u00e4mre synlighet och f\u00e4rre detaljer i s\u00f6kresultaten. Genom att l\u00e4gga till schema kan ni tydligt definiera er som en fris\u00f6rsalong i Sundsvall, vilket hj\u00e4lper maskiner att f\u00f6rst\u00e5 och presentera er verksamhet korrekt.",
+            "richSteps": "1. Skapa ett JSON-LD-skript som beskriver er verksamhet.\n2. Anv\u00e4nd typen `HairSalon` f\u00f6r att vara s\u00e5 specifik som m\u00f6jligt.\n3. Inkludera grundl\u00e4ggande information som namn, adress och telefonnummer.\n4. Klistra in skriptet i `<head>`-sektionen p\u00e5 er hemsida, `sprej.nu`.\n5. Validera koden med Googles verktyg \"Test av ut\u00f6kade resultat\" f\u00f6r att s\u00e4kerst\u00e4lla att den \u00e4r korrekt implementerad.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"HairSalon\",\n  \"name\": \"Sprej H\u00e5rstudio\",\n  \"url\": \"https://www.sprej.nu\",\n  \"telephone\": \"060-61 45 00\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Varvsgr\u00e4nd 2\",\n    \"addressLocality\": \"Sundsvall\",\n    \"postalCode\": \"852 32\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 62.391354,\n    \"longitude\": 17.3025904\n  },\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.8\",\n    \"reviewCount\": \"33\"\n  },\n  \"sameAs\": [\n    \"https://www.google.com/maps?cid=ChIJH0z0ml5nZEYRwy7tjXqlzf4\"\n  ]\n}\n</script>"
+        },
+        {
+            "id": 19,
+            "key": "localSubtype",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen specifik LocalBusiness-subtyp hittades.",
+            "fix": "Anv\u00e4nd en specifik subtyp (t.ex. Restaurant, Dentist, Plumber) ist\u00e4llet f\u00f6r bara LocalBusiness.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Schema.org har specifika underkategorier f\u00f6r olika branscher \u2014 anv\u00e4nd den mest exakta.\n2. Vanliga svenska exempel:\n   - Restaurang \u2192 `Restaurant`, `Cafe`, `Bakery`, `Bar`\n   - Hantverkare \u2192 `Plumber`, `Electrician`, `Painter`, `HVACBusiness`\n   - V\u00e5rd \u2192 `Dentist`, `Physician`, `MedicalBusiness`\n   - Sk\u00f6nhet \u2192 `HairSalon`, `BeautySalon`, `NailSalon`\n   - Bil \u2192 `AutoRepair`, `CarDealer`, `AutoBodyShop`\n3. Byt `@type` i ert existerande schema till den specifika typen.\n4. Komplett lista: `https://schema.org/docs/full.html` under \"LocalBusiness\".",
+            "genericCodeTemplate": "<!-- Byt ut \"LocalBusiness\" eller \"Organization\" mot r\u00e4tt subtyp -->\n\"@type\": \"<VERKSAMHETSTYP>\",",
+            "richRelevance": "Genom att inte specificera en subtyp till `LocalBusiness` framst\u00e5r Sprej H\u00e5rstudio som ett generiskt lokalt f\u00f6retag f\u00f6r s\u00f6kmotorer. Att anv\u00e4nda den mer specifika typen `HairSalon` hj\u00e4lper Google att f\u00f6rst\u00e5 exakt vilken typ av tj\u00e4nster ni erbjuder, vilket \u00f6kar chansen att synas f\u00f6r relevanta s\u00f6kningar som \"fris\u00f6r Sundsvall\".",
+            "richSteps": "1. Identifiera den mest specifika schema.org-typen f\u00f6r er verksamhet, vilket \u00e4r `HairSalon`.\n2. Om ni f\u00f6r n\u00e4rvarande anv\u00e4nder `LocalBusiness` eller `Organization`, uppdatera `@type`-f\u00e4ltet till `HairSalon`.\n3. Se \u00f6ver om det finns relevanta egenskaper f\u00f6r `HairSalon` som ni kan l\u00e4gga till, exempelvis `priceRange` (om ni vill visa det).\n4. Implementera den uppdaterade JSON-LD-koden p\u00e5 er webbplats.",
+            "richCodeExample": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"HairSalon\",\n  \"name\": \"Sprej H\u00e5rstudio\",\n  \"url\": \"https://www.sprej.nu\",\n  \"telephone\": \"060-61 45 00\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Varvsgr\u00e4nd 2\",\n    \"addressLocality\": \"Sundsvall\",\n    \"postalCode\": \"852 32\",\n    \"addressCountry\": \"SE\"\n  }\n}"
+        },
+        {
+            "id": 20,
+            "key": "jsonLd",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inga JSON-LD-block hittades.",
+            "fix": "L\u00e4gg till JSON-LD (application/ld+json) ist\u00e4llet f\u00f6r microdata -- AI-modeller f\u00f6redrar JSON-LD.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. JSON-LD \u00e4r det format Google och AI-tj\u00e4nster f\u00f6redrar f\u00f6r strukturerad data \u2014 l\u00e4ttare att implementera och tolka \u00e4n microdata/RDFa.\n2. L\u00e4gg in JSON-LD som `<script type=\"application/ld+json\">`-block i `<head>` (eller f\u00f6re `</body>`).\n3. B\u00f6rja med minst `Organization` eller `LocalBusiness` p\u00e5 startsidan \u2014 se `#14 LocalBusiness-schema` f\u00f6r mall.\n4. L\u00e4gg p\u00e5 fler scheman per sidtyp: `Product` f\u00f6r produktsidor, `Article` f\u00f6r bloggar, `FAQPage` f\u00f6r FAQ-sidor.\n5. Validera p\u00e5 `https://validator.schema.org/`.",
+            "genericCodeTemplate": "<!-- Grundl\u00e4ggande JSON-LD i <head> -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"telephone\": \"<TELEFONNUMMER>\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"<GATUADRESS>\",\n    \"addressLocality\": \"<STAD>\",\n    \"postalCode\": \"<POSTNUMMER>\",\n    \"addressCountry\": \"SE\"\n  }\n}\n</script>",
+            "richRelevance": "Moderna s\u00f6kmotorer och AI-system, inklusive Google, f\u00f6redrar JSON-LD-formatet f\u00f6r strukturerad data eftersom det \u00e4r enklare att tolka och underh\u00e5lla. Genom att implementera schema markup f\u00f6r Sprej H\u00e5rstudio med JSON-LD s\u00e4kerst\u00e4ller ni att er information \u00e4r l\u00e4ttillg\u00e4nglig f\u00f6r dessa system, vilket \u00e4r avg\u00f6rande f\u00f6r framtidens s\u00f6k.",
+            "richSteps": "1. Skapa ett `<script>`-element med attributet `type=\"application/ld+json\"`.\n2. Inuti detta skript, definiera er `HairSalon`-information i JSON-format.\n3. Inkludera nyckelinformation som namn, adress, telefon och URL.\n4. Placera hela `<script>`-blocket i `<head>`-sektionen p\u00e5 er hemsida.\n5. Ta bort eventuell gammal schema markup i andra format (som microdata eller RDFa) f\u00f6r att undvika konflikter.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"HairSalon\",\n  \"name\": \"Sprej H\u00e5rstudio\",\n  \"url\": \"https://www.sprej.nu\",\n  \"telephone\": \"060-61 45 00\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Varvsgr\u00e4nd 2\",\n    \"addressLocality\": \"Sundsvall\",\n    \"postalCode\": \"852 32\",\n    \"addressCountry\": \"SE\"\n  }\n}\n</script>"
+        },
+        {
+            "id": 21,
+            "key": "metaTags",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bade title-tagg och meta-beskrivning finns.",
+            "fix": null,
+            "data": {
+                "hasTitle": true,
+                "hasDescription": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 22,
+            "key": "faqSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "questionsFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 23,
+            "key": "contentDepth",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "pageCount": 0,
+                "hasBlog": false,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 24,
+            "key": "serviceSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "typesFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 25,
+            "key": "eatSignals",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "correctedByScaper": false
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 26,
+            "key": "semanticHtml",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inga semantiska HTML-element hittades (main, nav, article, section).",
+            "fix": "Anv\u00e4nd semantiska HTML5-element: <main> f\u00f6r huvudinneh\u00e5ll, <nav> f\u00f6r navigation, <article> f\u00f6r frist\u00e5ende inneh\u00e5ll.",
+            "data": {
+                "hasMain": false,
+                "hasNav": false,
+                "hasArticle": false,
+                "hasSection": false,
+                "hasAside": false,
+                "langAttribute": "sv"
+            },
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Byt ut generiska `<div>`-element mot semantiska HTML5-element s\u00e5 AI-crawlers och sk\u00e4rml\u00e4sare f\u00f6rst\u00e5r sidans struktur.\n2. Anv\u00e4nd `<header>` f\u00f6r sidhuvudet, `<nav>` f\u00f6r menyn, `<main>` f\u00f6r huvudinneh\u00e5llet, `<footer>` f\u00f6r sidfoten.\n3. Anv\u00e4nd `<article>` f\u00f6r frist\u00e5ende inneh\u00e5ll (blogginl\u00e4gg, produktbeskrivning) och `<section>` f\u00f6r tematiska sektioner inom en sida.\n4. S\u00e4tt `lang=\"sv\"` p\u00e5 `<html>`-elementet s\u00e5 det \u00e4r tydligt att sidan \u00e4r p\u00e5 svenska.",
+            "genericCodeTemplate": "<!DOCTYPE html>\n<html lang=\"sv\">\n<head>\n  <meta charset=\"utf-8\">\n  <title><F\u00d6RETAGSNAMN> \u2014 <TJ\u00c4NST> i <STAD></title>\n</head>\n<body>\n  <header>\n    <nav>\n      <a href=\"/\">Hem</a>\n      <a href=\"/tjanster\">Tj\u00e4nster</a>\n      <a href=\"/kontakt\">Kontakt</a>\n    </nav>\n  </header>\n\n  <main>\n    <article>\n      <h1><TJ\u00c4NST> i <STAD></h1>\n      <section>\n        <h2>V\u00e5ra tj\u00e4nster</h2>\n        <p>...</p>\n      </section>\n    </article>\n  </main>\n\n  <footer>\n    <address>\n      <F\u00d6RETAGSNAMN><br>\n      <GATUADRESS>, <POSTNUMMER> <STAD>\n    </address>\n  </footer>\n</body>\n</html>",
+            "richRelevance": "Webbplatsen f\u00f6r Sprej H\u00e5rstudio saknar semantiska HTML-taggar som `<main>` och `<nav>`, vilket g\u00f6r det sv\u00e5rare f\u00f6r s\u00f6kmotorer och hj\u00e4lpmedel (som sk\u00e4rml\u00e4sare) att f\u00f6rst\u00e5 sidans struktur. Genom att strukturera inneh\u00e5llet med korrekta taggar kan ni f\u00f6rb\u00e4ttra b\u00e5de er SEO och tillg\u00e4ngligheten, vilket ger en b\u00e4ttre anv\u00e4ndarupplevelse f\u00f6r alla bes\u00f6kare.",
+            "richSteps": "1. Identifiera sidans huvudnavigering och omslut den med ett `<nav>`-element.\n2. Omslut det prim\u00e4ra, unika inneh\u00e5llet p\u00e5 varje sida med ett `<main>`-element.\n3. Anv\u00e4nd `<section>`-element f\u00f6r att gruppera logiskt relaterat inneh\u00e5ll, som en sektion f\u00f6r \"V\u00e5ra tj\u00e4nster\" och en annan f\u00f6r \"Kontakta oss\".\n4. Anv\u00e4nd `<header>` f\u00f6r sidhuvudet (ofta med logotyp och navigation) och `<footer>` f\u00f6r sidfoten (med kontaktuppgifter och l\u00e4nkar).\n5. S\u00e4kerst\u00e4ll att `<html>`-taggen har attributet `lang=\"sv\"`, vilket den redan har enligt v\u00e5r analys.",
+            "richCodeExample": "<!DOCTYPE html>\n<html lang=\"sv\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Sprej H\u00e5rstudio Sundsvall</title>\n  <!-- H\u00e4r placeras JSON-LD-skriptet -->\n</head>\n<body>\n\n  <header>\n    <h1>Sprej H\u00e5rstudio</h1>\n    <nav>\n      <ul>\n        <li><a href=\"/\">Hem</a></li>\n        <li><a href=\"/tjanster\">Tj\u00e4nster</a></li>\n        <li><a href=\"/kontakt\">Kontakt</a></li>\n      </ul>\n    </nav>\n  </header>\n\n  <main>\n    <section id=\"om-oss\">\n      <h2>V\u00e4lkommen till Sprej H\u00e5rstudio i Sundsvall</h2>\n      <p>H\u00e4r skriver ni en v\u00e4lkomsttext om er salong...</p>\n    </section>\n    \n    <section id=\"tjanster\">\n      <h3>V\u00e5ra behandlingar</h3>\n      <p>Information om klippning, f\u00e4rgning, etc.</p>\n    </section>\n  </main>\n\n  <footer>\n    <p>Sprej H\u00e5rstudio | Varvsgr\u00e4nd 2, 852 32 Sundsvall | Tel: 060-61 45 00</p>\n  </footer>\n\n</body>\n</html>"
+        },
+        {
+            "id": 27,
+            "key": "h1",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen H1-rubrik hittades.",
+            "fix": "L\u00e4gg till en H1-rubrik med f\u00f6retagsnamn och tj\u00e4nst/plats.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Varje sida ska ha **exakt en** `<h1>`-rubrik \u2014 det \u00e4r den viktigaste rubriken f\u00f6r AI-modeller och sk\u00e4rml\u00e4sare.\n2. Skriv en H1 som inneh\u00e5ller: vad ni g\u00f6r + var ni g\u00f6r det + er identitet.\n3. Placera H1 h\u00f6gst upp i `<main>`, innan annat inneh\u00e5ll.\n4. Varje undersida b\u00f6r ha unik H1 (inte samma som startsidan).\n5. Undvik H1 som bild eller logotyp \u2014 AI kan inte l\u00e4sa det.",
+            "genericCodeTemplate": "<main>\n  <h1><TJ\u00c4NST> i <STAD> \u2014 <F\u00d6RETAGSNAMN></h1>\n  <p>Korta s\u00e4ljande underrubrik som beskriver vad ni erbjuder och vad som g\u00f6r er unika.</p>\n</main>",
+            "richRelevance": "H1-rubriken \u00e4r den viktigaste rubriken p\u00e5 en sida och talar om f\u00f6r b\u00e5de bes\u00f6kare och s\u00f6kmotorer vad sidan handlar om. Utan en H1-rubrik f\u00f6rsv\u00e5ras Googles f\u00f6rst\u00e5else f\u00f6r sidans inneh\u00e5ll, vilket kan leda till att Sprej H\u00e5rstudio rankar s\u00e4mre p\u00e5 viktiga s\u00f6kord som \"fris\u00f6r Sundsvall\".",
+            "richSteps": "1. \u00d6ppna HTML-koden f\u00f6r startsidan p\u00e5 `sprej.nu`.\n2. Leta upp sidans huvudsakliga inneh\u00e5llsomr\u00e5de, oftast direkt efter `<body>`-taggen.\n3. Infoga en H1-rubrik som tydligt och koncist beskriver sidans syfte.\n4. Anv\u00e4nd en beskrivande rubrik, till exempel \"Sprej H\u00e5rstudio \u2013 Din fris\u00f6r i Sundsvall\".\n5. Spara \u00e4ndringarna och publicera den uppdaterade sidan.",
+            "richCodeExample": "<h1>Sprej H\u00e5rstudio \u2013 Fris\u00f6r i Sundsvall</h1>"
+        },
+        {
+            "id": 28,
+            "key": "title",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Title-tagg: \"Sprej H\u00e5rstudio Sundsvall\"",
+            "fix": null,
+            "data": {
+                "title": "Sprej H\u00e5rstudio Sundsvall"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 29,
+            "key": "metaDescription",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Metabeskrivning: \"Sprej H\u00e5rstudio ligger mitt i centrala Sundsvall p\u00e5 Varvsgr\u00e4nd 2.\nBoka behandling online eller telefon 060-61 45 00. V\u00e4l...\"",
+            "fix": null,
+            "data": {
+                "metaDescription": "Sprej H\u00e5rstudio ligger mitt i centrala Sundsvall p\u00e5 Varvsgr\u00e4nd 2.\nBoka behandling online eller telefon 060-61 45 00. V\u00e4lkommen!"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 30,
+            "key": "contactInfo",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen kontaktinformation hittades.",
+            "fix": "L\u00e4gg till telefonnummer, e-post och adress synligt p\u00e5 sidan.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. L\u00e4gg in fullst\u00e4ndig kontaktinformation synligt p\u00e5 varje sida \u2014 i footern och p\u00e5 en dedikerad kontaktsida.\n2. Inneh\u00e5ll: f\u00f6retagsnamn, fullst\u00e4ndig adress, telefon, e-post, eventuellt organisationsnummer.\n3. Anv\u00e4nd semantiska `<address>`-elementet f\u00f6r att markera kontaktblocket.\n4. G\u00f6r telefon och e-post klickbara med `tel:` och `mailto:`-l\u00e4nkar.\n5. L\u00e4gg ocks\u00e5 in samma uppgifter i ert LocalBusiness JSON-LD-schema.",
+            "genericCodeTemplate": "<footer>\n  <address>\n    <strong><F\u00d6RETAGSNAMN></strong><br>\n    <GATUADRESS><br>\n    <POSTNUMMER> <STAD><br>\n    Tel: <a href=\"tel:<TELEFONNUMMER>\"><TELEFONNUMMER></a><br>\n    E-post: <a href=\"mailto:<EPOST>\"><EPOST></a><br>\n    Org.nr: <ORGNUMMER>\n  </address>\n</footer>",
+            "richRelevance": "F\u00f6r en lokal tj\u00e4nst som Sprej H\u00e5rstudio \u00e4r l\u00e4ttillg\u00e4nglig kontaktinformation avg\u00f6rande. Potentiella kunder som inte omedelbart hittar adress eller telefonnummer f\u00f6r att boka tid kommer sannolikt att v\u00e4lja en konkurrent ist\u00e4llet, vilket leder till direkt f\u00f6rlorade int\u00e4kter.",
+            "richSteps": "1. Redigera webbplatsens sidfot (footer) s\u00e5 att den visas p\u00e5 alla sidor.\n2. L\u00e4gg till er fullst\u00e4ndiga adress: `Varvsgr\u00e4nd 2, 852 32 Sundsvall`.\n3. L\u00e4gg till ert telefonnummer, `060-61 45 00`, och g\u00f6r det klickbart f\u00f6r mobilanv\u00e4ndare.\n4. Placera samma information v\u00e4l synligt p\u00e5 en dedikerad kontaktsida.",
+            "richCodeExample": "<footer>\n  <p><strong>Sprej H\u00e5rstudio</strong></p>\n  <p>Adress: Varvsgr\u00e4nd 2, 852 32 Sundsvall</p>\n  <p>Telefon: <a href=\"tel:+4660614500\">060-61 45 00</a></p>\n</footer>"
+        },
+        {
+            "id": 31,
+            "key": "altTexts",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "93% av bilderna har alt-text (13/14).",
+            "fix": null,
+            "data": {
+                "total": 14,
+                "withAlt": 13,
+                "percentage": 93
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 32,
+            "key": "internalLinks",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Mycket svag internl\u00e4nkning: bara 0 unika sidor l\u00e4nkas.",
+            "fix": "Skapa en tydlig navigationsstruktur med l\u00e4nkar till alla viktiga undersidor.",
+            "data": {
+                "total": 0,
+                "uniquePages": 0,
+                "hasContactLink": false,
+                "hasAboutLink": false,
+                "hasServicesLink": false
+            },
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Skapa en tydlig huvudnavigation som l\u00e4nkar till de viktigaste undersidorna: `Tj\u00e4nster`, `Om oss`, `Kontakt`.\n2. L\u00e4nka fr\u00e5n startsidan till **alla tj\u00e4nstesidor** \u2014 inte bara \"L\u00e4s mer om v\u00e5ra tj\u00e4nster\" utan direktl\u00e4nkar till varje tj\u00e4nst.\n3. L\u00e4gg till \"br\u00f6dsmulor\" (breadcrumbs) p\u00e5 undersidor: `Hem > Tj\u00e4nster > <Tj\u00e4nstenamn>`.\n4. P\u00e5 varje sida: l\u00e4nka relaterat inneh\u00e5ll i br\u00f6dtext eller via \"Relaterade tj\u00e4nster\"-block.\n5. AI-modeller f\u00f6ljer interna l\u00e4nkar f\u00f6r att f\u00f6rst\u00e5 sajtens struktur \u2014 bristf\u00e4llig internl\u00e4nkning betyder att djupare sidor inte indexeras.",
+            "genericCodeTemplate": "<!-- Navigation i header -->\n<nav>\n  <a href=\"/\">Hem</a>\n  <a href=\"/tjanster\">Tj\u00e4nster</a>\n  <a href=\"/om-oss\">Om oss</a>\n  <a href=\"/kontakt\">Kontakt</a>\n</nav>\n\n<!-- Br\u00f6dsmulor p\u00e5 undersidor -->\n<nav aria-label=\"Br\u00f6dsmulor\">\n  <ol>\n    <li><a href=\"/\">Hem</a></li>\n    <li><a href=\"/tjanster\">Tj\u00e4nster</a></li>\n    <li aria-current=\"page\"><TJ\u00c4NSTENAMN></li>\n  </ol>\n</nav>\n\n<!-- Br\u00f6dsmule-schema -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"BreadcrumbList\",\n  \"itemListElement\": [\n    { \"@type\": \"ListItem\", \"position\": 1, \"name\": \"Hem\", \"item\": \"https://<DOM\u00c4N>\" },\n    { \"@type\": \"ListItem\", \"position\": 2, \"name\": \"Tj\u00e4nster\", \"item\": \"https://<DOM\u00c4N>/tjanster\" },\n    { \"@type\": \"ListItem\", \"position\": 3, \"name\": \"<TJ\u00c4NSTENAMN>\" }\n  ]\n}\n</script>",
+            "richRelevance": "En webbplats utan internl\u00e4nkar \u00e4r som en bok utan inneh\u00e5llsf\u00f6rteckning. F\u00f6r Sprej H\u00e5rstudio inneb\u00e4r detta att s\u00f6kmotorer inte kan uppt\u00e4cka eller indexera viktiga undersidor om behandlingar, priser eller teamet. Detta g\u00f6r sidorna praktiskt taget osynliga i s\u00f6kresultaten och f\u00f6rs\u00e4mrar anv\u00e4ndarupplevelsen avsev\u00e4rt.",
+            "richSteps": "1. Skapa en huvudmeny som \u00e4r genomg\u00e5ende p\u00e5 hela webbplatsen.\n2. Identifiera och skapa sidor f\u00f6r era viktigaste tj\u00e4nster, t.ex. \"Behandlingar & Prislista\", \"Om oss\" och \"Kontakt & Boka\".\n3. L\u00e4gg till tydliga l\u00e4nkar till dessa sidor i huvudmenyn.\n4. Se till att er logotyp alltid l\u00e4nkar tillbaka till startsidan (`/`).\n5. L\u00e4nka mellan relevanta sidor i br\u00f6dtexten d\u00e4r det \u00e4r naturligt, t.ex. fr\u00e5n en text om f\u00e4rgning till er prislista.",
+            "richCodeExample": "<nav>\n  <ul>\n    <li><a href=\"/\">Hem</a></li>\n    <li><a href=\"/behandlingar/\">Behandlingar & Priser</a></li>\n    <li><a href=\"/om-oss/\">Om Oss</a></li>\n    <li><a href=\"/kontakt/\">Kontakt & Boka</a></li>\n  </ul>\n</nav>"
+        },
+        {
+            "id": 33,
+            "key": "aiMentions",
+            "status": "warning",
+            "source": "api",
+            "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"fris\u00f6r\" i Sundsvall.",
+            "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda.",
+            "data": {
+                "entityKnows": true,
+                "entitySentiment": "positive",
+                "categoryMentioned": false,
+                "extractedNiche": "fris\u00f6r"
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "premium",
+            "richRelevance": "Att AI-modeller k\u00e4nner till Sprej H\u00e5rstudio men inte rekommenderar er vid en generell s\u00f6kning p\u00e5 \"fris\u00f6r i Sundsvall\" \u00e4r en varningssignal. Det tyder p\u00e5 att konkurrenter har starkare lokala signaler, vilket g\u00f6r att de prioriteras i AI-genererade svar som allt oftare ers\u00e4tter traditionella s\u00f6kresultat.",
+            "richSteps": "1. L\u00e4gg till strukturerad data (Schema.org) f\u00f6r `HairSalon` p\u00e5 er webbplats f\u00f6r att ge s\u00f6kmotorer och AI tydlig, maskinl\u00e4sbar information.\n2. Registrera och s\u00e4kerst\u00e4ll konsekvent information (namn, adress, telefon) f\u00f6r Sprej H\u00e5rstudio i viktiga lokala kataloger som Eniro och Hitta.se.\n3. Uppmuntra aktivt n\u00f6jda kunder att l\u00e4mna recensioner p\u00e5 Google.\n4. Skapa inneh\u00e5ll p\u00e5 webbplatsen som st\u00e4rker er lokala koppling, t.ex. en sida om salongens historia i Sundsvall.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"HairSalon\",\n  \"name\": \"Sprej H\u00e5rstudio\",\n  \"url\": \"https://www.sprej.nu\",\n  \"telephone\": \"+4660614500\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Varvsgr\u00e4nd 2\",\n    \"addressLocality\": \"Sundsvall\",\n    \"postalCode\": \"852 32\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 62.391354,\n    \"longitude\": 17.3025904\n  },\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.8\",\n    \"reviewCount\": \"33\"\n  }\n}\n</script>"
+        },
+        {
+            "id": 34,
+            "key": "reviewReplies",
+            "status": "bad",
+            "source": "api",
+            "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+            "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+            "data": {
+                "total": 5,
+                "withReply": 0,
+                "responseRate": 0,
+                "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 33. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+            },
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "premium",
+            "richRelevance": "Genom att inte besvara recensioner missar Sprej H\u00e5rstudio en v\u00e4rdefull m\u00f6jlighet att bygga kundlojalitet och visa upp en professionell image. Eftersom Google och AI-\u00f6versikter kan visa f\u00f6retagssvar direkt i s\u00f6kresultaten, \u00e4r varje obesvarad recension en f\u00f6rlorad chans att st\u00e4rka ert varum\u00e4rke och hantera ert rykte online.",
+            "richSteps": "1. Logga in p\u00e5 er Google Business Profile f\u00f6r Sprej H\u00e5rstudio.\n2. Navigera till fliken \"Recensioner\".\n3. G\u00e5 igenom och besvara alla obesvarade recensioner. Tacka f\u00f6r positiv feedback och bem\u00f6t eventuell kritik konstruktivt.\n4. Skapa en intern rutin f\u00f6r att kontrollera och besvara nya recensioner inom 48 timmar.\n5. Se svaren som en del av er publika kundservice och varum\u00e4rkesbyggande.",
+            "richCodeExample": null
+        },
+        {
+            "id": 35,
+            "key": "gbpData",
+            "status": "ok",
+            "source": "api",
+            "finding": "Google Business Profile: Sprej H\u00e5rstudio -- betyg 4.8/5 (33 recensioner).",
+            "fix": null,
+            "data": {
+                "name": "Sprej H\u00e5rstudio",
+                "rating": 4.8,
+                "userRatingCount": 33
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 36,
+            "key": "competitors",
+            "status": "ok",
+            "source": "api",
+            "finding": "N\u00e4rliggande konkurrenter (Google Places, \u22641,5 km): Salong Pomp (4.5/5, 46 recensioner, 107 m bort); Jess Fris\u00f6rer (4.4/5, 46 recensioner, 107 m bort); Salong Clipp-Er EkoFris\u00f6r (5.0/5, 4 recensioner, 112 m bort); Karl-Anders H\u00e5r (4.7/5, 3 recensioner, 150 m bort); Salong Stenstan (5.0/5, 1 recensioner, 171 m bort).",
+            "fix": null,
+            "data": {
+                "competitors": [
+                    {
+                        "placeId": "ChIJVVVVxV1nZEYRIA0wTmATXjE",
+                        "name": "Salong Pomp",
+                        "rating": 4.5,
+                        "userRatingCount": 46,
+                        "distanceMeters": 107,
+                        "primaryType": "hair_salon"
+                    },
+                    {
+                        "placeId": "ChIJ58LgYVBnZEYRMMgLBZ3RsXY",
+                        "name": "Jess Fris\u00f6rer",
+                        "rating": 4.4,
+                        "userRatingCount": 46,
+                        "distanceMeters": 107,
+                        "primaryType": "hair_salon"
+                    },
+                    {
+                        "placeId": "ChIJ2_ro8DpnZEYRttAQxUU14P4",
+                        "name": "Salong Clipp-Er EkoFris\u00f6r",
+                        "rating": 5,
+                        "userRatingCount": 4,
+                        "distanceMeters": 112,
+                        "primaryType": "hair_salon"
+                    },
+                    {
+                        "placeId": "ChIJg6USgP9nZEYRHAsvKUPWH_I",
+                        "name": "Karl-Anders H\u00e5r",
+                        "rating": 4.7,
+                        "userRatingCount": 3,
+                        "distanceMeters": 150,
+                        "primaryType": "hair_salon"
+                    },
+                    {
+                        "placeId": "ChIJV43qZABnZEYRzavYdKQVLdc",
+                        "name": "Salong Stenstan",
+                        "rating": 5,
+                        "userRatingCount": 1,
+                        "distanceMeters": 171,
+                        "primaryType": "hair_salon"
+                    }
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 37,
+            "key": "synthesis",
+            "status": "notApplicable",
+            "source": "computed",
+            "finding": "Syntesen ar en separat sektion och poangsatts inte.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        }
+    ],
+    "synthesis": {
+        "actionPlan": "### Kritiskt\n\n1.  **\u00c5tg\u00e4rda Webbplatsens Tillg\u00e4nglighet & Prestanda:** Webbplatsen kunde inte analyseras av flera verktyg, inklusive Google PageSpeed Insights. Detta \u00e4r ett akut problem som blockerar b\u00e5de anv\u00e4ndare och AI-crawlers. \n    *   **\u00c5tg\u00e4rd:** Kontakta omedelbart er webbutvecklare. Be dem unders\u00f6ka varf\u00f6r webbplatsen \u00e4r extremt l\u00e5ngsam eller blockerar anrop. Detta m\u00e5ste l\u00f6sas innan n\u00e5gon annan optimering kan ske.\n\n2.  **Svara p\u00e5 Alla Google-recensioner:** Ni har 0% svarsfrekvens, vilket \u00e4r en enorm missad m\u00f6jlighet att engagera kunder och signalera aktivitet till AI-system som Google AI Overviews.\n    *   **\u00c5tg\u00e4rd:** Logga in p\u00e5 er [Google Business Profile](https://business.google.com/). G\u00e5 igenom och svara p\u00e5 alla 33 befintliga recensioner. Skapa d\u00e4refter en rutin att svara p\u00e5 nya recensioner inom 48 timmar. Tacka f\u00f6r positiva omd\u00f6men och hantera eventuell kritik professionellt.\n\n3.  **L\u00e4gg till H1-rubrik p\u00e5 Startsidan:** Startsidan saknar en H1-rubrik, vilket \u00e4r en fundamental SEO-brist.\n    *   **\u00c5tg\u00e4rd:** L\u00e4gg till en (1) H1-rubrik p\u00e5 startsidan som tydligt beskriver verksamheten och orten. Exempel:\n    ```html\n    <h1>Fris\u00f6r i Sundsvall \u2013 V\u00e4lkommen till Sprej H\u00e5rstudio</h1>\n    ```\n\n### Viktigt\n\n1.  **Implementera LocalBusiness Schema:** Strukturerad data \u00e4r avg\u00f6rande f\u00f6r att AI ska f\u00f6rst\u00e5 er verksamhet (vad ni \u00e4r, var ni finns, era betyg).\n    *   **\u00c5tg\u00e4rd:** L\u00e4gg till f\u00f6ljande JSON-LD-kod i `<head>`-sektionen p\u00e5 er startsida. **Verifiera och fyll i korrekta \u00f6ppettider.**\n    ```html\n    <script type=\"application/ld+json\">\n    {\n      \"@context\": \"https://schema.org\",\n      \"@type\": \"HairSalon\",\n      \"name\": \"Sprej H\u00e5rstudio\",\n      \"address\": {\n        \"@type\": \"PostalAddress\",\n        \"streetAddress\": \"Varvsgr\u00e4nd 2\",\n        \"addressLocality\": \"Sundsvall\",\n        \"postalCode\": \"852 32\",\n        \"addressCountry\": \"SE\"\n      },\n      \"telephone\": \"+4660614500\",\n      \"url\": \"https://www.sprej.nu\",\n      \"aggregateRating\": {\n        \"@type\": \"AggregateRating\",\n        \"ratingValue\": \"4.8\",\n        \"reviewCount\": \"33\"\n      },\n      \"openingHours\": [\"Mo-Fr 09:00-18:00\", \"Sa 10:00-15:00\"]\n    }\n    </script>\n    ```\n\n2.  **Bygg E-A-T (Expertis, Auktoritet, Trov\u00e4rdighet):** F\u00f6r att AI ska rekommendera er m\u00e5ste den lita p\u00e5 er expertis.\n    *   **\u00c5tg\u00e4rd:** Skapa en \"Om oss\"-sida som presenterar teamet med namn, bild och kort biografi om deras specialiteter. Publicera ert organisationsnummer synligt i sidfoten p\u00e5 hela webbplatsen f\u00f6r att st\u00e4rka er entitet.\n\n3.  **Publicera Tj\u00e4nster och Prislista:** G\u00f6r det enkelt f\u00f6r b\u00e5de m\u00e4nniskor och AI att f\u00f6rst\u00e5 vad ni erbjuder.\n    *   **\u00c5tg\u00e4rd:** Skapa en tydlig sida med era tj\u00e4nster (t.ex. \"Klippning Dam\", \"F\u00e4rgning\", \"Slingor\") och priser. Anv\u00e4nd korrekta rubriker (H2, H3) f\u00f6r varje tj\u00e4nst.\n\n### Bra att ha\n\n1.  **Skapa en FAQ-sida med Schema:** Besvara vanliga kundfr\u00e5gor proaktivt f\u00f6r att synas i AI-svar.\n    *   **\u00c5tg\u00e4rd:** Skapa en sida med svar p\u00e5 fr\u00e5gor som \"Hur bokar jag tid?\", \"Vilka m\u00e4rken anv\u00e4nder ni?\", \"G\u00f6r ni h\u00e5rupps\u00e4ttningar f\u00f6r br\u00f6llop?\". Implementera `FAQPage` schema f\u00f6r att hj\u00e4lpa s\u00f6kmotorer att f\u00f6rst\u00e5 inneh\u00e5llet.\n\n2.  **Publicera Inspirationsinneh\u00e5ll:** Visa er expertis visuellt och med text.\n    *   **\u00c5tg\u00e4rd:** Starta en blogg eller ett galleri med \"F\u00f6re & Efter\"-bilder, artiklar om h\u00e5rtrender eller sk\u00f6tselr\u00e5d. Detta ger AI mer kvalitativt inneh\u00e5ll att associera med er salong.",
+        "competitorNote": "Konkurrensen i Sundsvalls centrum \u00e4r h\u00e5rd och mycket lokal. Sprej H\u00e5rstudio \u00e4r v\u00e4l positionerat med ett h\u00f6gre betyg (4.8) \u00e4n de n\u00e4rmaste konkurrenterna med j\u00e4mf\u00f6rbar recensionsvolym, \"Salong Pomp\" (4.5 stj\u00e4rnor, 46 recensioner) och \"Jess Fris\u00f6rer\" (4.4 stj\u00e4rnor, 46 recensioner). Dessa tv\u00e5 ligger dessutom p\u00e5 samma avst\u00e5nd, endast 107 meter bort. Sprejs kvalitets\u00f6vertag \u00e4r en nyckeltillg\u00e5ng, men de har f\u00e4rre recensioner (33 st), vilket kan p\u00e5verka synligheten. Andra n\u00e4rliggande salonger som \"Salong Clipp-Er EkoFris\u00f6r\" har toppbetyg men fr\u00e5n ett mycket litet antal recensioner, vilket g\u00f6r dem till ett mindre hot ur ett ryktesperspektiv online. Marknaden \u00e4r fragmenterad och kampen om synlighet vinns genom en kombination av h\u00f6gt betyg och en stadig str\u00f6m av nya recensioner.",
+        "reviewAnalysis": "Sprej H\u00e5rstudio har ett utm\u00e4rkt genomsnittsbetyg p\u00e5 4.8 fr\u00e5n 33 recensioner, vilket signalerar en mycket h\u00f6g kundn\u00f6jdhet och \u00e4r en stark tillg\u00e5ng f\u00f6r att bygga f\u00f6rtroende hos b\u00e5de potentiella kunder och AI-modeller. Denna positiva feedback \u00e4r en outnyttjad guldgruva.\n\nDen kritiska svagheten \u00e4r en total avsaknad av svar p\u00e5 recensioner (0% svarsfrekvens i stickprovet). Att inte engagera sig i feedback, s\u00e4rskilt den positiva, \u00e4r en stor missad m\u00f6jlighet. Svar p\u00e5 recensioner bygger kundlojalitet, visar att f\u00f6retaget \u00e4r aktivt och engagerat, och f\u00f6rser AI-s\u00f6kmotorer som Google AI Overviews med f\u00e4rskt, relevant inneh\u00e5ll som kan lyftas fram direkt i s\u00f6kresultaten. Varje obesvarad recension \u00e4r en f\u00f6rlorad chans att st\u00e4rka sin digitala n\u00e4rvaro.",
+        "summary": "Sprej H\u00e5rstudio har ett starkt lokalt rykte med toppbetyg, men \u00e4r n\u00e4stintill osynlig f\u00f6r AI-s\u00f6kmotorer p\u00e5 grund av akuta tekniska problem med webbplatsen och en total avsaknad av engagemang med kundrecensioner. Webbplatsen \u00e4r s\u00e5 l\u00e5ngsam eller felkonfigurerad att den inte kan analyseras, vilket \u00e4r det absolut f\u00f6rsta som m\u00e5ste \u00e5tg\u00e4rdas. D\u00e4refter \u00e4r den viktigaste \u00e5tg\u00e4rden att omedelbart b\u00f6rja svara p\u00e5 alla Google-recensioner f\u00f6r att f\u00f6rb\u00e4ttra synligheten i AI-svar och bygga f\u00f6rtroende. Utan dessa grundl\u00e4ggande \u00e5tg\u00e4rder kommer salongen inte att rekommenderas av AI, trots sin h\u00f6ga kundn\u00f6jdhet."
+    },
+    "gbp": {
+        "name": "Sprej H\u00e5rstudio",
+        "rating": 4.8,
+        "userRatingCount": 33,
+        "address": "Varvsgr\u00e4nd 2, 852 32 Sundsvall, Sverige",
+        "phone": "060-61 45 00",
+        "websiteUri": "https://sprej.nu/",
+        "types": [
+            "hair_salon",
+            "hair_care",
+            "point_of_interest",
+            "service",
+            "establishment"
+        ],
+        "_domainMatch": true
+    },
+    "directories": {
+        "foundInSameAs": [],
+        "directories": [
+            {
+                "name": "Eniro",
+                "found": true,
+                "source": "tavily",
+                "profileUrl": "https://www.eniro.se/wicktoria+bystr%C3%B6m+h%C3%A5rstudio+sundsvall/32639760/firma",
+                "nap": {
+                    "address": "Varvsgr\u00e4nd 2, 85232 Sundsvall"
+                }
+            },
+            {
+                "name": "Hitta",
+                "found": true,
+                "source": "tavily",
+                "profileUrl": "https://www.hitta.se/sprej+sweden+ab/sundsvall/igbeejac",
+                "nap": {
+                    "phone": "060-61 45 00"
+                }
+            }
+        ],
+        "foundCount": 2,
+        "totalChecked": 2,
+        "napConsistency": {
+            "checked": true,
+            "consistent": true,
+            "phone": {
+                "values": [
+                    {
+                        "directory": "Hitta",
+                        "value": "060-61 45 00"
+                    }
+                ],
+                "consistent": true
+            },
+            "address": {
+                "values": [
+                    {
+                        "directory": "Eniro",
+                        "value": "Varvsgr\u00e4nd 2, 85232 Sundsvall"
+                    }
+                ],
+                "consistent": true
+            },
+            "finding": "NAP-data (namn, adress, telefon) \u00e4r konsekvent \u00f6ver kataloger \u2014 bra f\u00f6r AI-entitetsmatchning.",
+            "fix": ""
+        },
+        "status": "ok",
+        "finding": "F\u00f6retaget hittades p\u00e5 2/2 kataloger (Eniro, Hitta) med konsekvent NAP-data.",
+        "fix": ""
+    },
+    "aiMentions": {
+        "entityQuery": "Vad vet du om \"Sprej H\u00e5rstudio\" i Sundsvall? Ber\u00e4tta vad du k\u00e4nner till om f\u00f6retaget.",
+        "entityResponse": "Jag har tyv\u00e4rr ingen specifik information om \"Sprej H\u00e5rstudio\" i Sundsvall, eftersom min databas inte inneh\u00e5ller detaljer om alla lokala f\u00f6retag. Generellt sett \u00e4r h\u00e5rstudior som Sprej H\u00e5rstudio ofta inriktade p\u00e5 att erbjuda olika h\u00e5rv\u00e5rdstj\u00e4nster, s\u00e5som klippning, f\u00e4rgning, styling och behandlingar. M\u00e5nga s\u00e5dana salonger str\u00e4var efter att skapa en personlig och avslappnad atmosf\u00e4r f\u00f6r sina kunder.\n\nF\u00f6r att f\u00e5 mer information om Sprej H\u00e5rstudio, s\u00e5som deras tj\u00e4nster, priser och \u00f6ppettider, rekommenderar jag att du bes\u00f6ker deras officiella webbplats eller sociala medier, eller kontaktar dem direkt. Lokala recensionssajter kan ocks\u00e5 ge insikter fr\u00e5n tidigare kunder.",
+        "entityKnows": true,
+        "entitySentiment": "positive",
+        "extractedNiche": "fris\u00f6r",
+        "categoryQuery": "Var hittar jag bra fris\u00f6r i Sundsvall?",
+        "categoryResponse": "I Sundsvall finns det flera bra fris\u00f6rer att v\u00e4lja mellan. H\u00e4r \u00e4r n\u00e5gra tips p\u00e5 hur du kan hitta en fris\u00f6r som passar dina behov:\n\n1. **Recensioner och betyg**: Kolla p\u00e5 plattformar som Google Maps, Facebook eller Yelp f\u00f6r att l\u00e4sa recensioner och se betyg fr\u00e5n andra kunder.\n\n2. **Sociala medier**: M\u00e5nga fris\u00f6rer har Instagram- eller Facebook-sidor d\u00e4r de visar upp sina arbeten. Det kan ge dig en bra k\u00e4nsla f\u00f6r deras stil och kompetens.\n\n3. **Fris\u00f6rsalonger**: N\u00e5gra popul\u00e4ra fris\u00f6rsalonger i Sundsvall inkluderar:\n   - **Fris\u00f6rerna i Sundsvall**\n   - **Salong Klipp**\n   - **Studio 24**\n   - **H\u00e5r & Stil**\n\n4. **Rekommendationer**: Fr\u00e5ga v\u00e4nner eller familj om de har n\u00e5gra rekommendationer baserat p\u00e5 sina egna erfarenheter.\n\n5. **Boka en konsultation**: M\u00e5nga fris\u00f6rer erbjuder konsultationer d\u00e4r du kan diskutera dina \u00f6nskem\u00e5l och f\u00e5 en k\u00e4nsla f\u00f6r salongen och fris\u00f6ren.\n\nKom ih\u00e5g att det \u00e4r viktigt att hitta en fris\u00f6r som du k\u00e4nner dig bekv\u00e4m med och som f\u00f6rst\u00e5r dina \u00f6nskem\u00e5l!",
+        "categoryMentioned": false,
+        "status": "warning",
+        "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"fris\u00f6r\" i Sundsvall.",
+        "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda."
+    },
+    "reviewReplies": {
+        "total": 5,
+        "withReply": 0,
+        "replyRate": 0,
+        "status": "bad",
+        "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+        "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+        "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 33. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+    }
+}

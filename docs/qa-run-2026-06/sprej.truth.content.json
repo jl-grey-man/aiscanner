@@ -1,0 +1,38 @@
+[
+  {
+    "key": "h1",
+    "verdict": "bad",
+    "evidence": "Inga <h1>-taggar finns i startsidans rå-HTML — sökning ger noll träffar. Sidan använder enbart <h3>-rubriker (t.ex. 'Välkommen till Sprej Hårstudio') för sektionsrubriker.",
+    "confidence": "high"
+  },
+  {
+    "key": "title",
+    "verdict": "good",
+    "evidence": "<title>Sprej Hårstudio Sundsvall</title> finns på rad 4 i startsidans HTML — icke-tom och innehåller både varumärke och stad.",
+    "confidence": "high"
+  },
+  {
+    "key": "metaDescription",
+    "verdict": "good",
+    "evidence": "<meta name=\"description\" content=\"Sprej Hårstudio ligger mitt i centrala Sundsvall på Varvsgränd 2. Boka behandling online eller telefon 060-61 45 00. Välkommen!\"> finns i HTML (rad 9–10) — icke-tom och informativ.",
+    "confidence": "high"
+  },
+  {
+    "key": "contactInfo",
+    "verdict": "good",
+    "evidence": "Telefonnummer '060 - 61 45 00' förekommer i brödtexten (behandlingar-sektionen, rad 229) som synlig länktext, långt före 800-teckens­gränsen. Även ordet 'telefon' finns i samma stycke.",
+    "confidence": "high"
+  },
+  {
+    "key": "altTexts",
+    "verdict": "good",
+    "evidence": "13 av 14 <img>-taggar har icke-tomt alt-attribut (92,8 %). Enda undantaget är logotypen i navigeringsdiven (<img src=\"gfx/logow.png\"> — saknar alt helt). Alla övriga bilder har beskrivande alt-text.",
+    "confidence": "high"
+  },
+  {
+    "key": "internalLinks",
+    "verdict": "warning",
+    "evidence": "Sidan är en enpagessajt — de enda interna länkarna är ankar­länkar: #home, #behandlingar, #frisorer, #salongen (4 unika paths). Inga separata undersidor finns. Protokollgränsen för 'good' är ≥5 unika sidor; 4 ger 'warning'.",
+    "confidence": "high"
+  }
+]

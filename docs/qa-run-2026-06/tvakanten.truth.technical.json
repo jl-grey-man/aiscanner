@@ -1,0 +1,62 @@
+[
+  {
+    "key": "https",
+    "verdict": "good",
+    "evidence": "curl -sI https://www.tvakanten.se/ ger HTTP/2 200 utan certifikatfel, och http://www.tvakanten.se/ svarar 301 (WordPress-redirect) med Location: https://www.tvakanten.se/.",
+    "confidence": "high"
+  },
+  {
+    "key": "robotsTxt",
+    "verdict": "good",
+    "evidence": "GET /robots.txt svarar HTTP 200 med icke-tomt innehåll: 'User-agent: * / Disallow: /wp-admin/ / Allow: /wp-admin/admin-ajax.php' samt två Sitemap-rader.",
+    "confidence": "high"
+  },
+  {
+    "key": "aiCrawlers",
+    "verdict": "good",
+    "evidence": "robots.txt innehåller ett enda User-agent-block ('*') med Disallow: /wp-admin/ — ingen av de 13 AI-crawlrarna (GPTBot, PerplexityBot, ClaudeBot, CCBot m.fl.) blockeras specifikt; hela sajtens innehåll är fritt att crawla.",
+    "confidence": "high"
+  },
+  {
+    "key": "sitemap",
+    "verdict": "good",
+    "evidence": "GET /sitemap.xml svarar HTTP 200 (All in One SEO v4.8.6.1, urlset-format) med 19 st <url>-taggar inkl. startsidan, /menues/, /menyer/, /catering/, /om-oss/ m.fl.",
+    "confidence": "high"
+  },
+  {
+    "key": "llmsTxt",
+    "verdict": "good",
+    "evidence": "GET /llms.txt svarar HTTP 200 med välstrukturerad markdown: rubrik '# Tvåkanten', beskrivning 'Din restaurang på Avenyn i Göteborg', ## Sitemaps-sektion med sitemap-länk och ## Sidor med 18 interna sidlänkar.",
+    "confidence": "high"
+  },
+  {
+    "key": "canonical",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML innehåller <link rel=\"canonical\" href=\"https://www.tvakanten.se/\" /> direkt i serversvaret — injiceras inte via JS.",
+    "confidence": "high"
+  },
+  {
+    "key": "ogTags",
+    "verdict": "good",
+    "evidence": "Alla tre OG-taggar finns i startsidans HTML med icke-tomt content: og:title='Restaurang Tvåkanten', og:description='Restaurang på Avenyn i Göteborg med svensk mat & personlig service...', og:image='...Tvåkanten_20151208_100-1-300x200.jpg'.",
+    "confidence": "high"
+  },
+  {
+    "key": "socialPresence",
+    "verdict": "warning",
+    "evidence": "Två unika plattformar identifierade: Instagram (JSON-LD sameAs → instagram.com/tvakantengbg/) och Facebook (meta article:publisher → facebook.com/tvakanten/). LinkedIn, Pinterest och Twitter förekommer enbart i Elementors JS-konfiguration för delningsknappar — inga faktiska href-länkar till dessa plattformar finns i HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "hreflang",
+    "verdict": "warning",
+    "evidence": "Sajten är tvåspråkig med explicit 'ENGLISH'-språkväxlare och engelska sidor (/home/, /about/, /book-a-table/ m.fl. listade i llms.txt), men noll hreflang-taggar finns i startsidans HTML (grep returnerar 0 träffar).",
+    "confidence": "high"
+  },
+  {
+    "key": "cwv",
+    "verdict": "notMeasured",
+    "evidence": "PSI API svarade med 'Quota exceeded' och WebFetch av pagespeed.web.dev gav inget resultat — CWV-data kunde inte hämtas. Sajten kör WordPress + Elementor 3.6.2 (äldre version) vilket är en känd riskfaktor för Core Web Vitals.",
+    "confidence": "low"
+  }
+]

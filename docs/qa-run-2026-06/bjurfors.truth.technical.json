@@ -1,0 +1,62 @@
+[
+  {
+    "key": "https",
+    "verdict": "good",
+    "evidence": "HTTPS svarar HTTP 200 utan certifikatfel. HTTP (port 80) returnerar 301 → https://www.bjurfors.se/ (verifierat med curl -sI).",
+    "confidence": "high"
+  },
+  {
+    "key": "robotsTxt",
+    "verdict": "good",
+    "evidence": "GET /robots.txt svarar HTTP 200 med icke-tomt innehåll: 'User-agent: * / Disallow: /globalassets/ragnar/ / Allow: /' plus Sitemap-direktiv.",
+    "confidence": "high"
+  },
+  {
+    "key": "aiCrawlers",
+    "verdict": "good",
+    "evidence": "robots.txt innehåller endast ett User-agent: *-block med tre begränsade sökvägar (/globalassets/ragnar/, /contentassets/*.pdf, /sv/om-oss/.../undefined-offices/). Ingen av de 13 AI-crawlrarna (GPTBot, ClaudeBot, PerplexityBot m.fl.) är nämnda eller blockerade.",
+    "confidence": "high"
+  },
+  {
+    "key": "sitemap",
+    "verdict": "good",
+    "evidence": "GET /sitemap.xml svarar med en 6,2 MB urlset-fil innehållande 31 828 stycken <url>-taggar (grep -o '<url>' | wc -l). Ingen sitemapindex.",
+    "confidence": "high"
+  },
+  {
+    "key": "llmsTxt",
+    "verdict": "bad",
+    "evidence": "GET /llms.txt svarar HTTP 404 med en HTML-felsida ('Sidan kan inte hittas — Bjurfors'). Ingen llms.txt finns.",
+    "confidence": "high"
+  },
+  {
+    "key": "canonical",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML innehåller <link rel=\"canonical\" href=\"https://www.bjurfors.se/sv/\" /> (extraherad direkt från server-svaret, ej JS-renderad).",
+    "confidence": "high"
+  },
+  {
+    "key": "ogTags",
+    "verdict": "warning",
+    "evidence": "Startsidan har og:title och og:description men saknar og:image helt. Av de tre obligatoriska OG-taggarna saknas en.",
+    "confidence": "high"
+  },
+  {
+    "key": "socialPresence",
+    "verdict": "good",
+    "evidence": "Startsidans HTML innehåller href-länkar till tre unika plattformar: facebook.com/bjurforsmaklare, linkedin.com/company/bjurfors och se.pinterest.com/bjurfors. Ingen JSON-LD med sameAs (inga ld+json-block alls på sidan).",
+    "confidence": "high"
+  },
+  {
+    "key": "hreflang",
+    "verdict": "notMeasured",
+    "evidence": "Sajten är enspråkig (lang=\"sv\", inga /en/- eller andra språksökvägar, ingen språkväxlare i HTML). Inga hreflang-taggar finns och inga behövs.",
+    "confidence": "high"
+  },
+  {
+    "key": "cwv",
+    "verdict": "notMeasured",
+    "evidence": "PageSpeed Insights API returnerade HTTP 429 (daglig kvot slut) och inga publika tredjepartstjänster (GTmetrix, treo.sh, DebugBear) hade aktuell data. CWV-mätning kunde inte genomföras.",
+    "confidence": "low"
+  }
+]

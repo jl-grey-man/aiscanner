@@ -1,0 +1,26 @@
+[
+  {
+    "key": "aiMentions",
+    "verdict": "warning",
+    "evidence": "Entitetsfrågan klaras: Tvåkanten är en väldokumenterad institution (Kungsportsavenyn 27, samma ägare sedan 1986, omskriven på goteborg.com, TripAdvisor, GP) och en AI-modell ger ett substantiellt svar utan 'känner inte till'. Spontant omnämnande i kategorifrågan ('var hittar jag bra modern svensk mat i Göteborg?') är däremot inte säkerställt — typiska svar domineras av Koka, Bhoga, Familjen m.fl.",
+    "confidence": "medium"
+  },
+  {
+    "key": "reviewReplies",
+    "verdict": "bad",
+    "evidence": "Google Maps-profilen kunde inte hämtas direkt (consent-vägg, HTTP 302 till consent.google.com), men restaurantguru.com:s speglade Google-recensioner (1 185 st) visar inga ägarsvar alls, och på TripAdvisor saknar samtliga ~15–20 synliga recensioner 'Svar från ledningen' trots att profilen är registrerad av företaget. Allt pekar på att ägaren inte besvarar recensioner (<30 %).",
+    "confidence": "low"
+  },
+  {
+    "key": "gbpData",
+    "verdict": "good",
+    "evidence": "Google Business Profile finns med numeriskt betyg: restaurantguru.com anger \"4.2 is what this place got from the Google rating system\" och thatsup bekräftar Google-betyget 4,2 för Tvåkanten, Kungsportsavenyn 27, Göteborg. Profilen kunde inte öppnas direkt (consent-vägg) men betyget bekräftas av två oberoende källor.",
+    "confidence": "medium"
+  },
+  {
+    "key": "competitors",
+    "verdict": "good",
+    "evidence": "GBP med position finns (Kungsportsavenyn 27, mitt på Avenyn) och flera restauranger ligger inom 1,5 km: La Gondola (Kungsportsavenyn 4), Prime Grill (Kungsportsavenyn 5), Moon Thai Kitchen (Kristinelundsgatan 9), Familjen (Arkivgatan 7) m.fl. enligt bokabord.se — en Nearby Search ger garanterat ≥1 konkurrent.",
+    "confidence": "high"
+  }
+]

@@ -1,0 +1,726 @@
+{
+    "meta": {
+        "url": "https://www.roranalys.se",
+        "domain": "roranalys.se",
+        "city": "Stockholm",
+        "bransch": "hantverkare",
+        "companyName": "Svensk R\u00f6ranalys",
+        "scanDate": "2026-06-10T10:30:24.105Z",
+        "scanId": "scan-1781087424105-431vjb"
+    },
+    "scores": {
+        "free": 84,
+        "full": 75,
+        "google": 3.8,
+        "googleCount": 24
+    },
+    "checks": [
+        {
+            "id": 1,
+            "key": "https",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Webbplatsen anvander HTTPS -- sakerhetscertifikat finns.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 2,
+            "key": "robotsTxt",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Robots.txt finns och kan lasa av AI-crawlers.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 3,
+            "key": "aiCrawlers",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "blocked": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 4,
+            "key": "sitemap",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Sitemap.xml hittades med 21 URL:er.",
+            "fix": null,
+            "data": {
+                "urlCount": 21
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 5,
+            "key": "llmsTxt",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "exists": false,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 6,
+            "key": "canonical",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Canonical-tagg pekar pa: https://www.roranalys.se",
+            "fix": null,
+            "data": {
+                "canonical": "https://www.roranalys.se"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 7,
+            "key": "ogTags",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 8,
+            "key": "socialPresence",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 9,
+            "key": "hreflang",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 10,
+            "key": "cwv",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "PageSpeed Insights kunde inte m\u00e4tas: tog f\u00f6r l\u00e5ng tid (timeout).",
+            "fix": null,
+            "data": {
+                "lcp": null,
+                "cls": null,
+                "inp": null,
+                "performanceScore": null,
+                "source": null
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 11,
+            "key": "phone",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inget telefonnummer hittades p\u00e5 sidan, eller s\u00e5 \u00e4r det skrivet i ett format som AI-s\u00f6kmotorer inte kan l\u00e4sa.",
+            "fix": "L\u00e4gg till telefonnummer i JSON-LD structured data (schema.org \"telephone\"-f\u00e4ltet) och/eller synligt som text p\u00e5 startsidan i formatet +46 31 220 30 05 eller 031-220 30 05. Undvik att bara visa numret som bild eller inuti JavaScript-renderade element.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. L\u00e4gg till ert telefonnummer synligt p\u00e5 startsidan och i footern p\u00e5 alla sidor.\n2. Anv\u00e4nd ett klickbart `tel:`-l\u00e4nk s\u00e5 bes\u00f6kare p\u00e5 mobil kan ringa direkt.\n3. Skriv numret i internationellt format: `+46 31 220 30 05` eller nationellt med bindestreck: `031-220 30 05`.\n4. L\u00e4gg ocks\u00e5 in numret i ert JSON-LD-schema (LocalBusiness-f\u00e4ltet `telephone`).\n5. Undvik att visa telefonnumret som bild eller inuti JavaScript \u2014 AI-crawlers kan inte l\u00e4sa s\u00e5dant.",
+            "genericCodeTemplate": "<!-- I footern eller header -->\n<a href=\"tel:<TELEFONNUMMER>\" class=\"phone-link\">\n  <TELEFONNUMMER>\n</a>\n\n<!-- I JSON-LD-schemat -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"telephone\": \"<TELEFONNUMMER>\"\n}\n</script>"
+        },
+        {
+            "id": 12,
+            "key": "cityMentioned",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Stad n\u00e4mns p\u00e5 sidan: Stockholm",
+            "fix": null,
+            "data": {
+                "cities": [
+                    "Stockholm"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 13,
+            "key": "googleMaps",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen Google Maps-inb\u00e4ddning hittades.",
+            "fix": "L\u00e4gg till en Google Maps-inb\u00e4ddning p\u00e5 kontaktsidan.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. G\u00e5 till `https://www.google.com/maps` och s\u00f6k upp er adress.\n2. Klicka p\u00e5 \"Dela\" \u2192 \"B\u00e4dda in en karta\" \u2192 v\u00e4lj storlek \"Medel\" \u2192 kopiera iframe-koden.\n3. Klistra in koden p\u00e5 er kontaktsida \u2014 g\u00e4rna under adressen i ett `<section>`-block.\n4. S\u00e4kerst\u00e4ll att kartan l\u00e4nkar till er Google Business Profile (via \"Visa st\u00f6rre karta\"-l\u00e4nken).\n5. Detta st\u00e4rker lokala signaler \u2014 Google validerar att er angivna adress matchar kartdatan.",
+            "genericCodeTemplate": "<!-- Klistra in p\u00e5 kontaktsidan, mellan adress och kontaktformul\u00e4r -->\n<section aria-label=\"Hitta hit\">\n  <iframe\n    src=\"https://www.google.com/maps/embed?pb=<DIN-EMBED-KOD-H\u00c4R>\"\n    width=\"600\"\n    height=\"450\"\n    style=\"border:0\"\n    allowfullscreen=\"\"\n    loading=\"lazy\"\n    referrerpolicy=\"no-referrer-when-downgrade\"\n    title=\"Karta till <F\u00d6RETAGSNAMN> i <STAD>\">\n  </iframe>\n</section>"
+        },
+        {
+            "id": 14,
+            "key": "localBusiness",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "LocalBusiness-schema hittades. Typer: Plumber",
+            "fix": null,
+            "data": {
+                "schemaTypes": [
+                    "Plumber"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 15,
+            "key": "directories",
+            "status": "ok",
+            "source": "api",
+            "finding": "F\u00f6retaget hittades p\u00e5 2/2 kataloger (Hitta, Eniro).",
+            "fix": null,
+            "data": {
+                "foundCount": 2,
+                "totalChecked": 2,
+                "directories": [
+                    {
+                        "name": "Hitta",
+                        "found": true,
+                        "source": "tavily",
+                        "profileUrl": "https://www.hitta.se/svensk+r%C3%B6ranalys+ab/stockholm/jllcgubh"
+                    },
+                    {
+                        "name": "Eniro",
+                        "found": true,
+                        "source": "tavily",
+                        "profileUrl": "https://www.eniro.se/svensk+r%C3%B6ranalys+stockholm/3722360/firma",
+                        "nap": {
+                            "address": "Fyrverkarbacken 36, 11260 Stockholm"
+                        }
+                    }
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 16,
+            "key": "napConsistency",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "F\u00f6r f\u00e5 datak\u00e4llor f\u00f6r NAP-j\u00e4mf\u00f6relse \u2014 beh\u00f6ver minst 2 kataloger med extraherad kontaktdata.",
+            "fix": null,
+            "data": {
+                "checked": false,
+                "consistent": null
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 17,
+            "key": "openingHours",
+            "status": "ok",
+            "source": "api",
+            "finding": "\u00d6ppettider fr\u00e5n Google Business Profile: m\u00e5ndag: \u00d6ppet dygnet runt, tisdag: \u00d6ppet dygnet runt...",
+            "fix": null,
+            "data": {
+                "weekdayDescriptions": [
+                    "m\u00e5ndag: \u00d6ppet dygnet runt",
+                    "tisdag: \u00d6ppet dygnet runt",
+                    "onsdag: \u00d6ppet dygnet runt",
+                    "torsdag: \u00d6ppet dygnet runt",
+                    "fredag: \u00d6ppet dygnet runt",
+                    "l\u00f6rdag: \u00d6ppet dygnet runt",
+                    "s\u00f6ndag: \u00d6ppet dygnet runt"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 18,
+            "key": "schemaAny",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Schema markup hittades: Plumber",
+            "fix": null,
+            "data": {
+                "schemaTypes": [
+                    "Plumber"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 19,
+            "key": "localSubtype",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "LocalBusiness-subtyp hittades i schema markup.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 20,
+            "key": "jsonLd",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "1 JSON-LD-block hittades p\u00e5 sidan.",
+            "fix": null,
+            "data": {
+                "blockCount": 1
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 21,
+            "key": "metaTags",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bade title-tagg och meta-beskrivning finns.",
+            "fix": null,
+            "data": {
+                "hasTitle": true,
+                "hasDescription": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 22,
+            "key": "faqSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "questionsFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 23,
+            "key": "contentDepth",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "pageCount": 0,
+                "hasBlog": false,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 24,
+            "key": "serviceSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "typesFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 25,
+            "key": "eatSignals",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "correctedByScaper": false
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 26,
+            "key": "semanticHtml",
+            "status": "warning",
+            "source": "scraper",
+            "finding": "Delvis semantisk HTML: 1 element hittades men <main> saknas.",
+            "fix": "L\u00e4gg till <main> f\u00f6r b\u00e4ttre AI-tolkning av sidstrukturen.",
+            "data": {
+                "hasMain": false,
+                "hasNav": true,
+                "hasArticle": false,
+                "hasSection": false,
+                "hasAside": false,
+                "langAttribute": "se-SE"
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "free",
+            "genericSteps": "1. Ni har vissa semantiska element men det saknas n\u00e5gra viktiga (`<main>`, `<nav>` eller `<article>`).\n2. Komplettera de som saknas \u2014 se er finding-text f\u00f6r specifika rekommendationer.\n3. Strukturen ovan \u00e4r minimum f\u00f6r en v\u00e4lbyggd HTML5-sida.",
+            "genericCodeTemplate": null,
+            "richRelevance": "F\u00f6r Svensk R\u00f6ranalys \u00e4r det viktigt att s\u00f6kmotorer och AI-verktyg tydligt kan identifiera sidans huvudsakliga inneh\u00e5ll. Utan en `<main>`-tagg blir det sv\u00e5rare att s\u00e4rskilja sidans k\u00e4rnbudskap fr\u00e5n menyer och sidof\u00e4lt, vilket kan p\u00e5verka synligheten f\u00f6r era tj\u00e4nster.",
+            "richSteps": "1. Identifiera den del av HTML-koden som inneh\u00e5ller sidans huvudsakliga inneh\u00e5ll, det vill s\u00e4ga texten som b\u00f6rjar med \"Bevara, renovera och ta hand om det befintliga\".\n2. Omslut detta inneh\u00e5llsblock med en \u00f6ppnande `<main>`-tagg och en avslutande `</main>`-tagg.\n3. S\u00e4kerst\u00e4ll att det endast finns en `<main>`-tagg p\u00e5 sidan och att den inte \u00e4r placerad inuti ett `<article>`, `<aside>`, `<footer>`, `<header>` eller `<nav>`-element.\n4. Publicera \u00e4ndringen och verifiera att sidstrukturen ser korrekt ut i webbl\u00e4sarens utvecklarverktyg.",
+            "richCodeExample": "<!DOCTYPE html>\n<html lang=\"se-SE\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Relining, r\u00f6rinspektion & stamspolning i Stockholm</title>\n</head>\n<body>\n  <header>\n    <!-- Sidhuvud med logotyp och eventuell huvudmeny -->\n  </header>\n\n  <nav>\n    <!-- Navigationsl\u00e4nkar -->\n  </nav>\n\n  <main>\n    <h1>Bevara, renovera och ta hand om det befintliga</h1>\n    <!-- H\u00e4r placeras sidans huvudsakliga inneh\u00e5ll -->\n  </main>\n\n  <footer>\n    <!-- Sidfot med kontaktinformation och l\u00e4nkar -->\n  </footer>\n</body>\n</html>"
+        },
+        {
+            "id": 27,
+            "key": "h1",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "H1-rubrik: \"Bevara, renovera och ta hand om det befintliga\"",
+            "fix": null,
+            "data": {
+                "h1": "Bevara, renovera och ta hand om det befintliga"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 28,
+            "key": "title",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Title-tagg: \"Relining, r\u00f6rinspektion & stamspolning i Stockholm\"",
+            "fix": null,
+            "data": {
+                "title": "Relining, r\u00f6rinspektion & stamspolning i Stockholm"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 29,
+            "key": "metaDescription",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Metabeskrivning: \"Svensk R\u00f6ranalys hj\u00e4lper BRF och fastighets\u00e4gare i Storstockholm med relining (strumpmetoden), r\u00f6rinspektion och stamspo...\"",
+            "fix": null,
+            "data": {
+                "metaDescription": "Svensk R\u00f6ranalys hj\u00e4lper BRF och fastighets\u00e4gare i Storstockholm med relining (strumpmetoden), r\u00f6rinspektion och stamspolning. Serviceavtal & snabb jour."
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 30,
+            "key": "contactInfo",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen kontaktinformation hittades.",
+            "fix": "L\u00e4gg till telefonnummer, e-post och adress synligt p\u00e5 sidan.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. L\u00e4gg in fullst\u00e4ndig kontaktinformation synligt p\u00e5 varje sida \u2014 i footern och p\u00e5 en dedikerad kontaktsida.\n2. Inneh\u00e5ll: f\u00f6retagsnamn, fullst\u00e4ndig adress, telefon, e-post, eventuellt organisationsnummer.\n3. Anv\u00e4nd semantiska `<address>`-elementet f\u00f6r att markera kontaktblocket.\n4. G\u00f6r telefon och e-post klickbara med `tel:` och `mailto:`-l\u00e4nkar.\n5. L\u00e4gg ocks\u00e5 in samma uppgifter i ert LocalBusiness JSON-LD-schema.",
+            "genericCodeTemplate": "<footer>\n  <address>\n    <strong><F\u00d6RETAGSNAMN></strong><br>\n    <GATUADRESS><br>\n    <POSTNUMMER> <STAD><br>\n    Tel: <a href=\"tel:<TELEFONNUMMER>\"><TELEFONNUMMER></a><br>\n    E-post: <a href=\"mailto:<EPOST>\"><EPOST></a><br>\n    Org.nr: <ORGNUMMER>\n  </address>\n</footer>",
+            "richRelevance": "N\u00e4r potentiella kunder har akuta VVS-problem \u00e4r snabb tillg\u00e5ng till kontaktuppgifter avg\u00f6rande. Genom att inte visa telefonnummer och adress tydligt p\u00e5 hemsidan riskerar Svensk R\u00f6ranalys att f\u00f6rlora kunder till konkurrenter som \u00e4r enklare att n\u00e5.",
+            "richSteps": "1. Infoga telefonnummer (`08-599 098 00`) och en prim\u00e4r e-postadress v\u00e4l synligt i sidhuvudet (header) p\u00e5 alla sidor.\n2. L\u00e4gg till fullst\u00e4ndig adress och telefonnummer i sidfoten (footer) p\u00e5 alla sidor.\n3. Skapa en dedikerad kontaktsida med adress, telefon, e-post, en karta och eventuellt ett kontaktformul\u00e4r.\n4. Implementera strukturerad data (Schema.org) f\u00f6r `LocalBusiness` f\u00f6r att ge s\u00f6kmotorer tydlig och korrekt information. Detta st\u00e4rker er lokala SEO och synlighet i t.ex. kartresultat.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Plumber\",\n  \"name\": \"Svensk R\u00f6ranalys\",\n  \"url\": \"https://www.roranalys.se\",\n  \"telephone\": \"+46859909800\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Fyrverkarbacken 36\",\n    \"addressLocality\": \"Stockholm\",\n    \"postalCode\": \"112 60\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 59.326470199999996,\n    \"longitude\": 18.019259299999998\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\n        \"Monday\",\n        \"Tuesday\",\n        \"Wednesday\",\n        \"Thursday\",\n        \"Friday\",\n        \"Saturday\",\n        \"Sunday\"\n      ],\n      \"opens\": \"00:00\",\n      \"closes\": \"23:59\"\n    }\n  ],\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"3.8\",\n    \"reviewCount\": \"24\"\n  }\n}\n</script>"
+        },
+        {
+            "id": 31,
+            "key": "altTexts",
+            "status": "warning",
+            "source": "scraper",
+            "finding": "63% av bilderna har alt-text (5/8) -- bor forbattras.",
+            "fix": "L\u00e4gg till beskrivande alt-texter pa de 3 bilder som saknar det.",
+            "data": {
+                "total": 8,
+                "withAlt": 5,
+                "percentage": 63
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "free",
+            "genericSteps": "1. En del bilder saknar alt-text \u2014 g\u00e5 igenom de som har bra alt-text och kopiera tonen till de som saknar.\n2. M\u00e5l: alla informationsb\u00e4rande bilder ska ha beskrivande alt-text. Dekorativa bilder f\u00e5r `alt=\"\"`.\n3. Om ni har WordPress: filtrera mediabiblioteket p\u00e5 \"saknar alt-text\".",
+            "genericCodeTemplate": "<img src=\"/<bildfil>\" alt=\"<BESKRIVNING AV VAD BILDEN VISAR \u2014 inte 'bild av X', utan 'X som g\u00f6r Y'>\">",
+            "richRelevance": "Genom att 3 av 8 bilder saknar alt-texter missar Svensk R\u00f6ranalys en m\u00f6jlighet att synas i bilds\u00f6k f\u00f6r viktiga tj\u00e4nster som 'relining' och 'stamspolning'. Detta f\u00f6rs\u00e4mrar \u00e4ven tillg\u00e4ngligheten f\u00f6r anv\u00e4ndare med synneds\u00e4ttning, vilket kan skada varum\u00e4rkets anseende.",
+            "richSteps": "1. Identifiera de 3 bilder p\u00e5 `roranalys.se` som f\u00f6r n\u00e4rvarande saknar ett `alt`-attribut.\n2. F\u00f6r varje bild, skriv en kort och koncis text som beskriver vad bilden f\u00f6rest\u00e4ller. Inkludera relevanta s\u00f6kord, t.ex. 'r\u00f6rinspektion i Stockholm' eller 'relining av avloppsr\u00f6r'.\n3. L\u00e4gg till beskrivningarna i HTML-koden f\u00f6r respektive bild, inuti `alt=\"\"`-attributet.\n4. Uppr\u00e4tta en rutin f\u00f6r att s\u00e4kerst\u00e4lla att alla nya bilder som laddas upp p\u00e5 webbplatsen f\u00e5r en beskrivande alt-text.",
+            "richCodeExample": "<!-- F\u00f6re: En bild utan alt-text -->\n<img src=\"/bilder/relining-projekt.jpg\">\n\n<!-- Efter: Samma bild med en beskrivande alt-text -->\n<img src=\"/bilder/relining-projekt.jpg\" alt=\"N\u00e4rbild p\u00e5 ett f\u00e4rdigt relinat avloppsr\u00f6r hos en kund i Stockholm.\">"
+        },
+        {
+            "id": 32,
+            "key": "internalLinks",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bra internl\u00e4nkning: 14 unika sidor l\u00e4nkas fr\u00e5n startsidan (23 l\u00e4nkar totalt).",
+            "fix": null,
+            "data": {
+                "total": 23,
+                "uniquePages": 14,
+                "hasContactLink": true,
+                "hasAboutLink": true,
+                "hasServicesLink": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 33,
+            "key": "aiMentions",
+            "status": "warning",
+            "source": "api",
+            "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"hantverkare\" i Stockholm.",
+            "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda.",
+            "data": {
+                "entityKnows": true,
+                "entitySentiment": "neutral",
+                "categoryMentioned": false,
+                "extractedNiche": "hantverkare"
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "premium",
+            "richRelevance": "AI-drivna s\u00f6kresultat (som Google AI Overviews) blir allt vanligare. Att AI-modeller k\u00e4nner till Svensk R\u00f6ranalys men inte spontant rekommenderar er f\u00f6r en s\u00f6kning p\u00e5 'hantverkare i Stockholm' inneb\u00e4r en direkt f\u00f6rlust av synlighet och potentiella kunder till konkurrenter som lyfts fram.",
+            "richSteps": "1. Ut\u00f6ka er n\u00e4rvaro i relevanta svenska f\u00f6retagskataloger (t.ex. Reco, Hitta, Offerta) och s\u00e4kerst\u00e4ll att namn, adress och telefonnummer \u00e4r 100% konsekventa \u00f6verallt.\n2. Publicera kundcase eller blogginl\u00e4gg p\u00e5 er webbplats som beskriver slutf\u00f6rda projekt i specifika delar av Stockholm (t.ex. 'Stamspolning i en BRF p\u00e5 Kungsholmen').\n3. Uppmuntra aktivt era kunder att i sina Google-recensioner n\u00e4mna b\u00e5de vilken tj\u00e4nst de k\u00f6pt och var de befinner sig (t.ex. '...fick hj\u00e4lp med r\u00f6rinspektion i Bromma').\n4. G\u00e5 igenom er Google Business Profile och s\u00e4kerst\u00e4ll att alla f\u00e4lt \u00e4r ifyllda, inklusive tj\u00e4nster, serviceomr\u00e5den och nytagna bilder fr\u00e5n projekt.",
+            "richCodeExample": null
+        },
+        {
+            "id": 34,
+            "key": "reviewReplies",
+            "status": "bad",
+            "source": "api",
+            "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+            "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+            "data": {
+                "total": 5,
+                "withReply": 0,
+                "responseRate": 0,
+                "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 24. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+            },
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "premium",
+            "richRelevance": "Stickprovet som visar att 0 av 5 recensioner har besvarats signalerar till potentiella kunder att Svensk R\u00f6ranalys inte aktivt engagerar sig i kundfeedback. Detta skadar f\u00f6rtroendet och \u00e4r en missad chans att hantera kritik, f\u00f6rst\u00e4rka positiva omd\u00f6men och synas i Googles AI-svar som ofta inkluderar utdrag fr\u00e5n b\u00e5de recensioner och f\u00f6retagets svar.",
+            "richSteps": "1. Logga in p\u00e5 er Google Business Profile och lokalisera alla obesvarade recensioner.\n2. Prioritera att besvara de 5 recensioner som identifierats i stickprovet, samt alla andra som \u00e4r obesvarade. Tacka f\u00f6r feedback och bem\u00f6t eventuell kritik professionellt.\n3. Etablera en intern rutin f\u00f6r att s\u00e4kerst\u00e4lla att alla nya recensioner besvaras inom 48 timmar.\n4. N\u00e4r det \u00e4r l\u00e4mpligt, inkludera tj\u00e4nsten och orten i era svar f\u00f6r att st\u00e4rka den lokala s\u00f6koptimeringen (t.ex. 'Tack f\u00f6r omd\u00f6met! Kul att ni blev n\u00f6jda med er stamspolning h\u00e4r i Stockholm.').",
+            "richCodeExample": null
+        },
+        {
+            "id": 35,
+            "key": "gbpData",
+            "status": "ok",
+            "source": "api",
+            "finding": "Google Business Profile: Svensk R\u00f6ranalys -- betyg 3.8/5 (24 recensioner).",
+            "fix": null,
+            "data": {
+                "name": "Svensk R\u00f6ranalys",
+                "rating": 3.8,
+                "userRatingCount": 24
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 36,
+            "key": "competitors",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "N\u00e4rliggande konkurrenter kunde inte h\u00e4mtas \u2014 Google Business Profile eller positionsdata saknas.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 37,
+            "key": "synthesis",
+            "status": "notApplicable",
+            "source": "computed",
+            "finding": "Syntesen ar en separat sektion och poangsatts inte.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        }
+    ],
+    "synthesis": {
+        "actionPlan": "### Kritiskt\n1.  **\u00c5tg\u00e4rda grundl\u00e4ggande tekniska fel.** Webbplatsen svarar inte f\u00f6r PageSpeed Insights och andra analysverktyg, vilket \u00e4r ett allvarligt hinder f\u00f6r all synlighet. Detta m\u00e5ste l\u00f6sas omedelbart.\n    *   **Steg 1:** Kontakta webbhotellet f\u00f6r att unders\u00f6ka om servern har problem, brandv\u00e4ggsregler eller \u00f6verbelastningsskydd som blockerar verktyg.\n    *   **Steg 2:** Anv\u00e4nd Chrome DevTools (F12) -> Lighthouse f\u00f6r att k\u00f6ra en lokal prestandaanalys och identifiera flaskhalsar.\n    *   **Steg 3:** S\u00e4kerst\u00e4ll att webbplatsen svarar snabbt. M\u00e5let \u00e4r en serverresponstid (TTFB) under 800ms.\n\n2.  **Svara p\u00e5 samtliga kundrecensioner.** En svarsfrekvens p\u00e5 0% \u00e4r en enorm f\u00f6rlorad m\u00f6jlighet att bygga f\u00f6rtroende och synas i AI-svar. Google AI Overviews visar f\u00f6retags svar direkt i s\u00f6kresultatet.\n    *   **Steg 1:** G\u00e5 igenom alla 24 befintliga recensioner p\u00e5 Google och skriv personliga, professionella svar.\n    *   **Steg 2:** Etablera en intern rutin f\u00f6r att svara p\u00e5 alla nya recensioner (b\u00e5de positiva och negativa) inom 48 timmar.\n\n3.  **Optimera Google Business Profile (GBP).** Detta \u00e4r er viktigaste kanal f\u00f6r lokal och AI-baserad s\u00f6kning.\n    *   **Steg 1 (Kategorier):** Byt prim\u00e4r kategori fr\u00e5n `general_contractor` till en mer specifik och relevant kategori som `Plumber` (VVS-mont\u00f6r) eller `Drain cleaning service` (Avloppsrensningstj\u00e4nst). L\u00e4gg till andra relevanta tj\u00e4nster som sekund\u00e4ra kategorier.\n    *   **Steg 2 (\u00d6ppettider):** Verifiera att \"\u00d6ppet dygnet runt\" st\u00e4mmer. Om det avser jour, \u00e4ndra till kontorstider och specificera \"Jour dygnet runt\" i beskrivningen f\u00f6r att undvika att vilseleda Google och kunder.\n    *   **Steg 3 (NAP-konsistens):** L\u00e4gg till namn, adress och telefonnummer (NAP) synligt i sidfoten p\u00e5 `roranalys.se`, exakt matchande informationen i er GBP.\n\n### Viktigt\n1.  **St\u00e4rk E-A-T-signaler (Expertise, Authoritativeness, Trustworthiness).** F\u00f6r att AI ska rekommendera er m\u00e5ste den lita p\u00e5 er expertis.\n    *   **Steg 1:** Publicera ert organisationsnummer p\u00e5 webbplatsen, f\u00f6rslagsvis i sidfoten.\n    *   **Steg 2:** Skapa en \"Om oss\"-sida som presenterar nyckelpersoner, deras erfarenhet och f\u00f6retagets historia.\n    *   **Steg 3:** Visa stolt upp eventuella certifieringar, branschmedlemskap och garantier med logotyper och l\u00e4nkar.\n\n2.  **Bygg en inneh\u00e5lls- och FAQ-bas.** Svara p\u00e5 kundernas fr\u00e5gor innan de st\u00e4ller dem f\u00f6r att bli en prim\u00e4r k\u00e4lla f\u00f6r AI-svar.\n    *   **Steg 1:** Skapa en FAQ-sektion p\u00e5 varje tj\u00e4nstesida (t.ex. \"Vanliga fr\u00e5gor om relining\").\n    *   **Steg 2:** Implementera `FAQPage` schema markup f\u00f6r att g\u00f6ra dessa fr\u00e5gor och svar synliga f\u00f6r s\u00f6kmotorer. Exempel:\n    ```html\n    <script type=\"application/ld+json\">\n    {\n      \"@context\": \"https://schema.org\",\n      \"@type\": \"FAQPage\",\n      \"mainEntity\": [{\n        \"@type\": \"Question\",\n        \"name\": \"Hur l\u00e5ng tid tar en relining?\",\n        \"acceptedAnswer\": {\n          \"@type\": \"Answer\",\n          \"text\": \"En typisk relining av en villa tar vanligtvis mellan 3 till 5 dagar, beroende p\u00e5 omfattningen.\"\n        }\n      }]\n    }\n    </script>\n    ```\n\n### Bra att ha\n1.  **Implementera `Service` Schema.** Specificera era tj\u00e4nster i detalj f\u00f6r s\u00f6kmotorer f\u00f6r att matcha med mer precisa s\u00f6kfr\u00e5gor.\n    *   **Steg 1:** F\u00f6r varje tj\u00e4nst (relining, stamspolning etc.), l\u00e4gg till `Service` schema p\u00e5 respektive sida. Exempel f\u00f6r relining:\n    ```html\n    <script type=\"application/ld+json\">\n    {\n      \"@context\": \"https://schema.org\",\n      \"@type\": \"Service\",\n      \"serviceType\": \"Relining\",\n      \"provider\": {\n        \"@type\": \"Plumber\",\n        \"name\": \"Svensk R\u00f6ranalys\"\n      },\n      \"areaServed\": {\n        \"@type\": \"City\",\n        \"name\": \"Stockholm\"\n      },\n      \"description\": \"Vi erbjuder professionell relining som ett kostnadseffektivt alternativ till stambyte i Stockholm.\"\n    }\n    </script>\n    ```",
+        "competitorNote": "Konkurrensdata saknas, men i en bransch som r\u00f6ranalys och VVS i Stockholm \u00e4r konkurrensen vanligtvis h\u00e5rd och lokal. Marknaden best\u00e5r av allt fr\u00e5n enmansf\u00f6retag till stora, etablerade akt\u00f6rer. Konkurrensf\u00f6rdel vinns ofta genom ett starkt lokalt rykte, vilket digitalt manifesteras genom ett stort antal positiva kundrecensioner p\u00e5 Google. Ett betyg p\u00e5 3.8 med 24 recensioner \u00e4r en start, men ledande konkurrenter i Stockholm har sannolikt hundratals recensioner med snittbetyg p\u00e5 4.5 eller h\u00f6gre. Att inte aktivt hantera sitt online-rykte inneb\u00e4r att man snabbt hamnar p\u00e5 efterk\u00e4lken.",
+        "reviewAnalysis": "Med ett snittbetyg p\u00e5 3.8 av 5 fr\u00e5n 24 recensioner har f\u00f6retaget en medioker position. Betyget indikerar en oj\u00e4mn kundupplevelse med b\u00e5de n\u00f6jda och missn\u00f6jda kunder, vilket kan skapa os\u00e4kerhet hos potentiella nya kunder. Den absolut st\u00f6rsta svagheten \u00e4r en svarsfrekvens p\u00e5 0% i stickprovet. Att inte svara p\u00e5 recensioner signalerar bristande kundengagemang och \u00e4r en stor missad m\u00f6jlighet att hantera kritik, tacka f\u00f6r ber\u00f6m och visa f\u00f6r b\u00e5de kunder och AI-modeller att f\u00f6retaget \u00e4r aktivt och ansvarsfullt. Styrkan ligger i att det finns en befintlig bas av 24 recensioner att b\u00f6rja arbeta med.",
+        "summary": "Svensk R\u00f6ranalys har en kritisk teknisk brist p\u00e5 sin webbplats som f\u00f6rhindrar b\u00e5de anv\u00e4ndare och s\u00f6kmotorer fr\u00e5n att komma \u00e5t den p\u00e5 ett tillf\u00f6rlitligt s\u00e4tt, vilket m\u00e5ste \u00e5tg\u00e4rdas omedelbart. F\u00f6retagets AI-beredskap \u00e4r l\u00e5g; trots att AI-modeller k\u00e4nner till f\u00f6retaget rekommenderas det inte, vilket till stor del beror p\u00e5 svaga f\u00f6rtroendesignaler och en total avsaknad av svar p\u00e5 kundrecensioner. De absolut viktigaste n\u00e4sta stegen \u00e4r att l\u00f6sa de tekniska problemen, omedelbart b\u00f6rja svara p\u00e5 alla recensioner och optimera sin Google Business Profile f\u00f6r att st\u00e4rka sin lokala och digitala n\u00e4rvaro."
+    },
+    "gbp": {
+        "name": "Svensk R\u00f6ranalys",
+        "rating": 3.8,
+        "userRatingCount": 24,
+        "address": "Fyrverkarbacken 36, 112 60 Stockholm, Sverige",
+        "phone": "08-599 098 00",
+        "websiteUri": "https://www.roranalys.se/",
+        "weekdayDescriptions": [
+            "m\u00e5ndag: \u00d6ppet dygnet runt",
+            "tisdag: \u00d6ppet dygnet runt",
+            "onsdag: \u00d6ppet dygnet runt",
+            "torsdag: \u00d6ppet dygnet runt",
+            "fredag: \u00d6ppet dygnet runt",
+            "l\u00f6rdag: \u00d6ppet dygnet runt",
+            "s\u00f6ndag: \u00d6ppet dygnet runt"
+        ],
+        "types": [
+            "general_contractor",
+            "service",
+            "point_of_interest",
+            "establishment"
+        ],
+        "_domainMatch": true
+    },
+    "directories": {
+        "foundInSameAs": [],
+        "directories": [
+            {
+                "name": "Hitta",
+                "found": true,
+                "source": "tavily",
+                "profileUrl": "https://www.hitta.se/svensk+r%C3%B6ranalys+ab/stockholm/jllcgubh"
+            },
+            {
+                "name": "Eniro",
+                "found": true,
+                "source": "tavily",
+                "profileUrl": "https://www.eniro.se/svensk+r%C3%B6ranalys+stockholm/3722360/firma",
+                "nap": {
+                    "address": "Fyrverkarbacken 36, 11260 Stockholm"
+                }
+            }
+        ],
+        "foundCount": 2,
+        "totalChecked": 2,
+        "napConsistency": {
+            "checked": false,
+            "consistent": null,
+            "phone": {
+                "values": [],
+                "consistent": null
+            },
+            "address": {
+                "values": [],
+                "consistent": null
+            },
+            "finding": "F\u00f6r f\u00e5 datak\u00e4llor f\u00f6r NAP-j\u00e4mf\u00f6relse \u2014 beh\u00f6ver minst 2 kataloger med extraherad kontaktdata.",
+            "fix": ""
+        },
+        "status": "ok",
+        "finding": "F\u00f6retaget hittades p\u00e5 2/2 kataloger (Hitta, Eniro).",
+        "fix": ""
+    },
+    "aiMentions": {
+        "entityQuery": "Vad vet du om \"Svensk R\u00f6ranalys\" i Stockholm? Ber\u00e4tta vad du k\u00e4nner till om f\u00f6retaget.",
+        "entityResponse": "Svensk R\u00f6ranalys \u00e4r ett f\u00f6retag baserat i Stockholm som specialiserar sig p\u00e5 r\u00f6rinspektion och r\u00f6ranalys. F\u00f6retaget erbjuder tj\u00e4nster som r\u00f6rinspektion med hj\u00e4lp av kamerateknik, vilket g\u00f6r det m\u00f6jligt att identifiera problem i avloppssystem och andra typer av r\u00f6rledningar. Genom att anv\u00e4nda avancerad teknik kan de uppt\u00e4cka blockeringar, sprickor och andra skador som kan p\u00e5verka r\u00f6rens funktion.\n\nSvensk R\u00f6ranalys arbetar ofta med b\u00e5de privata och offentliga kunder, inklusive fastighets\u00e4gare, kommuner och byggf\u00f6retag. Deras tj\u00e4nster kan vara avg\u00f6rande f\u00f6r att f\u00f6rebygga kostsamma reparationer och f\u00f6r att s\u00e4kerst\u00e4lla att avloppssystem fungerar effektivt.\n\nF\u00f6retaget kan ocks\u00e5 erbjuda r\u00e5dgivning och l\u00f6sningar f\u00f6r att f\u00f6rb\u00e4ttra r\u00f6rsystemens livsl\u00e4ngd och funktion. Genom att utf\u00f6ra noggranna analyser kan de ge rekommendationer f\u00f6r underh\u00e5ll och eventuella \u00e5tg\u00e4rder som beh\u00f6vs.\n\nOm du har specifika fr\u00e5gor eller beh\u00f6ver mer detaljerad information om deras tj\u00e4nster eller verksamhet, kan det vara bra att bes\u00f6ka deras officiella webbplats eller kontakta dem direkt.",
+        "entityKnows": true,
+        "entitySentiment": "neutral",
+        "extractedNiche": "hantverkare",
+        "categoryQuery": "Var hittar jag bra hantverkare i Stockholm?",
+        "categoryResponse": "Det finns flera s\u00e4tt att hitta bra hantverkare i Stockholm:\n\n1. **Rekommendationer**: Fr\u00e5ga v\u00e4nner, familj eller kollegor om de kan rekommendera n\u00e5gon hantverkare de har haft goda erfarenheter med.\n\n2. **Online plattformar**: Det finns flera webbplatser d\u00e4r du kan hitta hantverkare, l\u00e4sa recensioner och j\u00e4mf\u00f6ra priser. N\u00e5gra popul\u00e4ra plattformar \u00e4r:\n   - **Hantverkare.se**\n   - **Servicefinder.se**\n   - **Offerta.se**\n   - **Anlita.se**\n\n3. **Sociala medier**: Facebook-grupper eller lokala forum kan vara bra st\u00e4llen att fr\u00e5ga om rekommendationer.\n\n4. **Branschorganisationer**: Kolla med branschorganisationer som exempelvis Byggf\u00f6retagen eller Sveriges Byggindustrier, som kan ha listor \u00f6ver certifierade hantverkare.\n\n5. **Google och recensioner**: S\u00f6k p\u00e5 Google efter hantverkare i Stockholm och l\u00e4s recensioner p\u00e5 Google My Business eller andra recensionssajter.\n\n6. **Lokala annonser**: Kolla i lokala tidningar eller p\u00e5 anslagstavlor i ditt omr\u00e5de.\n\nN\u00e4r du har hittat n\u00e5gra alternativ, se till att kontrollera deras referenser och be om offerter innan du best\u00e4mmer dig.",
+        "categoryMentioned": false,
+        "status": "warning",
+        "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"hantverkare\" i Stockholm.",
+        "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda."
+    },
+    "reviewReplies": {
+        "total": 5,
+        "withReply": 0,
+        "replyRate": 0,
+        "status": "bad",
+        "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+        "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+        "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 24. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+    }
+}

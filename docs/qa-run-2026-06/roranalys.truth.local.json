@@ -1,0 +1,44 @@
+[
+  {
+    "key": "phone",
+    "verdict": "good",
+    "evidence": "JSON-LD på startsidan innehåller \"telephone\":\"08-599 098 00\" (Plumber-schema). Protokollet godkänner telefon i JSON-LD oavsett position i brödtexten.",
+    "confidence": "high"
+  },
+  {
+    "key": "cityMentioned",
+    "verdict": "good",
+    "evidence": "Titeln lyder \"Relining, rörinspektion & stamspolning i Stockholm\" — Stockholm förekommer i title-taggen, vilket ingår i scannerns sökytor.",
+    "confidence": "high"
+  },
+  {
+    "key": "googleMaps",
+    "verdict": "bad",
+    "evidence": "Kontaktsidan använder OpenStreetMap (modul med class=\"osmap\"), inte Google Maps. Varken startsidan eller kontaktsidan innehåller mönstret google.com/maps, maps.google.com eller goo.gl/maps i rå-HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "localBusiness",
+    "verdict": "good",
+    "evidence": "Startsidans JSON-LD har \"@type\":\"Plumber\" vilket är en LocalBusiness-subtyp i scannerns whitelist.",
+    "confidence": "high"
+  },
+  {
+    "key": "directories",
+    "verdict": "warning",
+    "evidence": "Eniro bekräftad (eniro.se/svensk+röranalys+stockholm/3722360/firma) och Hitta bekräftad (hitta.se/svensk+röranalys+ab/stockholm/alpvhgpr). Båda finns, men Hitta visar ett annat telefonnummer (08-59 90 98 48 vs 08-599 098 00 på Eniro) — inkonsekvent NAP ger warning snarare än good.",
+    "confidence": "medium"
+  },
+  {
+    "key": "napConsistency",
+    "verdict": "bad",
+    "evidence": "Eniro listar 08-599 098 00 (norm: 0859909800) medan Hitta listar 08-59 90 98 48 (norm: 0859909848) — siffrorna skiljer sig efter normalisering. Adressen Fyrverkarbacken 36, 112 60 Stockholm är konsekvent, men telefondiscrepansen gör att NAP-check misslyckas.",
+    "confidence": "medium"
+  },
+  {
+    "key": "openingHours",
+    "verdict": "notMeasured",
+    "evidence": "Inget GBP-kort med weekdayDescriptions hittades via sökningar. Hantverkskollen.se anger att företaget saknar Google-betyg/omdömen, vilket tyder på att GBP antingen saknas eller inte har verifierade öppettider via Places API.",
+    "confidence": "low"
+  }
+]

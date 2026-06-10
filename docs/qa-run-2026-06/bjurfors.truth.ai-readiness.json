@@ -1,0 +1,56 @@
+[
+  {
+    "key": "schemaAny",
+    "verdict": "bad",
+    "evidence": "Inga <script type=\"application/ld+json\">-block hittades i startsidans rå-HTML (0 block). Bjurfors.se renderar all strukturerad data via JavaScript — AI-crawlers ser ingenting.",
+    "confidence": "high"
+  },
+  {
+    "key": "localSubtype",
+    "verdict": "bad",
+    "evidence": "Ingen JSON-LD överhuvudtaget på startsidan, varken LocalBusiness, RealEstateAgent eller någon annan @type. Identisk situation som schemaAny.",
+    "confidence": "high"
+  },
+  {
+    "key": "jsonLd",
+    "verdict": "bad",
+    "evidence": "0 st <script type=\"application/ld+json\">-block med innehåll på startsidan. Varken startsidan, om-oss-sidan, FAQ-sidan eller salja-sidan hade något JSON-LD.",
+    "confidence": "high"
+  },
+  {
+    "key": "metaTags",
+    "verdict": "good",
+    "evidence": "<title>Mäklare. Köpa eller sälja bostad? Välkommen till Bjurfors.</title> och <meta name=\"description\" content=\"Köpa, sälja eller värdera bostad? Bjurfors mäklare ger dig...\"> finns båda i startsidans rå-HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "faqSchema",
+    "verdict": "warning",
+    "evidence": "FAQ-sida finns på /sv/faq/ med rubriken \"FAQ om att köpa och sälja bostad\" och utförliga frågor/svar i löptext — men ingen FAQPage-schema i JSON-LD, inga dl/dt- eller details-element.",
+    "confidence": "high"
+  },
+  {
+    "key": "contentDepth",
+    "verdict": "good",
+    "evidence": "Sitemap.xml innehåller 31 828 <url>-taggar och inkluderar /blogg/-, /artiklar/- och /guide/-sektioner, exempelvis https://www.bjurfors.se/sv/utland/spanien/.../blogg/bloggarkiv/...",
+    "confidence": "high"
+  },
+  {
+    "key": "serviceSchema",
+    "verdict": "bad",
+    "evidence": "Ingen Service-, RealEstateAgent-, ProfessionalService- eller Product-schema hittades i JSON-LD på startsidan, om-oss-sidan, FAQ-sidan eller salja/boka-vardering-sidan — ingen JSON-LD alls existerar.",
+    "confidence": "high"
+  },
+  {
+    "key": "eatSignals",
+    "verdict": "warning",
+    "evidence": "Om-oss-sida (/sv/om-oss/) finns med namngivna ägare (Mats Ljung, Ola Lundqvist) i server-renderat HTML. Inget organisationsnummer, inga certifieringsord (auktoriserad/FMI/mäklarsamfundet) och ingen Person-/Organization-schema hittades på någon sida.",
+    "confidence": "medium"
+  },
+  {
+    "key": "semanticHtml",
+    "verdict": "warning",
+    "evidence": "<main class=\"o-container\" id=\"main\"> finns på startsidan, men inga <nav>-taggar — navigationen är implementerad som <div id=\"main-menu\" role=\"navigation\">. Varken <article>, <section> eller <aside> förekommer.",
+    "confidence": "high"
+  }
+]

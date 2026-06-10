@@ -1,0 +1,26 @@
+[
+  {
+    "key": "aiMentions",
+    "verdict": "good",
+    "evidence": "Entitetstest: Bjurfors är välkänt för AI-modeller — en av Sveriges största privatägda mäklarkedjor, grundad 1965 i Göteborg, marknadsledare där med 13 kontor (bekräftat via bjurfors.se/sv/om-oss/vara-kontor/goteborg/ samt hittamaklare.se, hemnet.se, booli.se). Kategoritest: på frågan 'Var hittar jag bra fastighetsmäklare i Göteborg?' nämns Bjurfors spontant bland de främsta namnen.",
+    "confidence": "medium"
+  },
+  {
+    "key": "reviewReplies",
+    "verdict": "notMeasured",
+    "evidence": "GBP-recensioner finns (Bjurfors, Engelbrektsgatan 30: 27 recensioner, betyg 3,1; Eriksbergstorget 11: 19 recensioner, betyg 3,7), men enskilda recensioner med/utan 'Svar från ägaren' kunde inte hämtas via ren HTTP — Googles recensionsvyer (listugcposts, reviewDialog 404, search.google.com/local/reviews-redirect) kräver JS-rendering, så svarsfrekvensen gick inte att fastställa.",
+    "confidence": "low"
+  },
+  {
+    "key": "gbpData",
+    "verdict": "good",
+    "evidence": "Google Business Profile finns för Bjurfors i Göteborg med numeriskt betyg: 'Bjurfors, Engelbrektsgatan 30, 411 37 Göteborg' (place_id ChIJOfHSD3HzT0YREL1oqu_sP6c, betyg 3,1, 27 recensioner, kategori Fastighetsmäklare) med websiteUri bjurfors.se — verifierat via Google Maps-sökdata. Även t.ex. Eriksbergstorget 11 (betyg 3,7) länkar till bjurfors.se.",
+    "confidence": "high"
+  },
+  {
+    "key": "competitors",
+    "verdict": "good",
+    "evidence": "GBP-position finns och Google Maps-sökning 'fastighetsmäklare' runt Engelbrektsgatan 30 (57.6986, 11.9765) ger 10 konkurrerande mäklarbyråer inom 1,5 km, bl.a. CHRISTANDER Fastighetsförmedling (201 m), Skeppsholmen Sotheby's (211 m), Residence Christie's (434 m), Lundin Fastighetsbyrå (547 m) och HusmanHagberg Göteborg Centrum (787 m).",
+    "confidence": "high"
+  }
+]

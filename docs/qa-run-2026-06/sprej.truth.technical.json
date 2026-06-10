@@ -1,0 +1,62 @@
+[
+  {
+    "key": "https",
+    "verdict": "good",
+    "evidence": "HTTPS svarar HTTP/2 200 utan certifikatfel. HTTP-varianten (port 80) returnerar 301 Moved Permanently till https://www.sprej.nu/ — korrekt omdirigering.",
+    "confidence": "high"
+  },
+  {
+    "key": "robotsTxt",
+    "verdict": "good",
+    "evidence": "GET /robots.txt returnerar HTTP 200 med innehållet: \"User-agent: *\\nDisallow: /24/\" — icke-tom body.",
+    "confidence": "high"
+  },
+  {
+    "key": "aiCrawlers",
+    "verdict": "good",
+    "evidence": "robots.txt innehåller bara \"User-agent: *\\nDisallow: /24/\" — ingen av de 13 AI-crawlrarna (GPTBot, PerplexityBot, ClaudeBot m.fl.) är specifikt blockerade.",
+    "confidence": "high"
+  },
+  {
+    "key": "sitemap",
+    "verdict": "bad",
+    "evidence": "GET /sitemap.xml returnerar HTTP 404 Not Found. Varken /sitemap.xml, /sitemap_index.xml eller /sitemap-index.xml existerar — ingen sitemap hittad.",
+    "confidence": "high"
+  },
+  {
+    "key": "llmsTxt",
+    "verdict": "bad",
+    "evidence": "GET /llms.txt returnerar HTTP 404 Not Found — filen existerar inte.",
+    "confidence": "high"
+  },
+  {
+    "key": "canonical",
+    "verdict": "warning",
+    "evidence": "Startsidans rå-HTML innehåller ingen <link rel=\"canonical\"> — sökning i hela 16 524 tecken HTML ger inga träffar.",
+    "confidence": "high"
+  },
+  {
+    "key": "ogTags",
+    "verdict": "bad",
+    "evidence": "Startsidans HTML saknar alla tre: og:title, og:description och og:image. Enda bild-meta är <meta name=\"thumbnail\"> som inte räknas som OG-tagg.",
+    "confidence": "high"
+  },
+  {
+    "key": "socialPresence",
+    "verdict": "warning",
+    "evidence": "Startsidan innehåller tre länkar till instagram.com/sprejharstudio — det är den enda sociala plattformen. Ingen Facebook, LinkedIn, TikTok eller annan plattform hittades. JSON-LD saknas helt, så inga sameAs-länkar finns.",
+    "confidence": "high"
+  },
+  {
+    "key": "hreflang",
+    "verdict": "notMeasured",
+    "evidence": "Sajten är enspråkigt svensk (<html lang=\"sv\">, inget /en/-innehåll, ingen språkväxlare). Hreflang-taggar behövs inte och saknas korrekt.",
+    "confidence": "high"
+  },
+  {
+    "key": "cwv",
+    "verdict": "notMeasured",
+    "evidence": "PSI-API returnerade HTTP 429 (daglig kvot slut) och WebFetch mot pagespeed.web.dev gav ingen mätdata — CWV-mätning kunde inte genomföras.",
+    "confidence": "low"
+  }
+]

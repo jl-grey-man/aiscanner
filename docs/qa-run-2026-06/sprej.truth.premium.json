@@ -1,0 +1,26 @@
+[
+  {
+    "key": "aiMentions",
+    "verdict": "bad",
+    "evidence": "Ur egen modellkunskap: känner inte till \"Sprej Hårstudio\" i Sundsvall och skulle inte spontant nämna salongen på frågan \"Var hittar jag bra frisör i Sundsvall?\". WebSearch visar endast katalogsidor (frisorsalonger.se, hitta.se, top10place.com) — svag entitetsprofil som sannolikt inte finns i AI-modellers träningsdata.",
+    "confidence": "medium"
+  },
+  {
+    "key": "reviewReplies",
+    "verdict": "bad",
+    "evidence": "Google Maps-profilen visar \"Gör anspråk på företaget\" — GBP:n är oanspråkstagen och kan därför inte ha några ägarsvar. Stickprovet på 5 recensioner (senaste 2025-05-20, betyg 3–5) hämtades via Places API: 0/5 besvarade = 0 %.",
+    "confidence": "medium"
+  },
+  {
+    "key": "gbpData",
+    "verdict": "good",
+    "evidence": "Places Text Search hittade GBP (place_id ChIJH0z0ml5nZEYRwy7tjXqlzf4) med betyg 4.8, 33 recensioner och websiteUri https://sprej.nu/ som matchar domänen, adress Varvsgränd 2, 852 32 Sundsvall.",
+    "confidence": "high"
+  },
+  {
+    "key": "competitors",
+    "verdict": "good",
+    "evidence": "Places Nearby Search (hair_salon, radie 1500 m från 62.391354,17.3025904) gav 9 konkurrenter med betyg, bl.a. Runt Hörnet Frisör (4.8, 342 rec., Storgatan 12) och Sax & Kam (4.3, 89 rec., Torggatan 2) — alla inom 1,5 km i centrala Sundsvall.",
+    "confidence": "high"
+  }
+]

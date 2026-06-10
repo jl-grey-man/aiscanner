@@ -1,0 +1,62 @@
+[
+  {
+    "key": "https",
+    "verdict": "good",
+    "evidence": "HTTP GET https://www.roranalys.se/ svarar HTTP/2 200 utan certifikatfel. HTTP-varianten (port 80) svarar HTTP 301 med Location: https://www.roranalys.se — korrekt redirect till HTTPS.",
+    "confidence": "high"
+  },
+  {
+    "key": "robotsTxt",
+    "verdict": "good",
+    "evidence": "GET /robots.txt svarar 200 med icke-tom body: 'User-agent: *\\n\\nSitemap: https://www.roranalys.se/sitemap.xml' (61 bytes). Filen existerar och har innehåll.",
+    "confidence": "high"
+  },
+  {
+    "key": "aiCrawlers",
+    "verdict": "good",
+    "evidence": "robots.txt innehåller bara 'User-agent: *' utan Disallow-rad — ingen crawler blockeras. Ingen av de 13 AI-crawlrarna (GPTBot, ClaudeBot, PerplexityBot m.fl.) är blockerade.",
+    "confidence": "high"
+  },
+  {
+    "key": "sitemap",
+    "verdict": "good",
+    "evidence": "GET /sitemap.xml svarar med en giltig urlset-sitemap som innehåller 21 st <url>-taggar (verifierat med grep -c). Inga <sitemapindex>-strukturer — direkta URL-poster.",
+    "confidence": "high"
+  },
+  {
+    "key": "llmsTxt",
+    "verdict": "bad",
+    "evidence": "GET https://www.roranalys.se/llms.txt svarar HTTP 404. Ingen llms.txt-fil finns på sajten.",
+    "confidence": "high"
+  },
+  {
+    "key": "canonical",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML innehåller <link rel='canonical' href='https://www.roranalys.se'/> i <head>-sektionen — serverat av servern, inte JS-injicerat.",
+    "confidence": "high"
+  },
+  {
+    "key": "ogTags",
+    "verdict": "good",
+    "evidence": "Startsidan har alla tre: og:title='Relining, rörinspektion & stamspolning i Stockholm', og:description='Svensk Röranalys hjälper BRF...', og:image='https://www.roranalys.se/uploads/gQkLDmqR/Tuleg_9735_300_973.webp' — samtliga med icke-tomt content.",
+    "confidence": "high"
+  },
+  {
+    "key": "socialPresence",
+    "verdict": "bad",
+    "evidence": "Startsidans HTML innehåller inga länkar till sociala plattformar (instagram, facebook, linkedin, twitter, youtube m.fl.) och JSON-LD-blocket saknar sameAs-fält. Noll unika plattformar identifierade.",
+    "confidence": "high"
+  },
+  {
+    "key": "hreflang",
+    "verdict": "notMeasured",
+    "evidence": "Sajten är enspråkig (html lang='sv', allt innehåll på svenska, ingen språkväxlare). Inga hreflang-taggar finns eller behövs — scannern sätter notApplicable för enspråkiga sajter.",
+    "confidence": "high"
+  },
+  {
+    "key": "cwv",
+    "verdict": "notMeasured",
+    "evidence": "PSI-API svarade 429 (daglig kvot förbrukad) och CrUX BigQuery-data saknas för domänen (treo.sh rapporterar 'data not yet available'). Varken fältdata eller labbdata kunde hämtas.",
+    "confidence": "high"
+  }
+]

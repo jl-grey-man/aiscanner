@@ -1,0 +1,44 @@
+[
+  {
+    "key": "phone",
+    "verdict": "good",
+    "evidence": "Startsidans JSON-LD (Organization) innehåller \"telephone\": \"+46313133336\", och brödtexten inom de första 800 tecknen visar \"031-313 33 36\" (under öppettiderna).",
+    "confidence": "high"
+  },
+  {
+    "key": "cityMentioned",
+    "verdict": "good",
+    "evidence": "\"Göteborg\" finns i både metabeskrivningen (\"Restaurang på Avenyn i Göteborg...\") och H1 (\"Restaurang Tvåkanten - Svensk Mat på Avenyn i Göteborg\") samt i bodyText (adressen \"411 36 Göteborg\").",
+    "confidence": "high"
+  },
+  {
+    "key": "googleMaps",
+    "verdict": "good",
+    "evidence": "Undersidan https://www.tvakanten.se/hitta-till-oss/ innehåller i rå-HTML en inbäddning med \"maps.google.com/maps?q=Tv%C3%A5kanten&t=m&z=14&output=embed\" — matchar scannerns mönster. Startsidan saknar karta.",
+    "confidence": "high"
+  },
+  {
+    "key": "localBusiness",
+    "verdict": "bad",
+    "evidence": "Startsidans enda JSON-LD-block (AIOSEO @graph) har @type: BreadcrumbList, Organization, WebPage och WebSite — ingen Restaurant/LocalBusiness eller annan subtyp. Organization räcker inte.",
+    "confidence": "high"
+  },
+  {
+    "key": "directories",
+    "verdict": "warning",
+    "evidence": "Hitta.se har en firmasida kopplad till restaurangens bolag (\"Mialda Restaurang - Rest. Tvåkanten AB\", webbplats www.tvakanten.se) = 1/2. På Eniro finns bara ett annat bolag med samma namn (Tvåkanten AB, finansbolag på Maj på Malös gata 40) — ingen profil för restaurangen.",
+    "confidence": "medium"
+  },
+  {
+    "key": "napConsistency",
+    "verdict": "notMeasured",
+    "evidence": "Färre än 2 kataloger har extraherbar NAP-data för restaurangen: endast Hitta-profilen (Kristinelundsgatan 9, 031-18 21 15 — avviker f.ö. från sajtens Kungsportsavenyn 27 / 031-313 33 36); Eniro-träffen avser ett annat bolag.",
+    "confidence": "medium"
+  },
+  {
+    "key": "openingHours",
+    "verdict": "good",
+    "evidence": "Google Business Profile finns (Tvåkanten, Kungsportsavenyen 27, 411 36 Göteborg, betyg 4,2 / 933 recensioner) och regularOpeningHours.weekdayDescriptions är ifyllt: \"måndag: Stängt\" t.o.m. \"söndag: 13:00–23:00\" via Places API.",
+    "confidence": "high"
+  }
+]

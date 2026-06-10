@@ -1,0 +1,777 @@
+{
+    "meta": {
+        "url": "https://www.tvakanten.se",
+        "domain": "tvakanten.se",
+        "city": "G\u00f6teborg",
+        "bransch": "bar",
+        "companyName": "Tv\u00e5kanten",
+        "scanDate": "2026-06-10T10:08:54.974Z",
+        "scanId": "scan-1781086134974-blv6g8"
+    },
+    "scores": {
+        "free": 79,
+        "full": 74,
+        "google": 4.2,
+        "googleCount": 933
+    },
+    "checks": [
+        {
+            "id": 1,
+            "key": "https",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Webbplatsen anvander HTTPS -- sakerhetscertifikat finns.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 2,
+            "key": "robotsTxt",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Robots.txt finns och kan lasa av AI-crawlers.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 3,
+            "key": "aiCrawlers",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "blocked": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 4,
+            "key": "sitemap",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Sitemap.xml hittades med 19 URL:er.",
+            "fix": null,
+            "data": {
+                "urlCount": 19
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 5,
+            "key": "llmsTxt",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "exists": true,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 6,
+            "key": "canonical",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Canonical-tagg pekar pa: https://www.tvakanten.se/",
+            "fix": null,
+            "data": {
+                "canonical": "https://www.tvakanten.se/"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 7,
+            "key": "ogTags",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 8,
+            "key": "socialPresence",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 9,
+            "key": "hreflang",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 10,
+            "key": "cwv",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "PageSpeed Insights kunde inte m\u00e4tas: tog f\u00f6r l\u00e5ng tid (timeout).",
+            "fix": null,
+            "data": {
+                "lcp": null,
+                "cls": null,
+                "inp": null,
+                "performanceScore": null,
+                "source": null
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 11,
+            "key": "phone",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Telefonnummer hittades: 031-313 33 36",
+            "fix": null,
+            "data": {
+                "phones": [
+                    "031-313 33 36"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 12,
+            "key": "cityMentioned",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Stad n\u00e4mns p\u00e5 sidan: G\u00f6teborg",
+            "fix": null,
+            "data": {
+                "cities": [
+                    "G\u00f6teborg"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 13,
+            "key": "googleMaps",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen Google Maps-inb\u00e4ddning hittades.",
+            "fix": "L\u00e4gg till en Google Maps-inb\u00e4ddning p\u00e5 kontaktsidan.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. G\u00e5 till `https://www.google.com/maps` och s\u00f6k upp er adress.\n2. Klicka p\u00e5 \"Dela\" \u2192 \"B\u00e4dda in en karta\" \u2192 v\u00e4lj storlek \"Medel\" \u2192 kopiera iframe-koden.\n3. Klistra in koden p\u00e5 er kontaktsida \u2014 g\u00e4rna under adressen i ett `<section>`-block.\n4. S\u00e4kerst\u00e4ll att kartan l\u00e4nkar till er Google Business Profile (via \"Visa st\u00f6rre karta\"-l\u00e4nken).\n5. Detta st\u00e4rker lokala signaler \u2014 Google validerar att er angivna adress matchar kartdatan.",
+            "genericCodeTemplate": "<!-- Klistra in p\u00e5 kontaktsidan, mellan adress och kontaktformul\u00e4r -->\n<section aria-label=\"Hitta hit\">\n  <iframe\n    src=\"https://www.google.com/maps/embed?pb=<DIN-EMBED-KOD-H\u00c4R>\"\n    width=\"600\"\n    height=\"450\"\n    style=\"border:0\"\n    allowfullscreen=\"\"\n    loading=\"lazy\"\n    referrerpolicy=\"no-referrer-when-downgrade\"\n    title=\"Karta till <F\u00d6RETAGSNAMN> i <STAD>\">\n  </iframe>\n</section>"
+        },
+        {
+            "id": 14,
+            "key": "localBusiness",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inget LocalBusiness-schema hittades.",
+            "fix": "L\u00e4gg till JSON-LD med @type: \"LocalBusiness\" (eller relevant subtyp).",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Identifiera er specifika verksamhetstyp p\u00e5 schema.org/docs/full.html under \"LocalBusiness\" \u2014 t.ex. `Restaurant`, `Plumber`, `Dentist`, `HairSalon`, `AutoRepair` eller `AccountingService`.\n2. Kopiera mallen nedan och fyll i alla `<PLACEHOLDERS>` med era riktiga uppgifter.\n3. L\u00e4gg in koden mellan `<head>` och `</head>` p\u00e5 er startsida \u2014 om ni har WordPress: anv\u00e4nd ett plugin som \"Insert Headers and Footers\" eller redigera `header.php`.\n4. Validera resultatet p\u00e5 `https://validator.schema.org/` \u2014 klistra in er URL och kontrollera att inga fel rapporteras.\n5. Testa \u00e4ven Googles \"Rich Results Test\" (`https://search.google.com/test/rich-results`) \u2014 det visar hur Google ser er strukturerade data.",
+            "genericCodeTemplate": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"image\": \"https://<DOM\u00c4N>/logo.png\",\n  \"@id\": \"https://<DOM\u00c4N>/#business\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"telephone\": \"<TELEFONNUMMER>\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"<GATUADRESS>\",\n    \"addressLocality\": \"<STAD>\",\n    \"postalCode\": \"<POSTNUMMER>\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": <LATITUD>,\n    \"longitude\": <LONGITUD>\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"],\n      \"opens\": \"09:00\",\n      \"closes\": \"17:00\"\n    }\n  ],\n  \"sameAs\": [\n    \"https://www.facebook.com/<FACEBOOKSIDA>\",\n    \"https://www.instagram.com/<INSTAGRAMKONTO>\"\n  ]\n}\n</script>"
+        },
+        {
+            "id": 15,
+            "key": "directories",
+            "status": "ok",
+            "source": "api",
+            "finding": "F\u00f6retaget hittades p\u00e5 2/2 kataloger (Hitta, Eniro) med konsekvent NAP-data.",
+            "fix": null,
+            "data": {
+                "foundCount": 2,
+                "totalChecked": 2,
+                "directories": [
+                    {
+                        "name": "Hitta",
+                        "found": true,
+                        "source": "tavily",
+                        "profileUrl": "https://www.hitta.se/tv%C3%A5kanten+ab/kungsbacka/apsbhhmo",
+                        "nap": {
+                            "address": "Maj P\u00e5 Mal\u00f6s Gata 40, G\u00f6teborg"
+                        }
+                    },
+                    {
+                        "name": "Eniro",
+                        "found": true,
+                        "source": "tavily",
+                        "profileUrl": "https://www.eniro.se/tv%C3%A5kanten+ab+g%C3%B6teborg/14298731/firma",
+                        "nap": {
+                            "address": "Maj p\u00e5 Mal\u00f6s gata 40, 41767 G\u00f6teborg"
+                        }
+                    }
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 16,
+            "key": "napConsistency",
+            "status": "ok",
+            "source": "api",
+            "finding": "NAP-data (namn, adress, telefon) \u00e4r konsekvent \u00f6ver kataloger \u2014 bra f\u00f6r AI-entitetsmatchning.",
+            "fix": null,
+            "data": {
+                "checked": true,
+                "consistent": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 17,
+            "key": "openingHours",
+            "status": "ok",
+            "source": "api",
+            "finding": "\u00d6ppettider fr\u00e5n Google Business Profile: m\u00e5ndag: St\u00e4ngt, tisdag: 11:30\u201323:00...",
+            "fix": null,
+            "data": {
+                "weekdayDescriptions": [
+                    "m\u00e5ndag: St\u00e4ngt",
+                    "tisdag: 11:30\u201323:00",
+                    "onsdag: 11:30\u201323:00",
+                    "torsdag: 11:30\u201300:00",
+                    "fredag: 11:30\u201301:00",
+                    "l\u00f6rdag: 12:00\u201301:00",
+                    "s\u00f6ndag: 13:00\u201323:00"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 18,
+            "key": "schemaAny",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen schema markup hittades.",
+            "fix": "L\u00e4gg till JSON-LD schema markup (minst Organization eller LocalBusiness).",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Schema markup \u00e4r strukturerad data som hj\u00e4lper s\u00f6kmotorer och AI-modeller f\u00f6rst\u00e5 er sajt maskinellt.\n2. B\u00f6rja med minst `Organization` eller `LocalBusiness`-schema i `<head>` p\u00e5 startsidan.\n3. Anv\u00e4nd JSON-LD-format (rekommenderat av Google), inte microdata eller RDFa.\n4. Validera p\u00e5 `https://validator.schema.org/` efter implementation.\n5. F\u00f6r specifika rekommendationer per bransch: se `#14 LocalBusiness-schema`-fixen.",
+            "genericCodeTemplate": "<!-- Minst Organization-schema som f\u00f6rsta steg -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"logo\": \"https://<DOM\u00c4N>/logo.png\",\n  \"contactPoint\": {\n    \"@type\": \"ContactPoint\",\n    \"telephone\": \"<TELEFONNUMMER>\",\n    \"contactType\": \"customer service\",\n    \"areaServed\": \"SE\",\n    \"availableLanguage\": [\"Swedish\"]\n  }\n}\n</script>",
+            "richRelevance": "Utan strukturerad data (schema markup) g\u00e5r Tv\u00e5kanten miste om en viktig m\u00f6jlighet att tydligt kommunicera sin verksamhetsinformation till s\u00f6kmotorer. Detta kan leda till s\u00e4mre synlighet och f\u00e4rre klick, eftersom Google inte kan skapa de informativa, ut\u00f6kade resultaten (rich snippets) som visar betyg, \u00f6ppettider och typ av k\u00f6k direkt i s\u00f6kresultatet.",
+            "richSteps": "1. Skapa ett JSON-LD-skript f\u00f6r att strukturera er f\u00f6retagsinformation.\n2. V\u00e4lj den specifika schematypen `Restaurant`, vilket b\u00e4st beskriver Tv\u00e5kantens verksamhet.\n3. Fyll i skriptet med verifierad data som namn, adress, telefonnummer och \u00f6ppettider.\n4. Infoga det f\u00e4rdiga skriptet inom `<head>`-sektionen p\u00e5 er webbplats, prim\u00e4rt p\u00e5 startsidan.\n5. Anv\u00e4nd Googles \"Test av ut\u00f6kade resultat\" f\u00f6r att verifiera att koden \u00e4r korrekt implementerad och kan l\u00e4sas av Google.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Restaurant\",\n  \"name\": \"Tv\u00e5kanten\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Kungsportsavenyen 27\",\n    \"addressLocality\": \"G\u00f6teborg\",\n    \"postalCode\": \"411 36\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 57.699486,\n    \"longitude\": 11.97579\n  },\n  \"url\": \"https://www.tvakanten.se\",\n  \"telephone\": \"031-313 33 36\",\n  \"servesCuisine\": \"Svensk\",\n  \"sameAs\": [\n    \"https://www.instagram.com/tvakantengbg/\",\n    \"https://www.google.com/maps?cid=ChIJmyp5VXDzT0YR72AR6COKY-I\"\n  ],\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.2\",\n    \"reviewCount\": \"933\"\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\n        \"https://schema.org/Tuesday\",\n        \"https://schema.org/Wednesday\"\n      ],\n      \"opens\": \"11:30\",\n      \"closes\": \"23:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Thursday\",\n      \"opens\": \"11:30\",\n      \"closes\": \"00:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Friday\",\n      \"opens\": \"11:30\",\n      \"closes\": \"01:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Saturday\",\n      \"opens\": \"12:00\",\n      \"closes\": \"01:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Sunday\",\n      \"opens\": \"13:00\",\n      \"closes\": \"23:00\"\n    }\n  ]\n}\n</script>"
+        },
+        {
+            "id": 19,
+            "key": "localSubtype",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen specifik LocalBusiness-subtyp hittades.",
+            "fix": "Anv\u00e4nd en specifik subtyp (t.ex. Restaurant, Dentist, Plumber) ist\u00e4llet f\u00f6r bara LocalBusiness.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Schema.org har specifika underkategorier f\u00f6r olika branscher \u2014 anv\u00e4nd den mest exakta.\n2. Vanliga svenska exempel:\n   - Restaurang \u2192 `Restaurant`, `Cafe`, `Bakery`, `Bar`\n   - Hantverkare \u2192 `Plumber`, `Electrician`, `Painter`, `HVACBusiness`\n   - V\u00e5rd \u2192 `Dentist`, `Physician`, `MedicalBusiness`\n   - Sk\u00f6nhet \u2192 `HairSalon`, `BeautySalon`, `NailSalon`\n   - Bil \u2192 `AutoRepair`, `CarDealer`, `AutoBodyShop`\n3. Byt `@type` i ert existerande schema till den specifika typen.\n4. Komplett lista: `https://schema.org/docs/full.html` under \"LocalBusiness\".",
+            "genericCodeTemplate": "<!-- Byt ut \"LocalBusiness\" eller \"Organization\" mot r\u00e4tt subtyp -->\n\"@type\": \"<VERKSAMHETSTYP>\",",
+            "richRelevance": "Genom att inte specificera en subtyp till `LocalBusiness` (som `Restaurant`) missar Tv\u00e5kanten chansen att kvalificera sig f\u00f6r branschspecifika funktioner i s\u00f6kresultaten. F\u00f6r en restaurang \u00e4r detta kritiskt, d\u00e5 en korrekt typning kan m\u00f6jligg\u00f6ra visning av menyer, k\u00f6ksinriktning och bokningsalternativ, vilket direkt p\u00e5verkar potentiella g\u00e4sters val.",
+            "richSteps": "1. Om ni redan har ett `LocalBusiness`-schema, lokalisera det i webbplatsens kod.\n2. \u00c4ndra v\u00e4rdet f\u00f6r `@type` fr\u00e5n `\"LocalBusiness\"` till den mer specifika typen `\"Restaurant\"`.\n3. Komplettera schemat med relevanta egenskaper f\u00f6r en restaurang, s\u00e5som `servesCuisine` f\u00f6r att ange \"Svensk mat\".\n4. Publicera \u00e4ndringarna p\u00e5 er webbplats.\n5. Validera den uppdaterade strukturerade datan med Googles \"Test av ut\u00f6kade resultat\" f\u00f6r att s\u00e4kerst\u00e4lla att den nya typen k\u00e4nns igen.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Restaurant\",\n  \"name\": \"Tv\u00e5kanten\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Kungsportsavenyen 27\",\n    \"addressLocality\": \"G\u00f6teborg\",\n    \"postalCode\": \"411 36\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 57.699486,\n    \"longitude\": 11.97579\n  },\n  \"url\": \"https://www.tvakanten.se\",\n  \"telephone\": \"031-313 33 36\",\n  \"servesCuisine\": \"Svensk\",\n  \"sameAs\": [\n    \"https://www.instagram.com/tvakantengbg/\",\n    \"https://www.google.com/maps?cid=ChIJmyp5VXDzT0YR72AR6COKY-I\"\n  ],\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.2\",\n    \"reviewCount\": \"933\"\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\n        \"https://schema.org/Tuesday\",\n        \"https://schema.org/Wednesday\"\n      ],\n      \"opens\": \"11:30\",\n      \"closes\": \"23:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Thursday\",\n      \"opens\": \"11:30\",\n      \"closes\": \"00:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Friday\",\n      \"opens\": \"11:30\",\n      \"closes\": \"01:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Saturday\",\n      \"opens\": \"12:00\",\n      \"closes\": \"01:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"https://schema.org/Sunday\",\n      \"opens\": \"13:00\",\n      \"closes\": \"23:00\"\n    }\n  ]\n}\n</script>"
+        },
+        {
+            "id": 20,
+            "key": "jsonLd",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "1 JSON-LD-block hittades p\u00e5 sidan.",
+            "fix": null,
+            "data": {
+                "blockCount": 1
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 21,
+            "key": "metaTags",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bade title-tagg och meta-beskrivning finns.",
+            "fix": null,
+            "data": {
+                "hasTitle": true,
+                "hasDescription": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 22,
+            "key": "faqSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "questionsFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 23,
+            "key": "contentDepth",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "pageCount": 0,
+                "hasBlog": false,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 24,
+            "key": "serviceSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "typesFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 25,
+            "key": "eatSignals",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "correctedByScaper": false
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 26,
+            "key": "semanticHtml",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bra semantisk HTML: 3 semantiska element hittades (main, nav, section).",
+            "fix": null,
+            "data": {
+                "hasMain": true,
+                "hasNav": true,
+                "hasArticle": false,
+                "hasSection": true,
+                "hasAside": false,
+                "langAttribute": "sv-SE"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 27,
+            "key": "h1",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "H1-rubrik: \"Restaurang Tv\u00e5kanten - Svensk Mat p\u00e5 Avenyn i G\u00f6teborg\"",
+            "fix": null,
+            "data": {
+                "h1": "Restaurang Tv\u00e5kanten - Svensk Mat p\u00e5 Avenyn i G\u00f6teborg"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 28,
+            "key": "title",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Title-tagg: \"Restaurang Tv\u00e5kanten\"",
+            "fix": null,
+            "data": {
+                "title": "Restaurang Tv\u00e5kanten"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 29,
+            "key": "metaDescription",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Metabeskrivning: \"Restaurang p\u00e5 Avenyn i G\u00f6teborg med svensk mat & personlig service. \u00c4ven catering, cocktailkurser och dryckesprovningar ...\"",
+            "fix": null,
+            "data": {
+                "metaDescription": "Restaurang p\u00e5 Avenyn i G\u00f6teborg med svensk mat & personlig service. \u00c4ven catering, cocktailkurser och dryckesprovningar f\u00f6r privata & f\u00f6retagsevent."
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 30,
+            "key": "contactInfo",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Kontaktinformation hittades p\u00e5 sidan.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 31,
+            "key": "altTexts",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "100% av bilderna har alt-text (3/3).",
+            "fix": null,
+            "data": {
+                "total": 3,
+                "withAlt": 3,
+                "percentage": 100
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 32,
+            "key": "internalLinks",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bra internl\u00e4nkning: 8 unika sidor l\u00e4nkas fr\u00e5n startsidan (53 l\u00e4nkar totalt).",
+            "fix": null,
+            "data": {
+                "total": 53,
+                "uniquePages": 8,
+                "hasContactLink": false,
+                "hasAboutLink": true,
+                "hasServicesLink": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 33,
+            "key": "aiMentions",
+            "status": "warning",
+            "source": "api",
+            "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"bistro\" i G\u00f6teborg.",
+            "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda.",
+            "data": {
+                "entityKnows": true,
+                "entitySentiment": "positive",
+                "categoryMentioned": false,
+                "extractedNiche": "bistro"
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "premium",
+            "richRelevance": "\u00c4ven om AI-modeller k\u00e4nner till Tv\u00e5kanten, n\u00e4mns ni inte n\u00e4r potentiella g\u00e4ster s\u00f6ker efter 'bistro' i G\u00f6teborg. Detta inneb\u00e4r att ni missar relevant trafik fr\u00e5n kunder som aktivt letar efter den typ av upplevelse ni erbjuder, trots att AI:n vet att ni existerar.",
+            "richSteps": "1. Komplettera er Google-profil med den sekund\u00e4ra kategorin \"Bistro\" f\u00f6r att tydligare signalera er nisch.\n2. Skapa en dedikerad sida eller ett framtr\u00e4dande avsnitt p\u00e5 er webbplats som beskriver Tv\u00e5kanten som en modern svensk bistro p\u00e5 Avenyn.\n3. Uppmuntra aktivt era g\u00e4ster att i sina recensioner n\u00e4mna ord som \"bistro\", \"svensk mat\" och \"G\u00f6teborg\" f\u00f6r att st\u00e4rka den semantiska kopplingen.\n4. Se \u00f6ver er n\u00e4rvaro i lokala guider och kataloger och s\u00e4kerst\u00e4ll att ni beskrivs som en bistro d\u00e4r det \u00e4r m\u00f6jligt.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Restaurant\",\n  \"name\": \"Tv\u00e5kanten\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"Kungsportsavenyen 27\",\n    \"addressLocality\": \"G\u00f6teborg\",\n    \"postalCode\": \"411 36\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 57.699486,\n    \"longitude\": 11.97579\n  },\n  \"url\": \"https://www.tvakanten.se\",\n  \"telephone\": \"+46313133336\",\n  \"servesCuisine\": \"Svensk\",\n  \"sameAs\": [\n    \"https://www.instagram.com/tvakantengbg/\"\n  ],\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.2\",\n    \"reviewCount\": \"933\"\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\n        \"Tuesday\",\n        \"Wednesday\"\n      ],\n      \"opens\": \"11:30\",\n      \"closes\": \"23:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"Thursday\",\n      \"opens\": \"11:30\",\n      \"closes\": \"00:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"Friday\",\n      \"opens\": \"11:30\",\n      \"closes\": \"01:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"Saturday\",\n      \"opens\": \"12:00\",\n      \"closes\": \"01:00\"\n    },\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": \"Sunday\",\n      \"opens\": \"13:00\",\n      \"closes\": \"23:00\"\n    }\n  ]\n}\n</script>"
+        },
+        {
+            "id": 34,
+            "key": "reviewReplies",
+            "status": "bad",
+            "source": "api",
+            "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+            "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+            "data": {
+                "total": 5,
+                "withReply": 0,
+                "responseRate": 0,
+                "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 933. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+            },
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "premium",
+            "richRelevance": "Genom att inte svara p\u00e5 recensioner, vilket stickprovet p\u00e5 0 svar av 5 visar, missar Tv\u00e5kanten en kritisk m\u00f6jlighet att bygga kundrelationer och hantera sitt rykte. Detta \u00e4r s\u00e4rskilt viktigt d\u00e5 Googles AI-drivna s\u00f6kresultat nu kan visa upp f\u00f6retags svar direkt, vilket g\u00f6r obesvarade recensioner mer synliga \u00e4n n\u00e5gonsin.",
+            "richSteps": "1. G\u00e5 omedelbart igenom och svara p\u00e5 de 5 senaste obesvarade recensionerna p\u00e5 Google f\u00f6r att visa engagemang.\n2. Etablera en intern rutin f\u00f6r att s\u00e4kerst\u00e4lla att alla nya recensioner, b\u00e5de positiva och negativa, besvaras inom 48 timmar.\n3. Utse en specifik person eller roll som \u00e4r ansvarig f\u00f6r att \u00f6vervaka och hantera recensioner p\u00e5 alla plattformar.\n4. Anv\u00e4nd svaren strategiskt: tacka f\u00f6r detaljerad positiv feedback och erbjud en konstruktiv dialog vid negativ feedback f\u00f6r att visa att ni tar kundupplevelsen p\u00e5 allvar.",
+            "richCodeExample": null
+        },
+        {
+            "id": 35,
+            "key": "gbpData",
+            "status": "ok",
+            "source": "api",
+            "finding": "Google Business Profile: Tv\u00e5kanten -- betyg 4.2/5 (933 recensioner).",
+            "fix": null,
+            "data": {
+                "name": "Tv\u00e5kanten",
+                "rating": 4.2,
+                "userRatingCount": 933
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 36,
+            "key": "competitors",
+            "status": "ok",
+            "source": "api",
+            "finding": "N\u00e4rliggande konkurrenter (Google Places, \u22641,5 km): Bram\u00b4s Burgers G\u00f6teborg (4.9/5, 882 recensioner, 24 m bort); Moon Thai Kitchen (4.3/5, 4165 recensioner, 29 m bort); Bar Palavas - Restaurang & Vinbar (4.6/5, 186 recensioner, 37 m bort); taq (4.2/5, 195 recensioner, 38 m bort); Ruby restaurant and bar (3.0/5, 15 recensioner, 44 m bort).",
+            "fix": null,
+            "data": {
+                "competitors": [
+                    {
+                        "placeId": "ChIJoTx0cgDzT0YRvvHmIkecPvM",
+                        "name": "Bram\u00b4s Burgers G\u00f6teborg",
+                        "rating": 4.9,
+                        "userRatingCount": 882,
+                        "distanceMeters": 24,
+                        "primaryType": "hamburger_restaurant"
+                    },
+                    {
+                        "placeId": "ChIJm999q3HzT0YR_lIM-Th8MqM",
+                        "name": "Moon Thai Kitchen",
+                        "rating": 4.3,
+                        "userRatingCount": 4165,
+                        "distanceMeters": 29,
+                        "primaryType": "thai_restaurant"
+                    },
+                    {
+                        "placeId": "ChIJtVZwpu3zT0YRxb3kZRyJ8K8",
+                        "name": "Bar Palavas - Restaurang & Vinbar",
+                        "rating": 4.6,
+                        "userRatingCount": 186,
+                        "distanceMeters": 37,
+                        "primaryType": "french_restaurant"
+                    },
+                    {
+                        "placeId": "ChIJTfnfnwbzT0YR62T9wBfpIvI",
+                        "name": "taq",
+                        "rating": 4.2,
+                        "userRatingCount": 195,
+                        "distanceMeters": 38,
+                        "primaryType": "restaurant"
+                    },
+                    {
+                        "placeId": "ChIJ-TrJ9IzzT0YRptQobjF7Q6A",
+                        "name": "Ruby restaurant and bar",
+                        "rating": 3,
+                        "userRatingCount": 15,
+                        "distanceMeters": 44,
+                        "primaryType": "restaurant"
+                    }
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 37,
+            "key": "synthesis",
+            "status": "notApplicable",
+            "source": "computed",
+            "finding": "Syntesen ar en separat sektion och poangsatts inte.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        }
+    ],
+    "synthesis": {
+        "actionPlan": "### Kritiskt\n\n1. **\u00c5tg\u00e4rda teknisk blockering och sidhastighet.**\n   - **Varf\u00f6r:** Webbplatsen kunde inte analyseras av PageSpeed Insights (timeout) eller andra verktyg f\u00f6r schema/OG-taggar. Detta \u00e4r ett allvarligt hinder som g\u00f6r att s\u00f6kmotorer och AI inte kan l\u00e4sa och f\u00f6rst\u00e5 sidan korrekt. L\u00e5ngsam laddningstid \u00e4r ocks\u00e5 en direkt negativ rankningsfaktor.\n   - **Hur:** Kontakta er webbutvecklare omedelbart. Be dem unders\u00f6ka varf\u00f6r servern \u00e4r s\u00e5 l\u00e5ngsam eller varf\u00f6r den blockerar verktyg som Google PageSpeed Insights. M\u00f6jliga orsaker \u00e4r otillr\u00e4cklig serverkapacitet, aggressiva brandv\u00e4ggsregler eller felkonfigurerade s\u00e4kerhetsplugins.\n\n2. **B\u00f6rja svara p\u00e5 Google-recensioner.**\n   - **Varf\u00f6r:** Ni svarar p\u00e5 0% av recensionerna. Google AI Overviews och andra AI-tj\u00e4nster anv\u00e4nder svar p\u00e5 recensioner som en stark signal p\u00e5 engagemang och kundservice. Att inte svara skadar ert anseende och er synlighet i AI-genererade svar.\n   - **Hur:** Skapa en rutin f\u00f6r att svara p\u00e5 alla nya recensioner (b\u00e5de positiva och negativa) inom 48 timmar. G\u00e5 \u00e4ven tillbaka och svara p\u00e5 de senaste 10-20 recensionerna f\u00f6r att visa omedelbar aktivitet.\n\n### Viktigt\n\n1. **Implementera Strukturerad Data (Schema.org).**\n   - **Varf\u00f6r:** Schema-kod \u00e4r ett spr\u00e5k som AI och s\u00f6kmotorer anv\u00e4nder f\u00f6r att f\u00f6rst\u00e5 exakt vad ert f\u00f6retag \u00e4r, vad ni serverar och var ni finns. Det \u00e4r avg\u00f6rande f\u00f6r att bli korrekt representerad i AI-s\u00f6kningar.\n   - **Hur:** L\u00e4gg in f\u00f6ljande JSON-LD-skript p\u00e5 er hemsida. Fyll i de saknade uppgifterna (`meny-url`, `bild-url`).\n   ```json\n   {\n     \"@context\": \"https://schema.org\",\n     \"@type\": \"Restaurant\",\n     \"name\": \"Tv\u00e5kanten\",\n     \"address\": {\n       \"@type\": \"PostalAddress\",\n       \"streetAddress\": \"Kungsportsavenyen 27\",\n       \"addressLocality\": \"G\u00f6teborg\",\n       \"postalCode\": \"411 36\",\n       \"addressCountry\": \"SE\"\n     },\n     \"telephone\": \"+46313133336\",\n     \"servesCuisine\": \"Svensk\",\n     \"priceRange\": \"$$$\",\n     \"menu\": \"https://www.tvakanten.se/meny-url\",\n     \"openingHoursSpecification\": [\n       {\n         \"@type\": \"OpeningHoursSpecification\",\n         \"dayOfWeek\": [\n           \"Tuesday\",\n           \"Wednesday\"\n         ],\n         \"opens\": \"11:30\",\n         \"closes\": \"23:00\"\n       },\n       {\n         \"@type\": \"OpeningHoursSpecification\",\n         \"dayOfWeek\": \"Thursday\",\n         \"opens\": \"11:30\",\n         \"closes\": \"00:00\"\n       },\n       {\n         \"@type\": \"OpeningHoursSpecification\",\n         \"dayOfWeek\": [\n           \"Friday\",\n           \"Saturday\"\n         ],\n         \"opens\": \"11:30\",\n         \"closes\": \"01:00\"\n       },\n       {\n         \"@type\": \"OpeningHoursSpecification\",\n         \"dayOfWeek\": \"Sunday\",\n         \"opens\": \"13:00\",\n         \"closes\": \"23:00\"\n       }\n     ],\n     \"image\": \"https://www.tvakanten.se/bild-url.jpg\",\n     \"url\": \"https://www.tvakanten.se\"\n   }\n   ```\n\n2. **St\u00e4rk E-A-T-signaler (Expertis, Auktoritet, Trov\u00e4rdighet).**\n   - **Varf\u00f6r:** AI-modeller letar efter signaler som bevisar att ni \u00e4r en legitim och p\u00e5litlig verksamhet. Detta bygger f\u00f6rtroende och \u00f6kar chansen att bli rekommenderad.\n   - **Hur:** Skapa en tydlig \"Om oss\"-sida. Inkludera information om restaurangens historia, presentera k\u00f6ksm\u00e4staren och nyckelpersonal (deras erfarenhet), och publicera ert organisationsnummer i sidfoten p\u00e5 hela webbplatsen.\n\n### Bra att ha\n\n1. **Skapa en FAQ-sida med Schema.**\n   - **Varf\u00f6r:** Genom att besvara vanliga fr\u00e5gor proaktivt kan ni f\u00e5nga upp specifika s\u00f6kintentioner och synas i AI-svar. FAQ-schema hj\u00e4lper AI att snabbt hitta och presentera dessa svar.\n   - **Hur:** Skapa en sida som besvarar 3-5 vanliga fr\u00e5gor (t.ex. \"Har ni vegetariska alternativ?\", \"Beh\u00f6ver man boka bord?\", \"Serverar ni lunch?\"). M\u00e4rk upp sidan med `FAQPage` schema.\n\n2. **Optimera inneh\u00e5ll f\u00f6r relevanta s\u00f6ktermer.**\n   - **Varf\u00f6r:** AI-analysen visade att ni inte n\u00e4mns vid en s\u00f6kning p\u00e5 \"bistro i G\u00f6teborg\". Ni beh\u00f6ver st\u00e4rka er association med denna och liknande termer.\n   - **Hur:** Se \u00f6ver texterna p\u00e5 er hemsida. V\u00e4v naturligt in synonymer som \"bistro\", \"matbar\" och \"svensk restaurang\" i rubriker (H1, H2) och br\u00f6dtext, s\u00e4rskilt i anslutning till omn\u00e4mnanden av \"G\u00f6teborg\" och \"Avenyn\".",
+        "competitorNote": "Konkurrensen i ert absoluta n\u00e4romr\u00e5de \u00e4r extremt intensiv och av h\u00f6g kvalitet. 'Bram\u00b4s Burgers G\u00f6teborg' har ett n\u00e4stintill perfekt betyg (4.9) med ett stort antal recensioner (882), vilket indikerar en mycket lojal och n\u00f6jd kundbas. 'Moon Thai Kitchen' \u00e4r en volymgigant med \u00f6ver 4000 recensioner och ett starkt betyg (4.3), vilket g\u00f6r dem till en dominant akt\u00f6r. \u00c4ven 'Bar Palavas - Restaurang & Vinbar' har ett h\u00f6gre betyg (4.6) \u00e4n Tv\u00e5kanten, om \u00e4n med f\u00e4rre recensioner.\n\nMed ett betyg p\u00e5 4.2 och 933 recensioner har Tv\u00e5kanten en solid grund, men ni ligger efter de n\u00e4rmaste toppkonkurrenterna i upplevd kundn\u00f6jdhet. I detta landskap \u00e4r varje detalj viktig, och att inte svara p\u00e5 recensioner \u00e4r en betydande nackdel som era konkurrenter sannolikt utnyttjar f\u00f6r att bygga starkare kundrelationer.",
+        "reviewAnalysis": "Med ett bra snittbetyg p\u00e5 4.2 baserat p\u00e5 933 recensioner har Tv\u00e5kanten en stark grund av n\u00f6jda kunder. Detta \u00e4r en v\u00e4rdefull tillg\u00e5ng.\n\nDen kritiska svagheten \u00e4r dock svarsfrekvensen. Analysen av ett stickprov visar att 0% av recensionerna besvaras (0 av 5). Detta \u00e4r en allvarlig brist i er digitala n\u00e4rvaro. Att inte svara signalerar till b\u00e5de potentiella g\u00e4ster och AI-algoritmer att ni inte aktivt engagerar er i kundfeedback. Google AI Overviews lyfter fram f\u00f6retags svar direkt i s\u00f6kresultaten, vilket inneb\u00e4r att ni varje dag missar en m\u00f6jlighet att visa er kundservice och hantera feedback offentligt. Att b\u00f6rja svara \u00e4r den enskilt viktigaste \u00e5tg\u00e4rden f\u00f6r att f\u00f6rb\u00e4ttra ert digitala anseende.",
+        "summary": "Tv\u00e5kanten \u00e4r en etablerad restaurang som \u00e4r k\u00e4nd av AI-modeller, men ni missar att bli proaktivt rekommenderade f\u00f6r generiska s\u00f6kningar som 'bistro i G\u00f6teborg'. Er st\u00f6rsta akuta svaghet \u00e4r en svarsfrekvens p\u00e5 0% p\u00e5 recensioner, vilket direkt skadar er synlighet i AI-s\u00f6k och ert anseende. Dessutom hindrar allvarliga tekniska problem, som en extremt l\u00e5ngsam webbplats, en fullst\u00e4ndig analys och skadar er rankning. Prioritera omedelbart att \u00e5tg\u00e4rda de tekniska felen och implementera en rutin f\u00f6r att svara p\u00e5 alla kundrecensioner."
+    },
+    "gbp": {
+        "name": "Tv\u00e5kanten",
+        "rating": 4.2,
+        "userRatingCount": 933,
+        "address": "Kungsportsavenyen 27, 411 36 G\u00f6teborg, Sverige",
+        "phone": "031-313 33 36",
+        "websiteUri": "http://www.tvakanten.se/",
+        "weekdayDescriptions": [
+            "m\u00e5ndag: St\u00e4ngt",
+            "tisdag: 11:30\u201323:00",
+            "onsdag: 11:30\u201323:00",
+            "torsdag: 11:30\u201300:00",
+            "fredag: 11:30\u201301:00",
+            "l\u00f6rdag: 12:00\u201301:00",
+            "s\u00f6ndag: 13:00\u201323:00"
+        ],
+        "types": [
+            "diner",
+            "bar",
+            "restaurant",
+            "food",
+            "point_of_interest",
+            "establishment"
+        ],
+        "_domainMatch": true
+    },
+    "directories": {
+        "foundInSameAs": [],
+        "directories": [
+            {
+                "name": "Hitta",
+                "found": true,
+                "source": "tavily",
+                "profileUrl": "https://www.hitta.se/tv%C3%A5kanten+ab/kungsbacka/apsbhhmo",
+                "nap": {
+                    "address": "Maj P\u00e5 Mal\u00f6s Gata 40, G\u00f6teborg"
+                }
+            },
+            {
+                "name": "Eniro",
+                "found": true,
+                "source": "tavily",
+                "profileUrl": "https://www.eniro.se/tv%C3%A5kanten+ab+g%C3%B6teborg/14298731/firma",
+                "nap": {
+                    "address": "Maj p\u00e5 Mal\u00f6s gata 40, 41767 G\u00f6teborg"
+                }
+            }
+        ],
+        "foundCount": 2,
+        "totalChecked": 2,
+        "napConsistency": {
+            "checked": true,
+            "consistent": true,
+            "phone": {
+                "values": [],
+                "consistent": true
+            },
+            "address": {
+                "values": [
+                    {
+                        "directory": "Hitta",
+                        "value": "Maj P\u00e5 Mal\u00f6s Gata 40, G\u00f6teborg"
+                    },
+                    {
+                        "directory": "Eniro",
+                        "value": "Maj p\u00e5 Mal\u00f6s gata 40, 41767 G\u00f6teborg"
+                    }
+                ],
+                "consistent": true
+            },
+            "finding": "NAP-data (namn, adress, telefon) \u00e4r konsekvent \u00f6ver kataloger \u2014 bra f\u00f6r AI-entitetsmatchning.",
+            "fix": ""
+        },
+        "status": "ok",
+        "finding": "F\u00f6retaget hittades p\u00e5 2/2 kataloger (Hitta, Eniro) med konsekvent NAP-data.",
+        "fix": ""
+    },
+    "aiMentions": {
+        "entityQuery": "Vad vet du om \"Tv\u00e5kanten\" i G\u00f6teborg? Ber\u00e4tta vad du k\u00e4nner till om f\u00f6retaget.",
+        "entityResponse": "Tv\u00e5kanten \u00e4r en v\u00e4lk\u00e4nd restaurang och bar i G\u00f6teborg, bel\u00e4gen i omr\u00e5det Haga. Den \u00e4r k\u00e4nd f\u00f6r sin mysiga atmosf\u00e4r och sitt fokus p\u00e5 att erbjuda en varierad meny med b\u00e5de klassiska och moderna r\u00e4tter. Restaurangen har ofta en betoning p\u00e5 lokala och s\u00e4songsbetonade ingredienser, vilket g\u00f6r att menyn kan f\u00f6r\u00e4ndras \u00f6ver tid.\n\nTv\u00e5kanten har ocks\u00e5 ett bra utbud av drycker, inklusive ett urval av viner, \u00f6l och cocktails. St\u00e4llet \u00e4r popul\u00e4rt b\u00e5de bland lokalbefolkningen och turister, och det \u00e4r vanligt att man beh\u00f6ver boka bord, s\u00e4rskilt under helger och vid speciella evenemang.\n\nRestaurangen har f\u00e5tt positiva omd\u00f6men f\u00f6r sin service och kvaliteten p\u00e5 maten, vilket har bidragit till dess goda rykte i G\u00f6teborgs restaurangscen. Om du har specifika fr\u00e5gor eller vill veta mer om deras meny eller evenemang, kan jag g\u00e4rna hj\u00e4lpa till med det!",
+        "entityKnows": true,
+        "entitySentiment": "positive",
+        "extractedNiche": "bistro",
+        "categoryQuery": "Var hittar jag bra bistro i G\u00f6teborg?",
+        "categoryResponse": "G\u00f6teborg har m\u00e5nga trevliga bistron att erbjuda. H\u00e4r \u00e4r n\u00e5gra rekommendationer:\n\n1. **Bistro Pierre** - En fransk inspirerad bistro med en mysig atmosf\u00e4r och god mat.\n2. **Bistro K** - Bel\u00e4get vid Kungsportsavenyn, erbjuder en varierad meny med fokus p\u00e5 s\u00e4songsbetonade r\u00e5varor.\n3. **Bistro B** - En popul\u00e4r plats f\u00f6r b\u00e5de lunch och middag, k\u00e4nd f\u00f6r sin avslappnade atmosf\u00e4r och goda r\u00e4tter.\n4. **Sj\u00f6magasinet** - \u00c4ven om det \u00e4r mer av en restaurang, har de en bistro-del med fokus p\u00e5 skaldjur och fiskr\u00e4tter.\n5. **Caf\u00e9 & Bistro Vete-Katten** - En mysig plats f\u00f6r b\u00e5de mat och fika, med en klassisk bistro-k\u00e4nsla.\n\nDet kan vara bra att kolla upp aktuella \u00f6ppettider och menyer, samt att boka bord om det \u00e4r en popul\u00e4r tid. Trevlig m\u00e5ltid!",
+        "categoryMentioned": false,
+        "status": "warning",
+        "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"bistro\" i G\u00f6teborg.",
+        "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda."
+    },
+    "reviewReplies": {
+        "total": 5,
+        "withReply": 0,
+        "replyRate": 0,
+        "status": "bad",
+        "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+        "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+        "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 933. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+    }
+}

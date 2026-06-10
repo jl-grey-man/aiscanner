@@ -1,0 +1,56 @@
+[
+  {
+    "key": "schemaAny",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML innehåller exakt ett <script type=\"application/ld+json\">-block med @type=\"Plumber\" och fullständig företagsdata (namn, adress, telefon, öppettider).",
+    "confidence": "high"
+  },
+  {
+    "key": "localSubtype",
+    "verdict": "good",
+    "evidence": "JSON-LD på startsidan har @type=\"Plumber\", vilket är en LocalBusiness-subtyp i schema.org-taxonomin. Plumber-schemat innehåller adress, telefon och e-post.",
+    "confidence": "high"
+  },
+  {
+    "key": "jsonLd",
+    "verdict": "good",
+    "evidence": "Startsidan har exakt 1 st <script type=\"application/ld+json\">-block med >10 tecken innehåll (Plumber-schemat är ca 700 tecken).",
+    "confidence": "high"
+  },
+  {
+    "key": "metaTags",
+    "verdict": "good",
+    "evidence": "<title>Relining, rörinspektion & stamspolning i Stockholm</title> och <meta name=\"description\" content=\"Svensk Röranalys hjälper BRF och fastighetsägare i Storstockholm...\"> finns båda i rå-HTML på startsidan.",
+    "confidence": "high"
+  },
+  {
+    "key": "faqSchema",
+    "verdict": "warning",
+    "evidence": "Startsidan har ett accordion-element (class=\"module accordion\") med 4 FAQ-frågor om relining/stamspolning synliga i HTML, men inget FAQPage JSON-LD-schema finns – varken på startsidan eller på /faq eller /vanliga-fragor (båda 404).",
+    "confidence": "high"
+  },
+  {
+    "key": "contentDepth",
+    "verdict": "warning",
+    "evidence": "Sitemap.xml innehåller 21 <loc>-taggar (10–50-intervallet). Blogg-sektion finns: /blogg plus 5 blogginlägg (t.ex. /b/stambyte-eller-relining). Antalet sidor understiger tröskeln 50 för good-verdict.",
+    "confidence": "high"
+  },
+  {
+    "key": "serviceSchema",
+    "verdict": "bad",
+    "evidence": "Inget JSON-LD med @type Service, ProfessionalService, Product, Offer eller PlumbingService hittades på startsidan, /tjanster, /tjanster/relining eller /om-oss – alla sidor har enbart @type=\"Plumber\" (företagsschemat, ej tjänsteschema).",
+    "confidence": "high"
+  },
+  {
+    "key": "eatSignals",
+    "verdict": "warning",
+    "evidence": "Om oss-sida finns (/om-oss), ISO 14001:2015 och 9001:2015 nämns i brödtexten. Däremot saknas organisationsnummer (mönster \\d{6}-\\d{4}) i synlig HTML och inga namngivna personer finns i JSON-LD (varken Person- eller employee-schema).",
+    "confidence": "high"
+  },
+  {
+    "key": "semanticHtml",
+    "verdict": "warning",
+    "evidence": "Startsidans rå-HTML innehåller <nav> (1 st) men inget <main>-element – i stället används <div ... role=\"main\">. Elementen <article>, <section> och <aside> saknas helt.",
+    "confidence": "high"
+  }
+]

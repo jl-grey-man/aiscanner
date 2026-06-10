@@ -1,0 +1,38 @@
+[
+  {
+    "key": "h1",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML innehåller exakt ett <h1>-element med texten \"Hitta rätt mäklare för din bostadsaffär\" (rad 390 i HTML-källan). Ingen JS-rendering krävs — rubriken finns direkt i serverns svar.",
+    "confidence": "high"
+  },
+  {
+    "key": "title",
+    "verdict": "good",
+    "evidence": "Startsidan har <title>Mäklare. Köpa eller sälja bostad? Välkommen till Bjurfors.</title> (58 tecken) i rå-HTML. Titeln är icke-tom och relevant för verksamheten.",
+    "confidence": "high"
+  },
+  {
+    "key": "metaDescription",
+    "verdict": "good",
+    "evidence": "Startsidan har <meta name=\"description\" content=\"Köpa, sälja eller värdera bostad? Bjurfors mäklare ger dig den hjälp och kunskap du behöver för att göra en riktigt bra bostadsaffär. Välkommen ett steg upp.\"> (157 tecken) i rå-HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "contactInfo",
+    "verdict": "bad",
+    "evidence": "De första 800 tecknen av strippad brödtext (utan header/nav/footer) innehåller varken telefonnummer, e-postadress eller orden kontakt/telefon/tel. Sajten sätter dessutom <meta name=\"format-detection\" content=\"telephone=no\">. Ordet \"Kontakta\" förekommer först vid tecken ~7825 i full brödtext och en länk \"Kontakta mäklare\" finns i navigationen som strippas.",
+    "confidence": "high"
+  },
+  {
+    "key": "altTexts",
+    "verdict": "bad",
+    "evidence": "Startsidan har 73 <img>-taggar varav 10 har icke-tomt alt-attribut — täckning 13,7 %. De 63 bilderna utan meningsfull alt har alt=\"\" (huvud­sakligen objektbilder/bostadsfotografier). Tröskeln för bad är under 50 %.",
+    "confidence": "high"
+  },
+  {
+    "key": "internalLinks",
+    "verdict": "good",
+    "evidence": "Startsidans HTML innehåller över 100 unika interna sökvägar (t.ex. /sv/kopa, /sv/salja, /sv/om-oss, /sv/tillsalu, /sv/faq m.fl.) — klart över tröskeln på 5 för verdict good.",
+    "confidence": "high"
+  }
+]

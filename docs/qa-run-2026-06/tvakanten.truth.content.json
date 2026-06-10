@@ -1,0 +1,38 @@
+[
+  {
+    "key": "h1",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML (HTTP 200) innehåller exakt en <h1> med text: \"Restaurang Tvåkanten - Svensk Mat på Avenyn i Göteborg\".",
+    "confidence": "high"
+  },
+  {
+    "key": "title",
+    "verdict": "good",
+    "evidence": "<title>Restaurang Tvåkanten</title> finns med icke-tom text i startsidans rå-HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "metaDescription",
+    "verdict": "good",
+    "evidence": "<meta name=\"description\" content=\"Restaurang på Avenyn i Göteborg med svensk mat & personlig service. Även catering, cocktailkurser och dryckesprovningar...\"> finns i rå-HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "contactInfo",
+    "verdict": "good",
+    "evidence": "Telefonnummer 031-313 33 36 syns i brödtextens första 800 tecken (efter header/nav/footer-strippning), och JSON-LD innehåller \"telephone\": \"+46313133336\".",
+    "confidence": "high"
+  },
+  {
+    "key": "altTexts",
+    "verdict": "good",
+    "evidence": "Startsidans rå-HTML har 3 <img>-taggar och alla 3 har icke-tomt alt-attribut (\"restaurang tvåkanten logga\") = 100 % ≥ 80 %.",
+    "confidence": "high"
+  },
+  {
+    "key": "internalLinks",
+    "verdict": "good",
+    "evidence": "8 unika interna sökvägar bland <a href> i rå-HTML: /, /home, /menyer, /boka-bord, /catering-3, /hitta-till-oss, /om-oss, /jobba-med-oss — ≥5 ger good.",
+    "confidence": "high"
+  }
+]

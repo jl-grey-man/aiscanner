@@ -1,0 +1,764 @@
+{
+    "meta": {
+        "url": "https://www.bjurfors.se",
+        "domain": "bjurfors.se",
+        "city": "Orihuela",
+        "bransch": "m\u00e4klare",
+        "companyName": "Bjurfors",
+        "scanDate": "2026-06-10T10:45:29.484Z",
+        "scanId": "scan-1781088329484-kj2umw"
+    },
+    "scores": {
+        "free": 57,
+        "full": 59,
+        "google": 4.7,
+        "googleCount": 71
+    },
+    "checks": [
+        {
+            "id": 1,
+            "key": "https",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Webbplatsen anvander HTTPS -- sakerhetscertifikat finns.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 2,
+            "key": "robotsTxt",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Robots.txt finns och kan lasa av AI-crawlers.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 3,
+            "key": "aiCrawlers",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "blocked": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 4,
+            "key": "sitemap",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Sitemap.xml hittades med 31828 URL:er.",
+            "fix": null,
+            "data": {
+                "urlCount": 31828
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 5,
+            "key": "llmsTxt",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "exists": false,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 6,
+            "key": "canonical",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Canonical-tagg pekar pa: https://www.bjurfors.se/sv/",
+            "fix": null,
+            "data": {
+                "canonical": "https://www.bjurfors.se/sv/"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 7,
+            "key": "ogTags",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 8,
+            "key": "socialPresence",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 9,
+            "key": "hreflang",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 10,
+            "key": "cwv",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "PageSpeed Insights kunde inte m\u00e4tas: tog f\u00f6r l\u00e5ng tid (timeout).",
+            "fix": null,
+            "data": {
+                "lcp": null,
+                "cls": null,
+                "inp": null,
+                "performanceScore": null,
+                "source": null
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 11,
+            "key": "phone",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inget telefonnummer hittades p\u00e5 sidan, eller s\u00e5 \u00e4r det skrivet i ett format som AI-s\u00f6kmotorer inte kan l\u00e4sa.",
+            "fix": "L\u00e4gg till telefonnummer i JSON-LD structured data (schema.org \"telephone\"-f\u00e4ltet) och/eller synligt som text p\u00e5 startsidan i formatet +46 31 220 30 05 eller 031-220 30 05. Undvik att bara visa numret som bild eller inuti JavaScript-renderade element.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. L\u00e4gg till ert telefonnummer synligt p\u00e5 startsidan och i footern p\u00e5 alla sidor.\n2. Anv\u00e4nd ett klickbart `tel:`-l\u00e4nk s\u00e5 bes\u00f6kare p\u00e5 mobil kan ringa direkt.\n3. Skriv numret i internationellt format: `+46 31 220 30 05` eller nationellt med bindestreck: `031-220 30 05`.\n4. L\u00e4gg ocks\u00e5 in numret i ert JSON-LD-schema (LocalBusiness-f\u00e4ltet `telephone`).\n5. Undvik att visa telefonnumret som bild eller inuti JavaScript \u2014 AI-crawlers kan inte l\u00e4sa s\u00e5dant.",
+            "genericCodeTemplate": "<!-- I footern eller header -->\n<a href=\"tel:<TELEFONNUMMER>\" class=\"phone-link\">\n  <TELEFONNUMMER>\n</a>\n\n<!-- I JSON-LD-schemat -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"telephone\": \"<TELEFONNUMMER>\"\n}\n</script>",
+            "richRelevance": "F\u00f6r Bjurfors, som v\u00e4nder sig till kunder f\u00f6r bostadsaff\u00e4rer i Spanien, \u00e4r ett synligt och klickbart telefonnummer avg\u00f6rande. Det bygger f\u00f6rtroende och underl\u00e4ttar direktkontakt fr\u00e5n potentiella k\u00f6pare och s\u00e4ljare, vilket kan vara skillnaden mellan en f\u00f6rfr\u00e5gan och en f\u00f6rlorad aff\u00e4r.",
+            "richSteps": "1. S\u00e4kerst\u00e4ll att telefonnumret `965 32 85 46` \u00e4r tydligt synligt p\u00e5 startsidan och kontaktsidan.\n2. Formatera numret som en klickbar l\u00e4nk med `tel:`-protokollet f\u00f6r att underl\u00e4tta f\u00f6r mobilanv\u00e4ndare att ringa upp direkt.\n3. Inkludera telefonnumret i sajtens strukturerade data (Schema.org) f\u00f6r att hj\u00e4lpa s\u00f6kmotorer att f\u00f6rst\u00e5 och visa informationen korrekt.",
+            "richCodeExample": "<a href=\"tel:+34965328546\">965 32 85 46</a>"
+        },
+        {
+            "id": 12,
+            "key": "cityMentioned",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen stad n\u00e4mns p\u00e5 sidan.",
+            "fix": "Namn staden i rubriker, meta-beskrivning och brodtext.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. L\u00e4gg till stadens namn i flera nyckelplatser:\n   - `<title>`-taggen (\"<F\u00d6RETAGSNAMN> \u2014 <TJ\u00c4NST> i <STAD>\")\n   - `<h1>` p\u00e5 startsidan\n   - `<meta name=\"description\">`\n   - Br\u00f6dtext p\u00e5 startsidan (minst 2 g\u00e5nger)\n   - `<footer>` med fullst\u00e4ndig adress\n2. Anv\u00e4nd staden i naturlig fras \u2014 inte bara som lista. \"<TJ\u00c4NST> i <STAD>\" \u00e4r b\u00e4ttre \u00e4n bara \"<STAD>\".\n3. Om ni servar flera st\u00e4der: skapa separata landningssidor per stad (`/<TJ\u00c4NST>-<STAD>`).",
+            "genericCodeTemplate": "<title><F\u00d6RETAGSNAMN> \u2014 <TJ\u00c4NST> i <STAD></title>\n<meta name=\"description\" content=\"<F\u00d6RETAGSNAMN> \u00e4r <TJ\u00c4NST> i <STAD>. <ERBJUDANDE>.\">\n\n<h1><TJ\u00c4NST> i <STAD> \u2014 <F\u00d6RETAGSNAMN></h1>\n<p>Vi \u00e4r <TJ\u00c4NST> baserade i <STAD> och har <ANTAL> \u00e5rs erfarenhet av <SPECIALITET>.</p>",
+            "richRelevance": "Genom att inte tydligt n\u00e4mna \"Orihuela\" p\u00e5 startsidan missar Bjurfors en fundamental m\u00f6jlighet att ranka p\u00e5 lokala s\u00f6kningar. Potentiella kunder som s\u00f6ker efter \"m\u00e4klare i Orihuela\" kommer sannolikt inte att hitta till er, vilket leder till f\u00f6rlorad, h\u00f6gst relevant trafik.",
+            "richSteps": "1. Uppdatera sidans `<title>`-tagg till att inkludera er prim\u00e4ra ort. Anv\u00e4nd den befintliga titeln som grund.\n2. \u00c4ndra huvudrubriken `<h1>` s\u00e5 att den tydligt kommunicerar er geografiska expertis.\n3. Integrera \"Orihuela\" och n\u00e4rliggande omr\u00e5den naturligt i br\u00f6dtexten p\u00e5 startsidan f\u00f6r att f\u00f6rst\u00e4rka den lokala kopplingen.",
+            "richCodeExample": "<title>M\u00e4klare i Orihuela - K\u00f6pa & s\u00e4lja bostad | Bjurfors</title>\n<h1>Hitta r\u00e4tt m\u00e4klare i Orihuela f\u00f6r din bostadsaff\u00e4r</h1>"
+        },
+        {
+            "id": 13,
+            "key": "googleMaps",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Google Maps-inb\u00e4ddning hittades p\u00e5 /sv/tillsalu/skane/malmo/bunkeflostrand/bokallen-6/.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 14,
+            "key": "localBusiness",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inget LocalBusiness-schema hittades.",
+            "fix": "L\u00e4gg till JSON-LD med @type: \"LocalBusiness\" (eller relevant subtyp).",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Identifiera er specifika verksamhetstyp p\u00e5 schema.org/docs/full.html under \"LocalBusiness\" \u2014 t.ex. `Restaurant`, `Plumber`, `Dentist`, `HairSalon`, `AutoRepair` eller `AccountingService`.\n2. Kopiera mallen nedan och fyll i alla `<PLACEHOLDERS>` med era riktiga uppgifter.\n3. L\u00e4gg in koden mellan `<head>` och `</head>` p\u00e5 er startsida \u2014 om ni har WordPress: anv\u00e4nd ett plugin som \"Insert Headers and Footers\" eller redigera `header.php`.\n4. Validera resultatet p\u00e5 `https://validator.schema.org/` \u2014 klistra in er URL och kontrollera att inga fel rapporteras.\n5. Testa \u00e4ven Googles \"Rich Results Test\" (`https://search.google.com/test/rich-results`) \u2014 det visar hur Google ser er strukturerade data.",
+            "genericCodeTemplate": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"image\": \"https://<DOM\u00c4N>/logo.png\",\n  \"@id\": \"https://<DOM\u00c4N>/#business\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"telephone\": \"<TELEFONNUMMER>\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"<GATUADRESS>\",\n    \"addressLocality\": \"<STAD>\",\n    \"postalCode\": \"<POSTNUMMER>\",\n    \"addressCountry\": \"SE\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": <LATITUD>,\n    \"longitude\": <LONGITUD>\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"],\n      \"opens\": \"09:00\",\n      \"closes\": \"17:00\"\n    }\n  ],\n  \"sameAs\": [\n    \"https://www.facebook.com/<FACEBOOKSIDA>\",\n    \"https://www.instagram.com/<INSTAGRAMKONTO>\"\n  ]\n}\n</script>",
+            "richRelevance": "Utan LocalBusiness-schema kan s\u00f6kmotorer inte entydigt identifiera Bjurfors kontor i Orihuela som en fysisk verksamhet. Detta minskar chansen att visas med en framtr\u00e4dande kunskapspanel i s\u00f6kresultatet, vilket kan inkludera karta, \u00f6ppettider och betyg som bygger f\u00f6rtroende hos potentiella kunder.",
+            "richSteps": "1. Kopiera kodexemplet nedan.\n2. Klistra in koden i `<head>`-sektionen p\u00e5 er hemsida.\n3. Verifiera att koden \u00e4r korrekt implementerad med hj\u00e4lp av Googles verktyg \"Test av ut\u00f6kade resultat\".",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"RealEstateAgent\",\n  \"name\": \"Bjurfors\",\n  \"url\": \"https://www.bjurfors.se\",\n  \"telephone\": \"+34965328546\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"CC La Mosca, local 4\",\n    \"addressLocality\": \"Orihuela\",\n    \"postalCode\": \"03189\",\n    \"addressCountry\": \"ES\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 37.9357938,\n    \"longitude\": -0.7222039\n  },\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": 4.7,\n    \"reviewCount\": 71\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\n        \"Monday\",\n        \"Tuesday\",\n        \"Wednesday\",\n        \"Thursday\",\n        \"Friday\"\n      ],\n      \"opens\": \"09:00\",\n      \"closes\": \"17:00\"\n    }\n  ],\n  \"sameAs\": \"https://www.google.com/maps?cid=ChIJJbR8-RyqYw0RbsaxZIWFkgU\"\n}\n</script>"
+        },
+        {
+            "id": 15,
+            "key": "directories",
+            "status": "warning",
+            "source": "api",
+            "finding": "Hittades p\u00e5 Hitta. Saknas p\u00e5: Eniro.",
+            "fix": "Registrera p\u00e5 Eniro. AI-modeller tr\u00e4nas p\u00e5 katalogdata \u2014 fler listningar st\u00e4rker entitetsprofilen.",
+            "data": {
+                "foundCount": 1,
+                "totalChecked": 2,
+                "directories": [
+                    {
+                        "name": "Hitta",
+                        "found": true,
+                        "source": "tavily",
+                        "profileUrl": "https://www.hitta.se/fastighetsbyr%C3%A5/f%C3%B6retag/87?geo.hint=42.12120%3A-87.84050"
+                    },
+                    {
+                        "name": "Eniro",
+                        "found": false,
+                        "source": "not_found"
+                    }
+                ]
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "free",
+            "genericSteps": "1. Ni saknas i n\u00e5gon viktig katalog (vanligen Eniro eller Hitta.se).\n2. Registrera er hos den som saknas \u2014 l\u00e4nkarna ovan.\n3. S\u00e4kerst\u00e4ll att uppgifterna matchar er egen sajt exakt (samma stavning, format, mellanslag).",
+            "genericCodeTemplate": null,
+            "richRelevance": "Att Bjurfors saknas p\u00e5 en stor svensk katalog som Eniro kan f\u00f6rsvaga er digitala auktoritet mot den svenska m\u00e5lgruppen som s\u00f6ker bostad utomlands. AI-modeller och s\u00f6kmotorer anv\u00e4nder data fr\u00e5n flera k\u00e4llor f\u00f6r att verifiera ett f\u00f6retags information, och enhetliga listningar \u00f6ver flera kataloger st\u00e4rker Bjurfors profil.",
+            "richSteps": "1. G\u00e5 till Eniro F\u00f6retag och s\u00f6k efter er verksamhet.\n2. Om en profil saknas, skapa en ny \"gratisprofil\".\n3. Om en ofullst\u00e4ndig profil finns, g\u00f6r anspr\u00e5k p\u00e5 den f\u00f6r att kunna redigera informationen.\n4. S\u00e4kerst\u00e4ll att namn, adress och telefonnummer (NAP) p\u00e5 Eniro exakt matchar informationen p\u00e5 er hemsida och Google Business Profile.",
+            "richCodeExample": null
+        },
+        {
+            "id": 16,
+            "key": "napConsistency",
+            "status": "notMeasured",
+            "source": "api",
+            "finding": "F\u00f6r f\u00e5 datak\u00e4llor f\u00f6r NAP-j\u00e4mf\u00f6relse \u2014 beh\u00f6ver minst 2 kataloger med extraherad kontaktdata.",
+            "fix": null,
+            "data": {
+                "checked": false,
+                "consistent": null
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 17,
+            "key": "openingHours",
+            "status": "ok",
+            "source": "api",
+            "finding": "\u00d6ppettider fr\u00e5n Google Business Profile: m\u00e5ndag: 09:00\u201317:00, tisdag: 09:00\u201317:00...",
+            "fix": null,
+            "data": {
+                "weekdayDescriptions": [
+                    "m\u00e5ndag: 09:00\u201317:00",
+                    "tisdag: 09:00\u201317:00",
+                    "onsdag: 09:00\u201317:00",
+                    "torsdag: 09:00\u201317:00",
+                    "fredag: 09:00\u201317:00",
+                    "l\u00f6rdag: St\u00e4ngt",
+                    "s\u00f6ndag: St\u00e4ngt"
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 18,
+            "key": "schemaAny",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen schema markup hittades.",
+            "fix": "L\u00e4gg till JSON-LD schema markup (minst Organization eller LocalBusiness).",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Schema markup \u00e4r strukturerad data som hj\u00e4lper s\u00f6kmotorer och AI-modeller f\u00f6rst\u00e5 er sajt maskinellt.\n2. B\u00f6rja med minst `Organization` eller `LocalBusiness`-schema i `<head>` p\u00e5 startsidan.\n3. Anv\u00e4nd JSON-LD-format (rekommenderat av Google), inte microdata eller RDFa.\n4. Validera p\u00e5 `https://validator.schema.org/` efter implementation.\n5. F\u00f6r specifika rekommendationer per bransch: se `#14 LocalBusiness-schema`-fixen.",
+            "genericCodeTemplate": "<!-- Minst Organization-schema som f\u00f6rsta steg -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"logo\": \"https://<DOM\u00c4N>/logo.png\",\n  \"contactPoint\": {\n    \"@type\": \"ContactPoint\",\n    \"telephone\": \"<TELEFONNUMMER>\",\n    \"contactType\": \"customer service\",\n    \"areaServed\": \"SE\",\n    \"availableLanguage\": [\"Swedish\"]\n  }\n}\n</script>",
+            "richRelevance": "Strukturerad data, eller schema markup, hj\u00e4lper s\u00f6kmotorer och AI-modeller att f\u00f6rst\u00e5 inneh\u00e5llet p\u00e5 Bjurfors webbplats i detalj. Utan detta g\u00e5r Bjurfors miste om m\u00f6jligheten att presenteras med ut\u00f6kade resultat (rich snippets) i s\u00f6kresultaten, vilket kan minska synlighet och klickfrekvens.",
+            "richSteps": "1. Identifiera den mest relevanta schematypen f\u00f6r er verksamhet, i detta fall `RealEstateAgent`.\n2. Samla in all n\u00f6dv\u00e4ndig f\u00f6retagsinformation som namn, adress, telefonnummer och \u00f6ppettider.\n3. Skapa ett JSON-LD-skript med denna information.\n4. Infoga skriptet i `<head>`-sektionen p\u00e5 er hemsida, https://www.bjurfors.se.\n5. Validera implementeringen med Googles verktyg f\u00f6r ut\u00f6kade resultat f\u00f6r att s\u00e4kerst\u00e4lla att den \u00e4r felfri.",
+            "richCodeExample": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"RealEstateAgent\",\n  \"name\": \"Bjurfors\",\n  \"url\": \"https://www.bjurfors.se\",\n  \"telephone\": \"965 32 85 46\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"CC La Mosca, local 4\",\n    \"addressLocality\": \"Orihuela\",\n    \"postalCode\": \"03189\",\n    \"addressCountry\": \"ES\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 37.9357938,\n    \"longitude\": -0.7222039\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\n        \"Monday\",\n        \"Tuesday\",\n        \"Wednesday\",\n        \"Thursday\",\n        \"Friday\"\n      ],\n      \"opens\": \"09:00\",\n      \"closes\": \"17:00\"\n    }\n  ],\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.7\",\n    \"reviewCount\": \"71\"\n  },\n  \"sameAs\": \"https://maps.google.com/?cid=ChIJJbR8-RyqYw0RbsaxZIWFkgU\"\n}"
+        },
+        {
+            "id": 19,
+            "key": "localSubtype",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Ingen specifik LocalBusiness-subtyp hittades.",
+            "fix": "Anv\u00e4nd en specifik subtyp (t.ex. Restaurant, Dentist, Plumber) ist\u00e4llet f\u00f6r bara LocalBusiness.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. Schema.org har specifika underkategorier f\u00f6r olika branscher \u2014 anv\u00e4nd den mest exakta.\n2. Vanliga svenska exempel:\n   - Restaurang \u2192 `Restaurant`, `Cafe`, `Bakery`, `Bar`\n   - Hantverkare \u2192 `Plumber`, `Electrician`, `Painter`, `HVACBusiness`\n   - V\u00e5rd \u2192 `Dentist`, `Physician`, `MedicalBusiness`\n   - Sk\u00f6nhet \u2192 `HairSalon`, `BeautySalon`, `NailSalon`\n   - Bil \u2192 `AutoRepair`, `CarDealer`, `AutoBodyShop`\n3. Byt `@type` i ert existerande schema till den specifika typen.\n4. Komplett lista: `https://schema.org/docs/full.html` under \"LocalBusiness\".",
+            "genericCodeTemplate": "<!-- Byt ut \"LocalBusiness\" eller \"Organization\" mot r\u00e4tt subtyp -->\n\"@type\": \"<VERKSAMHETSTYP>\",",
+            "richRelevance": "Genom att anv\u00e4nda en specifik subtyp som `RealEstateAgent` ist\u00e4llet f\u00f6r en generell `LocalBusiness`, kan Bjurfors ge s\u00f6kmotorer och AI-modeller en exakt f\u00f6rst\u00e5else f\u00f6r er verksamhet. Detta \u00f6kar chansen att synas f\u00f6r relevanta s\u00f6kningar relaterade till m\u00e4klartj\u00e4nster och kan leda till mer kvalificerad trafik.",
+            "richSteps": "1. Granska er nuvarande (eller planerade) `LocalBusiness`-schema.\n2. Byt ut `@type: \"LocalBusiness\"` mot en mer specifik typ.\n3. V\u00e4lj `RealEstateAgent` fr\u00e5n Schema.org:s lista \u00f6ver subtyper, eftersom det b\u00e4st beskriver Bjurfors verksamhet.\n4. Uppdatera JSON-LD-skriptet p\u00e5 er webbplats med den nya typen.\n5. Verifiera \u00e4ndringen med ett valideringsverktyg f\u00f6r att s\u00e4kerst\u00e4lla att den nya typen k\u00e4nns igen korrekt.",
+            "richCodeExample": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"RealEstateAgent\",\n  \"name\": \"Bjurfors\",\n  \"url\": \"https://www.bjurfors.se\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"CC La Mosca, local 4\",\n    \"addressLocality\": \"Orihuela\",\n    \"postalCode\": \"03189\"\n  }\n}"
+        },
+        {
+            "id": 20,
+            "key": "jsonLd",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Inga JSON-LD-block hittades.",
+            "fix": "L\u00e4gg till JSON-LD (application/ld+json) ist\u00e4llet f\u00f6r microdata -- AI-modeller f\u00f6redrar JSON-LD.",
+            "data": null,
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. JSON-LD \u00e4r det format Google och AI-tj\u00e4nster f\u00f6redrar f\u00f6r strukturerad data \u2014 l\u00e4ttare att implementera och tolka \u00e4n microdata/RDFa.\n2. L\u00e4gg in JSON-LD som `<script type=\"application/ld+json\">`-block i `<head>` (eller f\u00f6re `</body>`).\n3. B\u00f6rja med minst `Organization` eller `LocalBusiness` p\u00e5 startsidan \u2014 se `#14 LocalBusiness-schema` f\u00f6r mall.\n4. L\u00e4gg p\u00e5 fler scheman per sidtyp: `Product` f\u00f6r produktsidor, `Article` f\u00f6r bloggar, `FAQPage` f\u00f6r FAQ-sidor.\n5. Validera p\u00e5 `https://validator.schema.org/`.",
+            "genericCodeTemplate": "<!-- Grundl\u00e4ggande JSON-LD i <head> -->\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"<VERKSAMHETSTYP>\",\n  \"name\": \"<F\u00d6RETAGSNAMN>\",\n  \"url\": \"https://<DOM\u00c4N>\",\n  \"telephone\": \"<TELEFONNUMMER>\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"<GATUADRESS>\",\n    \"addressLocality\": \"<STAD>\",\n    \"postalCode\": \"<POSTNUMMER>\",\n    \"addressCountry\": \"SE\"\n  }\n}\n</script>",
+            "richRelevance": "AI-modeller och Google f\u00f6redrar JSON-LD-formatet f\u00f6r strukturerad data eftersom det \u00e4r enklare att tolka och underh\u00e5lla \u00e4n \u00e4ldre format som microdata. Genom att implementera JSON-LD s\u00e4kerst\u00e4ller Bjurfors att er f\u00f6retagsinformation \u00e4r l\u00e4ttillg\u00e4nglig f\u00f6r moderna system, vilket f\u00f6rb\u00e4ttrar er tekniska SEO och framtidss\u00e4krar er digitala n\u00e4rvaro.",
+            "richSteps": "1. Skapa ett `<script>`-element med attributet `type=\"application/ld+json\"`.\n2. Placera all er strukturerade data i JSON-format inuti detta skriptelement.\n3. Infoga hela `<script>`-blocket i `<head>`-sektionen p\u00e5 er hemsida.\n4. Om ni idag anv\u00e4nder microdata, planera f\u00f6r att ta bort det efter att JSON-LD har validerats och fungerar korrekt f\u00f6r att undvika dubbletter.\n5. Anv\u00e4nd Googles Rich Results Test f\u00f6r att bekr\u00e4fta att ert JSON-LD-skript \u00e4r korrekt formaterat och kan l\u00e4sas av Google.",
+            "richCodeExample": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"RealEstateAgent\",\n  \"name\": \"Bjurfors\",\n  \"url\": \"https://www.bjurfors.se\",\n  \"telephone\": \"965 32 85 46\",\n  \"address\": {\n    \"@type\": \"PostalAddress\",\n    \"streetAddress\": \"CC La Mosca, local 4\",\n    \"addressLocality\": \"Orihuela\",\n    \"postalCode\": \"03189\",\n    \"addressCountry\": \"ES\"\n  },\n  \"geo\": {\n    \"@type\": \"GeoCoordinates\",\n    \"latitude\": 37.9357938,\n    \"longitude\": -0.7222039\n  },\n  \"openingHoursSpecification\": [\n    {\n      \"@type\": \"OpeningHoursSpecification\",\n      \"dayOfWeek\": [\n        \"Monday\",\n        \"Tuesday\",\n        \"Wednesday\",\n        \"Thursday\",\n        \"Friday\"\n      ],\n      \"opens\": \"09:00\",\n      \"closes\": \"17:00\"\n    }\n  ],\n  \"aggregateRating\": {\n    \"@type\": \"AggregateRating\",\n    \"ratingValue\": \"4.7\",\n    \"reviewCount\": \"71\"\n  },\n  \"sameAs\": \"https://maps.google.com/?cid=ChIJJbR8-RyqYw0RbsaxZIWFkgU\"\n}\n</script>"
+        },
+        {
+            "id": 21,
+            "key": "metaTags",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bade title-tagg och meta-beskrivning finns.",
+            "fix": null,
+            "data": {
+                "hasTitle": true,
+                "hasDescription": true
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 22,
+            "key": "faqSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "questionsFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 23,
+            "key": "contentDepth",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "pageCount": 0,
+                "hasBlog": false,
+                "finding": "Kunde inte analyseras",
+                "fix": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 24,
+            "key": "serviceSchema",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "typesFound": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "codeExample": ""
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 25,
+            "key": "eatSignals",
+            "status": "notMeasured",
+            "source": "ai",
+            "finding": "Kunde inte analyseras",
+            "fix": null,
+            "data": {
+                "status": "unknown",
+                "found": [],
+                "missing": [],
+                "finding": "Kunde inte analyseras",
+                "fix": "",
+                "correctedByScaper": false
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 26,
+            "key": "semanticHtml",
+            "status": "warning",
+            "source": "scraper",
+            "finding": "Delvis semantisk HTML: 1 element hittades men <nav> saknas.",
+            "fix": "L\u00e4gg till <nav> f\u00f6r b\u00e4ttre AI-tolkning av sidstrukturen.",
+            "data": {
+                "hasMain": true,
+                "hasNav": false,
+                "hasArticle": false,
+                "hasSection": false,
+                "hasAside": false,
+                "langAttribute": "sv"
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "free",
+            "genericSteps": "1. Ni har vissa semantiska element men det saknas n\u00e5gra viktiga (`<main>`, `<nav>` eller `<article>`).\n2. Komplettera de som saknas \u2014 se er finding-text f\u00f6r specifika rekommendationer.\n3. Strukturen ovan \u00e4r minimum f\u00f6r en v\u00e4lbyggd HTML5-sida.",
+            "genericCodeTemplate": null,
+            "richRelevance": "Analysen visar att Bjurfors webbplats anv\u00e4nder `<main>`-elementet men saknar `<nav>` f\u00f6r huvudnavigeringen. Genom att omsluta huvudmenyn med ett `<nav>`-element hj\u00e4lper ni AI-modeller och s\u00f6kmotorer att snabbt identifiera och f\u00f6rst\u00e5 webbplatsens struktur, vilket kan f\u00f6rb\u00e4ttra b\u00e5de indexering och anv\u00e4ndarupplevelse.",
+            "richSteps": "1. Lokalisera HTML-koden som genererar er huvudmeny eller prim\u00e4ra navigeringsl\u00e4nkar.\n2. Omslut hela detta block med en `<nav>`-tagg.\n3. Om ni har flera navigeringsmenyer (t.ex. i sidhuvud och sidfot), anv\u00e4nd `<nav>` f\u00f6r den prim\u00e4ra menyn.\n4. Kontrollera att \u00e4ndringen inte p\u00e5verkar sidans visuella layout eller CSS-stilar.\n5. Publicera \u00e4ndringen och verifiera att sidan renderas korrekt.",
+            "richCodeExample": "<nav>\n  <ul>\n    <li><a href=\"/kopa-bostad\">K\u00f6pa bostad</a></li>\n    <li><a href=\"/salja-bostad\">S\u00e4lja bostad</a></li>\n    <li><a href=\"/hitta-maklare\">Hitta m\u00e4klare</a></li>\n    <li><a href=\"/om-oss\">Om oss</a></li>\n    <li><a href=\"/kontakt\">Kontakt</a></li>\n  </ul>\n</nav>"
+        },
+        {
+            "id": 27,
+            "key": "h1",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "H1-rubrik: \"Hitta r\u00e4tt m\u00e4klare f\u00f6r din bostadsaff\u00e4r\"",
+            "fix": null,
+            "data": {
+                "h1": "Hitta r\u00e4tt m\u00e4klare f\u00f6r din bostadsaff\u00e4r"
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 28,
+            "key": "title",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Title-tagg: \"M\u00e4klare. K\u00f6pa eller s\u00e4lja bostad? V\u00e4lkommen till Bjurfors.\"",
+            "fix": null,
+            "data": {
+                "title": "M\u00e4klare. K\u00f6pa eller s\u00e4lja bostad? V\u00e4lkommen till Bjurfors."
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 29,
+            "key": "metaDescription",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Metabeskrivning: \"K\u00f6pa, s\u00e4lja eller v\u00e4rdera bostad? Bjurfors m\u00e4klare ger dig den hj\u00e4lp och kunskap du beh\u00f6ver f\u00f6r att g\u00f6ra en riktigt bra ...\"",
+            "fix": null,
+            "data": {
+                "metaDescription": "K\u00f6pa, s\u00e4lja eller v\u00e4rdera bostad? Bjurfors m\u00e4klare ger dig den hj\u00e4lp och kunskap du beh\u00f6ver f\u00f6r att g\u00f6ra en riktigt bra bostadsaff\u00e4r. V\u00e4lkommen ett steg upp."
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 30,
+            "key": "contactInfo",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Kontaktinformation hittades p\u00e5 sidan.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 31,
+            "key": "altTexts",
+            "status": "bad",
+            "source": "scraper",
+            "finding": "Bara 13% av bilderna har alt-text (10/78).",
+            "fix": "L\u00e4gg till beskrivande alt-texter pa alla bilder -- AI-modeller anvander alt-texter for att forsta sidinnehall.",
+            "data": {
+                "total": 78,
+                "withAlt": 10,
+                "percentage": 13
+            },
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "free",
+            "genericSteps": "1. G\u00e5 igenom alla bilder p\u00e5 sajten och l\u00e4gg till `alt`-attribut p\u00e5 `<img>`-taggarna.\n2. Alt-texten ska beskriva bildens **inneh\u00e5ll**, inte att det \u00e4r en bild (\"K\u00f6ksm\u00e4staren tillagar pasta\" \u2014 inte \"bild av kock\").\n3. Dekorativa bilder utan informationsv\u00e4rde: anv\u00e4nd tomt alt (`alt=\"\"`) f\u00f6r att markera som dekorativ.\n4. Logotyper: anv\u00e4nd f\u00f6retagsnamnet som alt-text.\n5. Om ni har WordPress: alt-text fylls i Mediabiblioteket \u2014 g\u00e5 igenom era befintliga bilder.",
+            "genericCodeTemplate": "<!-- Inneh\u00e5llsb\u00e4rande bild -->\n<img src=\"/restaurang-interior.jpg\" alt=\"Matsalen p\u00e5 <F\u00d6RETAGSNAMN> med vita dukar och stort f\u00f6nster mot <GATA>\">\n\n<!-- Logotyp -->\n<img src=\"/logo.png\" alt=\"<F\u00d6RETAGSNAMN>\">\n\n<!-- Dekorativ bild (utan informationsv\u00e4rde) -->\n<img src=\"/divider.png\" alt=\"\">"
+        },
+        {
+            "id": 32,
+            "key": "internalLinks",
+            "status": "ok",
+            "source": "scraper",
+            "finding": "Bra internl\u00e4nkning: 86 unika sidor l\u00e4nkas fr\u00e5n startsidan (106 l\u00e4nkar totalt).",
+            "fix": null,
+            "data": {
+                "total": 106,
+                "uniquePages": 86,
+                "hasContactLink": false,
+                "hasAboutLink": true,
+                "hasServicesLink": false
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "free"
+        },
+        {
+            "id": 33,
+            "key": "aiMentions",
+            "status": "warning",
+            "source": "api",
+            "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"m\u00e4klare\" i Orihuela.",
+            "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda.",
+            "data": {
+                "entityKnows": true,
+                "entitySentiment": "neutral",
+                "categoryMentioned": false,
+                "extractedNiche": "m\u00e4klare"
+            },
+            "codeExample": null,
+            "priority": "important",
+            "tier": "premium"
+        },
+        {
+            "id": 34,
+            "key": "reviewReplies",
+            "status": "bad",
+            "source": "api",
+            "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+            "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+            "data": {
+                "total": 5,
+                "withReply": 0,
+                "responseRate": 0,
+                "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 71. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+            },
+            "codeExample": null,
+            "priority": "critical",
+            "tier": "premium"
+        },
+        {
+            "id": 35,
+            "key": "gbpData",
+            "status": "ok",
+            "source": "api",
+            "finding": "Google Business Profile: Bjurfors -- betyg 4.7/5 (71 recensioner).",
+            "fix": null,
+            "data": {
+                "name": "Bjurfors",
+                "rating": 4.7,
+                "userRatingCount": 71
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 36,
+            "key": "competitors",
+            "status": "ok",
+            "source": "api",
+            "finding": "N\u00e4rliggande konkurrenter (Google Places, \u22641,5 km): OBRA NUEVA COSTA BLANCA - MPC-Builders & Real Estate, Orihuela Costa (utan betyg, 11 m bort); Century 21 Mediterranean Homes | Inmobiliaria Alicante (4.7/5, 97 recensioner, 17 m bort); Matthieu Ramecourt Century 21 (5.0/5, 39 recensioner, 25 m bort); ExclusivE Real Estate (4.4/5, 20 recensioner, 49 m bort); DEVETOPER (5.0/5, 36 recensioner, 57 m bort).",
+            "fix": null,
+            "data": {
+                "competitors": [
+                    {
+                        "placeId": "ChIJe9_89pkHYw0ROqzIU55I7cw",
+                        "name": "OBRA NUEVA COSTA BLANCA - MPC-Builders & Real Estate, Orihuela Costa",
+                        "rating": null,
+                        "userRatingCount": null,
+                        "distanceMeters": 11,
+                        "primaryType": "real_estate_agency"
+                    },
+                    {
+                        "placeId": "ChIJn0rt_KwHYw0RzRlLIBioINw",
+                        "name": "Century 21 Mediterranean Homes | Inmobiliaria Alicante",
+                        "rating": 4.7,
+                        "userRatingCount": 97,
+                        "distanceMeters": 17,
+                        "primaryType": "real_estate_agency"
+                    },
+                    {
+                        "placeId": "ChIJ-a3Kk54HYw0R2lMlP1jMi5o",
+                        "name": "Matthieu Ramecourt Century 21",
+                        "rating": 5,
+                        "userRatingCount": 39,
+                        "distanceMeters": 25,
+                        "primaryType": "real_estate_agency"
+                    },
+                    {
+                        "placeId": "ChIJ1eMQ9ZgHYw0RpO54OTZAw8M",
+                        "name": "ExclusivE Real Estate",
+                        "rating": 4.4,
+                        "userRatingCount": 20,
+                        "distanceMeters": 49,
+                        "primaryType": "real_estate_agency"
+                    },
+                    {
+                        "placeId": "ChIJQQMYDsYHYw0RjJCbJ5sHRks",
+                        "name": "DEVETOPER",
+                        "rating": 5,
+                        "userRatingCount": 36,
+                        "distanceMeters": 57,
+                        "primaryType": "real_estate_agency"
+                    }
+                ]
+            },
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        },
+        {
+            "id": 37,
+            "key": "synthesis",
+            "status": "notApplicable",
+            "source": "computed",
+            "finding": "Syntesen ar en separat sektion och poangsatts inte.",
+            "fix": null,
+            "data": null,
+            "codeExample": null,
+            "priority": null,
+            "tier": "premium"
+        }
+    ],
+    "synthesis": {
+        "actionPlan": "### Kritiskt\n\n1.  **\u00c5tg\u00e4rda tekniska blockerare och sidhastighet.**\n    *   **Problem:** Flera analysverktyg, inklusive Google PageSpeed Insights, kan inte analysera webbplatsen p\u00e5 grund av timeout. Detta \u00e4r en allvarlig blockering f\u00f6r b\u00e5de traditionella s\u00f6kmotorer och nya AI-crawlers. Det hindrar indexering och f\u00f6rst\u00e5else av ert inneh\u00e5ll.\n    *   **\u00c5tg\u00e4rd:** Samarbeta med era webbutvecklare f\u00f6r att omedelbart unders\u00f6ka och l\u00f6sa grundorsaken. Kontrollera serverns svarstider, brandv\u00e4ggsinst\u00e4llningar och eventuella `robots.txt`-regler som kan blockera legitima bots. M\u00e5let \u00e4r att Google PageSpeed Insights ska kunna genomf\u00f6ra en fullst\u00e4ndig analys.\n\n2.  **Implementera en rutin f\u00f6r att svara p\u00e5 recensioner.**\n    *   **Problem:** Svarsfrekvensen p\u00e5 0% \u00e4r en stor missad m\u00f6jlighet. Google AI Overviews och andra AI-tj\u00e4nster kan visa f\u00f6retagets svar direkt i s\u00f6kresultaten. Att inte svara skadar f\u00f6rtroendet och er synlighet i AI-s\u00f6k.\n    *   **\u00c5tg\u00e4rd:** Svara omedelbart p\u00e5 de 5+ obesvarade recensionerna. Skapa en intern policy att svara p\u00e5 alla nya recensioner (b\u00e5de positiva och negativa) inom 48 timmar. Detta visar engagemang och bygger en positiv digital profil som AI-modeller kan referera till.\n\n3.  **Implementera `LocalBusiness` Schema Markup.**\n    *   **Problem:** Sidan saknar strukturerad data f\u00f6r `LocalBusiness`, vilket g\u00f6r det sv\u00e5rare f\u00f6r AI och s\u00f6kmotorer att entydigt f\u00f6rst\u00e5 vad ni g\u00f6r, var ni finns och hur man kontaktar er.\n    *   **\u00c5tg\u00e4rd:** L\u00e4gg till f\u00f6ljande JSON-LD-skript p\u00e5 startsidan och/eller en dedikerad kontaktsida. Detta matar AI-modeller med exakt, verifierbar information om ert lokala kontor.\n    *   **Kodexempel:**\n        ```html\n        <script type=\"application/ld+json\">\n        {\n          \"@context\": \"https://schema.org\",\n          \"@type\": \"RealEstateAgent\",\n          \"name\": \"Bjurfors Orihuela Costa\",\n          \"address\": {\n            \"@type\": \"PostalAddress\",\n            \"streetAddress\": \"CC La Mosca, local 4\",\n            \"addressLocality\": \"Orihuela Costa\",\n            \"postalCode\": \"03189\",\n            \"addressRegion\": \"Alicante\",\n            \"addressCountry\": \"ES\"\n          },\n          \"telephone\": \"+34-965-32-85-46\",\n          \"url\": \"https://www.bjurfors.se/sv/hitta-maklare/spanien/orihuela-costa/\",\n          \"openingHours\": [\n            \"Mo-Fr 09:00-17:00\"\n          ],\n          \"aggregateRating\": {\n            \"@type\": \"AggregateRating\",\n            \"ratingValue\": \"4.7\",\n            \"reviewCount\": \"71\"\n          },\n          \"image\": \"[URL till en h\u00f6gkvalitativ bild p\u00e5 kontoret eller logotyp]\"\n        }\n        </script>\n        ```\n\n### Viktigt\n\n1.  **St\u00e4rk den lokala entiteten f\u00f6r AI-igenk\u00e4nning.**\n    *   **Problem:** AI k\u00e4nner till f\u00f6retaget men rekommenderar det inte spontant vid generiska s\u00f6kningar som \"m\u00e4klare i Orihuela\".\n    *   **\u00c5tg\u00e4rd:** Registrera f\u00f6retaget p\u00e5 Eniro.se. S\u00e4kerst\u00e4ll att NAP-data (Namn, Adress, Telefon) \u00e4r 100% konsekvent \u00f6ver alla plattformar (Hitta, Eniro, Google Business Profile, er egen webbplats). AI-modeller anv\u00e4nder dessa kataloger f\u00f6r att verifiera och bygga f\u00f6rtroende f\u00f6r en entitet.\n\n2.  **F\u00f6rb\u00e4ttra E-A-T-signaler (Expertise, Authoritativeness, Trustworthiness).**\n    *   **Problem:** Brist p\u00e5 tydliga f\u00f6rtroendesignaler p\u00e5 webbplatsen (analysen misslyckades, men detta \u00e4r en vanlig brist).\n    *   **\u00c5tg\u00e4rd:** Skapa en robust \"Om oss\"-sida f\u00f6r kontoret i Orihuela. Inkludera individuella profiler f\u00f6r varje m\u00e4klare med bild, erfarenhet och certifieringar. Publicera ert organisationsnummer och eventuella branschmedlemskap tydligt p\u00e5 webbplatsen. Detta \u00e4r grundl\u00e4ggande f\u00f6r att bygga f\u00f6rtroende hos b\u00e5de m\u00e4nniskor och AI.\n\n### Bra att ha\n\n1.  **Skapa en lokal FAQ-sida med `FAQPage` Schema.**\n    *   **Problem:** Missad m\u00f6jlighet att \u00e4ga svaren p\u00e5 vanliga kundfr\u00e5gor direkt i s\u00f6kresultaten.\n    *   **\u00c5tg\u00e4rd:** Skapa en sida som besvarar 5-10 vanliga fr\u00e5gor om att k\u00f6pa/s\u00e4lja bostad i Orihuela Costa. Implementera `FAQPage` schema markup f\u00f6r att \u00f6ka chansen att dessa svar visas direkt i Google och anv\u00e4nds av AI-assistenter.",
+        "competitorNote": "Konkurrensen i Orihuela Costa \u00e4r extremt h\u00e5rd och koncentrerad. Inom 50 meter fr\u00e5n Bjurfors finns flera h\u00f6gpresterande konkurrenter. **Century 21 Mediterranean Homes | Inmobiliaria Alicante** har ett liknande betyg (4.7) men fler recensioner (97), vilket ger dem en starkare social proof-signal. **Matthieu Ramecourt Century 21** har ett perfekt betyg p\u00e5 5.0 fr\u00e5n 39 recensioner, vilket indikerar en mycket lojal och n\u00f6jd kundbas. \u00c4ven mindre akt\u00f6rer som **ExclusivE Real Estate** och **DEVETOPER** har starka recensionsprofiler.\n\nDetta landskap inneb\u00e4r att Bjurfors, trots ett bra eget betyg (4.7/71), m\u00e5ste vara proaktiva i sin digitala n\u00e4rvaro f\u00f6r att inte drunkna i bruset. Att inte svara p\u00e5 recensioner \u00e4r en betydande nackdel n\u00e4r direkta konkurrenter uppenbarligen hanterar sin onlinerykte aktivt.",
+        "reviewAnalysis": "Bjurfors har ett starkt samlat betyg p\u00e5 **4.7 stj\u00e4rnor fr\u00e5n 71 recensioner**, vilket indikerar en h\u00f6g niv\u00e5 av kundn\u00f6jdhet och en solid grund att bygga p\u00e5. Detta \u00e4r en klar styrka.\n\nDen kritiska svagheten \u00e4r dock en **svarsfrekvens p\u00e5 0%** i det analyserade stickprovet. Att inte engagera sig i feedback, vare sig den \u00e4r positiv eller negativ, signalerar en brist p\u00e5 engagemang och transparens. Detta \u00e4r en missad m\u00f6jlighet att bygga relationer, hantera kundupplevelser offentligt och f\u00f6rst\u00e4rka positiva omd\u00f6men. I en AI-driven s\u00f6kv\u00e4rld, d\u00e4r svar fr\u00e5n f\u00f6retag kan lyftas fram, \u00e4r denna passivitet en direkt h\u00e4mmande faktor f\u00f6r synlighet och f\u00f6rtroende.",
+        "summary": "Bjurfors i Orihuela har en stark grund med ett h\u00f6gt kundbetyg, men lider av kritiska tekniska problem som g\u00f6r webbplatsen otillg\u00e4nglig f\u00f6r analys av s\u00f6kmotorer och AI-verktyg. Den totala avsaknaden av svar p\u00e5 kundrecensioner \u00e4r en akut svaghet som underminerar f\u00f6rtroendet och minskar synligheten i AI-s\u00f6k. De mest prioriterade \u00e5tg\u00e4rderna \u00e4r att l\u00f6sa de tekniska timeout-felen p\u00e5 webbplatsen och omedelbart b\u00f6rja svara p\u00e5 alla Google-recensioner f\u00f6r att matcha den tuffa lokala konkurrensen och bli ett rekommenderat val f\u00f6r AI-assistenter."
+    },
+    "gbp": {
+        "name": "Bjurfors",
+        "rating": 4.7,
+        "userRatingCount": 71,
+        "address": "CC La Mosca, local 4, 03189 Orihuela Costa, Alicante, Spanien",
+        "phone": "965 32 85 46",
+        "websiteUri": "https://www.bjurfors.se/sv/utland/spanien/maklare-i-spanien/torrevieja/?utm_source=google_location&utm_medium=organic&utm_campaign=pinmetoo&utm_term=torrevieja",
+        "weekdayDescriptions": [
+            "m\u00e5ndag: 09:00\u201317:00",
+            "tisdag: 09:00\u201317:00",
+            "onsdag: 09:00\u201317:00",
+            "torsdag: 09:00\u201317:00",
+            "fredag: 09:00\u201317:00",
+            "l\u00f6rdag: St\u00e4ngt",
+            "s\u00f6ndag: St\u00e4ngt"
+        ],
+        "types": [
+            "real_estate_agency",
+            "point_of_interest",
+            "service",
+            "establishment"
+        ],
+        "_domainMatch": true
+    },
+    "directories": {
+        "foundInSameAs": [],
+        "directories": [
+            {
+                "name": "Hitta",
+                "found": true,
+                "source": "tavily",
+                "profileUrl": "https://www.hitta.se/fastighetsbyr%C3%A5/f%C3%B6retag/87?geo.hint=42.12120%3A-87.84050"
+            },
+            {
+                "name": "Eniro",
+                "found": false,
+                "source": "not_found"
+            }
+        ],
+        "foundCount": 1,
+        "totalChecked": 2,
+        "napConsistency": {
+            "checked": false,
+            "consistent": null,
+            "phone": {
+                "values": [],
+                "consistent": null
+            },
+            "address": {
+                "values": [],
+                "consistent": null
+            },
+            "finding": "F\u00f6r f\u00e5 datak\u00e4llor f\u00f6r NAP-j\u00e4mf\u00f6relse \u2014 beh\u00f6ver minst 2 kataloger med extraherad kontaktdata.",
+            "fix": ""
+        },
+        "status": "warning",
+        "finding": "Hittades p\u00e5 Hitta. Saknas p\u00e5: Eniro.",
+        "fix": "Registrera p\u00e5 Eniro. AI-modeller tr\u00e4nas p\u00e5 katalogdata \u2014 fler listningar st\u00e4rker entitetsprofilen."
+    },
+    "aiMentions": {
+        "entityQuery": "Vad vet du om \"Bjurfors\" i Orihuela? Ber\u00e4tta vad du k\u00e4nner till om f\u00f6retaget.",
+        "entityResponse": "Bjurfors \u00e4r en svensk m\u00e4klarkedja som \u00e4r verksam inom fastighetsf\u00f6rmedling och har kontor p\u00e5 flera platser, inklusive i Spanien. I Orihuela, som ligger i provinsen Alicante, erbjuder Bjurfors tj\u00e4nster f\u00f6r att hj\u00e4lpa kunder att k\u00f6pa och s\u00e4lja fastigheter, s\u00e4rskilt riktat mot svenskar som \u00e4r intresserade av att investera i bost\u00e4der i Spanien.\n\nF\u00f6retaget \u00e4r k\u00e4nt f\u00f6r att ha ett brett utbud av fastigheter, inklusive l\u00e4genheter, villor och radhus, och de erbjuder ofta tj\u00e4nster som r\u00e5dgivning om marknaden, juridisk hj\u00e4lp och finansieringsalternativ. Bjurfors har ocks\u00e5 en stark n\u00e4rvaro online, vilket g\u00f6r det enklare f\u00f6r kunder att s\u00f6ka efter fastigheter och f\u00e5 information om aktuella erbjudanden.\n\nBjurfors str\u00e4var efter att ge en h\u00f6g serviceniv\u00e5 och har ofta ett team av svensktalande m\u00e4klare som kan hj\u00e4lpa kunder med spr\u00e5kbarri\u00e4rer och kulturella skillnader. \n\nOm du har specifika fr\u00e5gor eller beh\u00f6ver mer detaljerad information om Bjurfors i Orihuela, kan jag f\u00f6rs\u00f6ka hj\u00e4lpa till med det!",
+        "entityKnows": true,
+        "entitySentiment": "neutral",
+        "extractedNiche": "m\u00e4klare",
+        "categoryQuery": "Var hittar jag bra m\u00e4klare i Orihuela?",
+        "categoryResponse": "F\u00f6r att hitta bra m\u00e4klare i Orihuela kan du f\u00f6lja dessa steg:\n\n1. **Online-s\u00f6kning**: Anv\u00e4nd s\u00f6kmotorer som Google f\u00f6r att s\u00f6ka efter m\u00e4klare i Orihuela. S\u00f6ktermer som \"fastighetsm\u00e4klare Orihuela\" eller \"real estate agents Orihuela\" kan ge bra resultat.\n\n2. **Fastighetsportaler**: Bes\u00f6k popul\u00e4ra fastighetsportaler som Idealista, Fotocasa eller Kyero. Dessa sidor listar ofta m\u00e4klare och deras objekt i omr\u00e5det.\n\n3. **Recensioner och betyg**: Kolla p\u00e5 recensioner och betyg p\u00e5 plattformar som Trustpilot eller Google Reviews f\u00f6r att f\u00e5 en uppfattning om m\u00e4klarnas rykte och kundn\u00f6jdhet.\n\n4. **Sociala medier**: M\u00e5nga m\u00e4klare har n\u00e4rvaro p\u00e5 sociala medier, d\u00e4r de delar sina objekt och kundomd\u00f6men. Plattformar som Facebook och Instagram kan vara anv\u00e4ndbara.\n\n5. **Lokala rekommendationer**: Fr\u00e5ga personer som bor i omr\u00e5det eller som har erfarenhet av att k\u00f6pa fastighet i Orihuela. De kan ge v\u00e4rdefulla rekommendationer.\n\n6. **Kontakta flera m\u00e4klare**: N\u00e4r du har en lista \u00f6ver potentiella m\u00e4klare, kontakta dem f\u00f6r att st\u00e4lla fr\u00e5gor och f\u00e5 en k\u00e4nsla f\u00f6r deras service och expertis.\n\nGenom att f\u00f6lja dessa steg b\u00f6r du kunna hitta en m\u00e4klare som passar dina behov i Orihuela.",
+        "categoryMentioned": false,
+        "status": "warning",
+        "finding": "AI har information om f\u00f6retaget men n\u00e4mner det inte spontant vid s\u00f6kning p\u00e5 \"m\u00e4klare\" i Orihuela.",
+        "fix": "St\u00e4rk lokala signaler: fler kataloger, lokalt inneh\u00e5ll p\u00e5 sajten, fler recensioner med ortnamnet n\u00e4mnda."
+    },
+    "reviewReplies": {
+        "total": 5,
+        "withReply": 0,
+        "replyRate": 0,
+        "status": "bad",
+        "finding": "Svarar p\u00e5 bara 0% av recensioner i stickprovet (0/5). 5 recensioner utan svar.",
+        "fix": "Svara p\u00e5 obesvarade recensioner snarast. S\u00e4tt upp rutin att svara inom 48h. Google AI Overviews visar f\u00f6retagssvar direkt \u2014 detta \u00e4r AI-synlighet du missar varje dag.",
+        "sampleNote": "OBS: Baserat p\u00e5 ett stickprov av 5 recensioner av totalt 71. Det faktiska svarsfrekvensen kan vara h\u00f6gre."
+    }
+}

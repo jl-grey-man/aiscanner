@@ -1,0 +1,26 @@
+[
+  {
+    "key": "aiMentions",
+    "verdict": "warning",
+    "evidence": "Eget kunskapstest: AI:n saknar faktisk minneskunskap om 'Svensk Röranalys' och skulle inte spontant nämna företaget på kategorifrågan om relining/rörinspektion i Stockholm, men entitetsfrågans låga tröskel (>80 tecken utan friskrivning) passerar sannolikt tack vare stark publik profil (Eniro, Hitta, Allabolag, Yelp, 76 anställda sedan 2001).",
+    "confidence": "low"
+  },
+  {
+    "key": "reviewReplies",
+    "verdict": "warning",
+    "evidence": "GBP har betyg 3,8 vilket visar att recensioner finns, men enskilda recensioner och andel ägarsvar kunde inte hämtas via ren HTTP — Googles recensions-endpoints (listugcposts/listentitiesreviews) returnerar tomt eller 404 även för kända platser, och Maps-sidan kräver JavaScript.",
+    "confidence": "low"
+  },
+  {
+    "key": "gbpData",
+    "verdict": "good",
+    "evidence": "Google Maps-data (tbm=map) bekräftar GBP: 'Svensk Röranalys', Fyrverkarbacken 36, 112 60 Stockholm, betyg 3.8, typ 'Vvs-entreprenör', med websiteUri https://www.roranalys.se/ som matchar den scannade domänen.",
+    "confidence": "high"
+  },
+  {
+    "key": "competitors",
+    "verdict": "good",
+    "evidence": "GBP-position finns (59.3265, 18.0193) och minst en konkurrent av samma typ ligger inom 1,5 km: Cyklande Rörmokaren (rörmokare/VVS), Pilgatan 5, 112 23 Stockholm, betyg 4,7, ca 1,1 km från Svensk Röranalys position enligt Google Maps-data.",
+    "confidence": "high"
+  }
+]

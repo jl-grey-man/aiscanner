@@ -1,0 +1,44 @@
+[
+  {
+    "key": "phone",
+    "verdict": "bad",
+    "evidence": "Inget JSON-LD på sidan alls (0 ld+json-block). Telefonnumret '060 - 61 45 00' förekommer i brödtexten men vid position ~1272 tecken — långt efter 800-teckengränsen. I meta description finns '060-61 45 00' men det är inte en giltig yta för phone-checken (endast bodyText + JSON-LD telephone räknas).",
+    "confidence": "high"
+  },
+  {
+    "key": "cityMentioned",
+    "verdict": "good",
+    "evidence": "Sundsvall nämns i sidans <title>: 'Sprej Hårstudio Sundsvall' och i meta description: 'Sprej Hårstudio ligger mitt i centrala Sundsvall på Varvsgränd 2.' — bägge är giltiga sökningsytor för denna check.",
+    "confidence": "high"
+  },
+  {
+    "key": "googleMaps",
+    "verdict": "good",
+    "evidence": "Google Maps-inbäddning hittad direkt i HTML: <iframe src=\"https://www.google.com/maps/embed?pb=...!2sSprej%20Sweden%20AB!...\" — mönstret google.com/maps matchar regexet.",
+    "confidence": "high"
+  },
+  {
+    "key": "localBusiness",
+    "verdict": "bad",
+    "evidence": "Sidan saknar JSON-LD helt (grep på 'application/ld+json' ger 0 träffar). Inget LocalBusiness- eller annat schema-märkning finns i startsidans HTML.",
+    "confidence": "high"
+  },
+  {
+    "key": "directories",
+    "verdict": "good",
+    "evidence": "Sprej Sweden AB hittad på Eniro (eniro.se/sprej+sweden+ab+sundsvall/16021300/firma) och Hitta (hitta.se/sprej+sweden+ab/sundsvall/igbeejac) — båda med fullständig profilsida, adress Varvsgränd 2 och telefon 060-61 45 00.",
+    "confidence": "high"
+  },
+  {
+    "key": "napConsistency",
+    "verdict": "good",
+    "evidence": "Eniro: telefon 060-61 45 00, adress Varvsgränd 2, 85232 Sundsvall. Hitta: telefon 060-61 45 00, adress Varvsgränd 2, 852 32 Sundsvall. Efter normalisering (postnummer bort, gemener) matchar telefon och gatuadress exakt på båda katalogerna.",
+    "confidence": "high"
+  },
+  {
+    "key": "openingHours",
+    "verdict": "notMeasured",
+    "evidence": "GBP-profil för Sprej Sweden AB finns bekräftad via Google Maps-embed på sajten (CID 0xfecda57a8ded2ec3). Flera aggregatorer (hitta.se, frisorsalonger.se) saknar öppettidsdata — hitta.se visar 'Lägg till öppettider', vilket tyder på att GBP:s regularOpeningHours inte är ifyllda.",
+    "confidence": "medium"
+  }
+]

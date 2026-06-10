@@ -1,0 +1,44 @@
+[
+  {
+    "key": "phone",
+    "verdict": "bad",
+    "evidence": "Startsidans body800 (efter strippning av nav/header/footer/script) innehåller inga svenska telefonnummer — de första 800 tecknen består av sidrubrik och navigeringsmeny. Ingen JSON-LD alls på startsidan (0 ld+json-block) så inget telephone-fält att söka i.",
+    "confidence": "high"
+  },
+  {
+    "key": "cityMentioned",
+    "verdict": "bad",
+    "evidence": "Titel ('Mäklare. Köpa eller sälja bostad? Välkommen till Bjurfors.'), meta-beskrivning, H1 ('Hitta rätt mäklare för din bostadsaffär') och H2:arna nämner ingen stad. Stadsnamn (Stockholm, Göteborg m.fl.) förekommer först vid position 1 546+ i bodytexten — långt utanför 800-teckensgränsen.",
+    "confidence": "high"
+  },
+  {
+    "key": "googleMaps",
+    "verdict": "good",
+    "evidence": "Kontorsida för Göteborg-huvudkontoret (https://www.bjurfors.se/goteborg-huvudkontor, listad i sitemap med prioritet 0.9) innehåller länken <a href=\"https://www.google.com/maps/search/?api=1&query=57.655147,12.017008\"> — matchar scannerns regex /google\\.com\\/maps/i.",
+    "confidence": "high"
+  },
+  {
+    "key": "localBusiness",
+    "verdict": "bad",
+    "evidence": "Inga <script type=\"application/ld+json\">-block hittades på startsidan (0 st). Varken LocalBusiness, Organization, WebSite eller någon annan @type finns i startsidans HTML — schema saknas helt.",
+    "confidence": "high"
+  },
+  {
+    "key": "directories",
+    "verdict": "good",
+    "evidence": "Bjurfors finns på Eniro (t.ex. eniro.se/bjurfors+goteborg+city+goteborg/14906346/firma, flera kontor) och Hitta.se (t.ex. hitta.se/verksamhet/bjurfors-goteborg-huvudkontor-jaalnvxak med LocalBusiness-schema). Representerade på båda katalogerna.",
+    "confidence": "high"
+  },
+  {
+    "key": "napConsistency",
+    "verdict": "bad",
+    "evidence": "Eniro returnerar Bjurfors Göteborg City (Engelbrektsgatan 30, 031-761 79 00) medan Hitta.se returnerar Bjurfors Göteborg Huvudkontor (Alelundsgatan 4, 031-733 20 00) — olika kontor med olika adress och telefon. Normaliserade värden stämmer inte överens på varken adress eller telefon.",
+    "confidence": "medium"
+  },
+  {
+    "key": "openingHours",
+    "verdict": "good",
+    "evidence": "Google Business Profile för Bjurfors Bostadsrätter City (Engelbrektsgatan 30, Göteborg) visar öppettider per veckodag: mån–tor 09:00–17:00, fre 09:00–16:30, lör–sön stängt — bekräftat via hitta-oppna.se som hämtar från GBP.",
+    "confidence": "high"
+  }
+]
