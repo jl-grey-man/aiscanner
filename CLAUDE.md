@@ -209,7 +209,7 @@ The scraper extracts these fields per page:
 | `hasRestaurantSchema` | boolean | true for Restaurant, Cafe, Bakery, Bar, etc. |
 | `canonical` | string\|null | href from `<link rel="canonical">` |
 | `hasGoogleMaps` | boolean | true if Google Maps embed/link detected (NOT OpenStreetMap) |
-| `phones` | string[] | Swedish format |
+| `phones` | string[] | Swedish format — söks i HELA strippade sidtexten (inte 800-fönstret) + JSON-LD `telephone` ur fulltexten, inkl. `@graph` |
 | `cities` | string[] | 12 major Swedish cities |
 | `menuSummary` | string | |
 | `hasContactInfo` | boolean | |
@@ -317,7 +317,8 @@ Every frontend change MUST pass the following gate before being presented to the
 
 ## Fragile areas
 
-- **Schema detection:** The LOCAL_BUSINESS_SUBTYPES list in scraper.ts must be maintained. When schema.org adds new LocalBusiness subtypes, add them here.
+- **Schema detection:** The LOCAL_BUSINESS_SUBTYPES list in scraper.ts must be maintained. When schema.org adds new LocalBusiness subtypes, add them here. `@type`-extraktionen packar upp `@graph` (WordPress/Yoast lägger ALLA typer där utan toppnivå-@type) — ta aldrig bort den uppackningen. `telephone` extraheras ur schemats FULLTEXT i samma loop; `schemaScripts`-arrayen är 500-tecken-kapad och får ALDRIG användas för JSON.parse.
+- **Subpage fetching:** All page fetches use the full `BROWSER_HEADERS` — never override with a bare `User-Agent: Mozilla/5.0` (triggers WAF 466 on sites that accept the full header set). Sitemap `<loc>` values can be CDATA-wrapped (All in One SEO) — the wrapper is stripped before URL parsing. Host comparisons treat `www.` and naked domain as the same site, and all downstream URL logic uses the FINAL URL after redirects (`mainRes.url`).
 - **JSON-LD parsing:** Wrapped in try/catch. Malformed JSON falls back to text search. Both code paths must set `hasAnyLocalBusinessSchema`.
 - **Google Maps detection:** Regex must be Google-specific: `/google\.com\/maps|maps\.google\.com|goo\.gl\/maps/i`. Do NOT widen to generic "map" detection.
 - **Canonical:** Extracted BEFORE cheerio removes `<head>` elements (step 2 in extractSummary).

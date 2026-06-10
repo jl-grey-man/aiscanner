@@ -29,6 +29,13 @@
 
 ## Bekräftade scannerbuggar (rotorsak verifierad i kod + mot live-HTML)
 
+> **STATUS 2026-06-10 (em): ALLA FIXADE.** BUG 1–4 nedan plus två följdbuggar som hittades
+> under verifieringen (BUG 5–6). Verifierat i två lager: (1) direktanrop mot
+> `scrapeWebsite`/`extractSummary` (syntetiskt + live mot tvakanten/roranalys/sprej),
+> (2) partiella free-scans via `/api/enhanced-scan` — alla 8 berörda check-statusar
+> flippade till `ok`: tvakanten schemaAny/jsonLd/internalLinks/googleMaps,
+> roranalys phone/contactInfo, sprej phone/contactInfo.
+
 ### BUG 1 — `@graph` packas inte upp vid schema-detektering
 **Fil:** `app/lib/scraper.ts:229–246`
 **Symptom:** tvakanten `schemaAny` = bad trots att startsidan har JSON-LD (verifierat: 1 684 tecken, `{"@context":…,"@graph":[BreadcrumbList, Organization, WebSite, WebPage]}`).
@@ -53,6 +60,21 @@
 **Orsak:** input-URL:en var `https://tvakanten.se`; sajten 301-redirectar till `https://www.tvakanten.se/` och alla länkar i HTML är absoluta mot `www.`-värden. Jämförelsen `parsed.hostname === pageHostname` använder **input-värden** → 0 träffar.
 **Kaskad:** när länklistan är tom väljs undersidor sämre → `googleMaps` (bad, men inbäddning finns på `/hitta-till-oss/` enligt truth) och sannolikt `faqSchema`-missen på bjurfors (`/sv/faq/` skannades inte) delar denna rotorsak.
 **Fix:** använd slutlig URL efter redirect (response.url) som hostname-källa, och/eller normalisera bort `www.` på båda sidor av jämförelsen.
+
+### BUG 5 — CDATA i sitemap-`<loc>` ger ogiltiga URL:er *(hittad under fixverifieringen)*
+**Fil:** `app/lib/scraper.ts` (loc-parsningen i `scrapeWebsite`)
+**Symptom:** tvakanten fick 0 undersidor även efter BUG 4-fixen.
+**Orsak:** All in One SEO (och fler sitemap-pluginer) wrappar URL:er i `<![CDATA[...]]>`. Scannerns regex behöll wrappern → `new URL()` kastade → alla poster filtrerades bort.
+**Fix:** strippa `<![CDATA[` / `]]>` innan URL-parsning.
+
+### BUG 6 — undersidor hämtas med avskalad User-Agent → WAF-block *(hittad under fixverifieringen)*
+**Fil:** `app/lib/scraper.ts` (extra-sidehämtningen)
+**Symptom:** tvakantens undersidor svarade 466 (WAF) trots att huvudsidan gick bra.
+**Orsak:** undersidehämtningen overridade headers med bara `User-Agent: Mozilla/5.0` i stället för de fulla `BROWSER_HEADERS` som huvudsidan använder — naken UA triggar WAF:ar.
+**Fix:** ta bort overriden så alla sidor hämtas med samma browser-headers.
+
+### Semantikförbättring — telefon söks i hela sidtexten
+Telefonregexen körs nu på **hela** den strippade sidtexten i stället för det 800-tecken-kapade `bodyText` (kapningen finns bara för AI-promptens skull; regexen går aldrig till AI:n). Detta gjorde att sprejs nummer på textposition 1 272 hittas. `VERIFICATION-PROTOCOL.md` §phone är uppdaterad.
 
 ---
 

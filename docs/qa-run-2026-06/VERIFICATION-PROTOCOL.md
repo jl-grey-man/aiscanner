@@ -143,12 +143,14 @@ Gissa aldrig åt det positiva hållet.
 ## B. Local (check 11–17)
 
 ### phone — Telefonnummer synligt
-- **Scannern mäter:** svenskt telefonnummer via regex `(?:\+46|0)\s?\d{1,3}[-\s]?\d{2,3}...` i
-  startsidans bodyText (första 800 tecken, header/nav/footer strippade) ELLER `telephone`-fält i
-  JSON-LD. Endast startsidan.
+- **Scannern mäter:** svenskt telefonnummer via regex `(?:\+46|0)\s?\d{1,3}[\s-]{0,3}\d{2,3}...`
+  (separatorer som " - " tillåts) i **hela** startsidans strippade text (header/nav/footer
+  strippade — 800-gränsen gäller bara AI-prompten, inte telefonsökningen) ELLER `telephone`-fält
+  i JSON-LD (inkl. inuti `@graph`). Endast startsidan. *(Uppdaterad 2026-06-10 — tidigare söktes
+  bara de första 800 tecknen och @graph/trunkerade scheman missades.)*
 - **Så verifierar du:** hämta startsidans HTML utan JS. Leta svenskt nummer i synlig brödtext
-  (kom ihåg: header/footer räknas INTE, och endast ~800 första tecknen) samt `"telephone"` i
-  `application/ld+json`. Nummer som bild, i JS-variabler eller bara i header/footer = syns inte.
+  (kom ihåg: header/footer räknas INTE) samt `"telephone"` i `application/ld+json` (även i
+  `@graph`). Nummer som bild, i JS-variabler eller bara i header/footer = syns inte.
 - **Verdict-mappning:** good = minst ett nummer hittat i brödtext eller JSON-LD.
   bad = inget hittat. (Aldrig warning/notMeasured.)
 
@@ -174,7 +176,8 @@ Gissa aldrig åt det positiva hållet.
 ### localBusiness — LocalBusiness-schema
 - **Scannern mäter:** att startsidans JSON-LD innehåller `@type` som matchar `LocalBusiness`
   eller någon av ~60 subtyper (Restaurant, Plumber, Dentist, RealEstateAgent, Store, Hotel, …).
-  Matchning: gemener + substring mot whitelist. Endast startsidan.
+  Matchning: gemener + substring mot whitelist. Endast startsidan. Typer inuti `@graph`
+  räknas (sedan 2026-06-10).
 - **Så verifierar du:** extrahera alla `<script type="application/ld+json">` ur startsidans
   rå-HTML, parsa och lista `@type`-värden (inkl. arrayer). `Organization` eller `WebSite` räcker
   INTE — det måste vara LocalBusiness eller en subtyp.
@@ -328,9 +331,9 @@ Gissa aldrig åt det positiva hållet.
   notMeasured om sidan inte kunde analyseras.
 
 ### internalLinks — Internlänkning
-- **Scannern mäter:** antal UNIKA interna sökvägar (samma värd eller relativa länkar,
-  normaliserade paths) bland `<a href>` på startsidan — inkl. nav (länkar räknas före
-  strippning).
+- **Scannern mäter:** antal UNIKA interna sökvägar (samma värd — `www.` och naken domän
+  räknas som samma — eller relativa länkar, normaliserade paths) bland `<a href>` på
+  startsidan — inkl. nav (länkar räknas före strippning).
 - **Så verifierar du:** extrahera alla `<a href>` ur startsidans rå-HTML, behåll interna,
   normalisera path (gemener, trailing slash bort) och räkna unika.
 - **Verdict-mappning:** good = ≥5 unika sidor. warning = 2–4. bad = 0–1.

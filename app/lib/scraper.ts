@@ -99,6 +99,12 @@ function normalizeUrl(url: string): string {
   return url.trim().toLowerCase().replace(/\/$/, '')
 }
 
+// www.example.se och example.se är samma sajt — jämför värdnamn utan www-prefix
+function sameHost(a: string, b: string): boolean {
+  const norm = (h: string) => h.toLowerCase().replace(/^www\./, '')
+  return norm(a) === norm(b)
+}
+
 function isEnglishPath(url: string): boolean {
   try {
     const path = new URL(url).pathname
@@ -222,6 +228,7 @@ export function extractSummary(html: string, url: string): PageSummary {
   // 1. EXTRAHERA SCHEMA FÖRST (innan script-taggar tas bort)
   const schemaScripts: string[] = []
   const schemaTypes: string[] = []
+  const schemaPhones: string[] = []
   let hasLocalBusinessSchema = false
   let hasAnyLocalBusinessSchema = false
   let hasRestaurantSchema = false
@@ -232,8 +239,15 @@ export function extractSummary(html: string, url: string): PageSummary {
       schemaScripts.push(text.slice(0, 500)) // max 500 tecken per schema
       try {
         const parsed = JSON.parse(text)
-        const items = Array.isArray(parsed) ? parsed : [parsed]
+        const roots = Array.isArray(parsed) ? parsed : [parsed]
+        // WordPress/Yoast lägger typerna i @graph utan toppnivå-@type — packa upp
+        const items = roots.flatMap((r: any) =>
+          r && Array.isArray(r['@graph']) ? [r, ...r['@graph']] : [r]
+        )
         for (const item of items) {
+          if (item && typeof item.telephone === 'string' && item.telephone.trim()) {
+            schemaPhones.push(item.telephone.trim())
+          }
           const typeRaw = item['@type']
           const types = Array.isArray(typeRaw) ? typeRaw : typeRaw ? [typeRaw] : []
           for (const t of types) {
@@ -326,7 +340,7 @@ export function extractSummary(html: string, url: string): PageSummary {
     } else {
       try {
         const parsed = new URL(href)
-        if (parsed.hostname === pageHostname) {
+        if (sameHost(parsed.hostname, pageHostname)) {
           normalized = parsed.pathname.toLowerCase().replace(/\/$/, '') || '/'
         }
       } catch {
@@ -362,25 +376,16 @@ export function extractSummary(html: string, url: string): PageSummary {
   // 4. Ta bort brus
   $('script, style, nav, footer, header, aside, iframe, noscript').remove()
 
-  const bodyText = $('body').text()
+  const fullBodyText = $('body').text()
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 800) // HÅRD GRÄNS: max 800 tecken per sida
+  const bodyText = fullBodyText.slice(0, 800) // HÅRD GRÄNS: max 800 tecken per sida (AI-prompten)
 
-  // Telefon: bodyText-regex + JSON-LD "telephone" (AI-sökmotorer läser structured data)
-  const bodyPhones = Array.from(bodyText.matchAll(/(?:\+46|0)\s?[0-9]{1,3}[-\s]?[0-9]{2,3}[-\s]?[0-9]{2,3}[-\s]?[0-9]{2,3}/g)).map(m => m[0])
-  const schemaPhones: string[] = []
-  for (const script of schemaScripts) {
-    try {
-      const parsed = JSON.parse(script)
-      const items = Array.isArray(parsed) ? parsed : [parsed]
-      for (const item of items) {
-        if (typeof item.telephone === 'string' && item.telephone.trim()) {
-          schemaPhones.push(item.telephone.trim())
-        }
-      }
-    } catch { /* skip malformed JSON-LD */ }
-  }
+  // Telefon: söks i HELA den strippade texten (går aldrig in i AI-prompten, så
+  // 800-gränsen gäller inte här) + JSON-LD "telephone" (extraherad i steg 1 ur
+  // FULLTEXTEN, inte den 500-tecken-kapade schemaScripts-kopian).
+  // Separatorer som " - " tillåts.
+  const bodyPhones = Array.from(fullBodyText.matchAll(/(?:\+46|0)\s?[0-9]{1,3}[\s-]{0,3}[0-9]{2,3}[\s-]{0,3}[0-9]{2,3}[\s-]{0,3}[0-9]{2,3}/g)).map(m => m[0])
   const phones = Array.from(new Set([...bodyPhones, ...schemaPhones]))
 
   // Extrahera title/meta/h1/h2s EXTRA tidigt så stad-matchningen kan söka i dem.
@@ -470,8 +475,13 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
   }
   const mainHtml = await mainRes.text()
 
+  // Sajter redirectar ofta naken domän → www (eller tvärtom). Allt nedströms
+  // (origin, sitemap-filter, länkjämförelser) måste utgå från SLUTLIG URL,
+  // annars filtreras alla interna länkar/sitemap-poster bort som "externa".
+  const finalUrl = mainRes.url || url
+
   // 2. Hämta robots, sitemap, llms parallellt
-  const base = new URL(url).origin
+  const base = new URL(finalUrl).origin
 
   const [robotsRes, sitemapRes, llmsRes] = await Promise.all([
     fetchWithTimeout(`${base}/robots.txt`, {}, 8000).catch(() => null),
@@ -489,12 +499,34 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
 
   if (sitemapXml && sitemapUrlCount && sitemapUrlCount > 0 && sitemapUrlCount < 500) {
     const urlMatches = [...sitemapXml.matchAll(/<loc>(.*?)<\/loc>/g)]
-    const allUrls = urlMatches.map(m => m[1]).filter(u => u.startsWith(base))
-    extraUrls = filterAndSelectUrls(allUrls, url, 4)
+    const baseHost = new URL(base).hostname
+    // Vissa sitemap-pluginer (All in One SEO) wrappar URL:en i <![CDATA[...]]>
+    const allUrls = urlMatches
+      .map(m => m[1].replace(/^\s*<!\[CDATA\[/, '').replace(/\]\]>\s*$/, '').trim())
+      .filter(u => {
+      try {
+        return sameHost(new URL(u).hostname, baseHost)
+      } catch {
+        return false
+      }
+    })
+    extraUrls = filterAndSelectUrls(allUrls, finalUrl, 4)
   } else {
     // Fallback: extrahera interna länkar från förstasidan
-    const linkMatches = Array.from(mainHtml.matchAll(/href="(\/[^"]+)"/g))
-    const internalPaths = Array.from(new Set(linkMatches.map(m => m[1])))
+    // (både relativa OCH absoluta mot samma värd — många sajter länkar absolut)
+    const finalHost = new URL(finalUrl).hostname
+    const linkMatches = Array.from(mainHtml.matchAll(/href="(\/[^"]+|https?:\/\/[^"]+)"/g))
+    const candidatePaths = Array.from(new Set(linkMatches.map(m => m[1])))
+      .map(href => {
+        try {
+          const u = new URL(href, base)
+          return sameHost(u.hostname, finalHost) ? u.pathname : null
+        } catch {
+          return null
+        }
+      })
+      .filter((path): path is string => path !== null && path.length > 1)
+    const internalPaths = Array.from(new Set(candidatePaths))
       .filter(path =>
         !path.startsWith('/wp-') &&
         !path.startsWith('/wp-content/') &&
@@ -507,16 +539,16 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
       )
       .map(path => new URL(path, base).toString())
 
-    extraUrls = filterAndSelectUrls(internalPaths, url, 4)
+    extraUrls = filterAndSelectUrls(internalPaths, finalUrl, 4)
   }
 
   // 4. Hämta extra sidor parallellt
   const extraPages = await Promise.all(
     extraUrls.map(async (pageUrl) => {
       try {
-        const res = await fetchWithTimeout(pageUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-        }, 8000)
+        // Inga header-overrides — avskalad "Mozilla/5.0" triggar WAF (466) på
+        // sajter som accepterar fulla BROWSER_HEADERS (samma som huvudsidan får).
+        const res = await fetchWithTimeout(pageUrl, {}, 8000)
         if (!res.ok) return null
         const html = await res.text()
         return extractSummary(html, pageUrl)
@@ -527,7 +559,7 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
   )
 
   // 5. Bygg huvudsidan och kombinera
-  const mainPage = extractSummary(mainHtml, url)
+  const mainPage = extractSummary(mainHtml, finalUrl)
   const validExtras = extraPages.filter((p): p is PageSummary => p !== null)
 
   return {
