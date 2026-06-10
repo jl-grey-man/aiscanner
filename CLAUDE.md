@@ -222,7 +222,7 @@ The scraper extracts these fields per page:
 - **3× Gemini Flash** in parallel: technical signals, FAQ/content depth, E-A-T
 - **1× Gemini Pro** synthesis: markdown action plan with competitor analysis
 - **1× GPT-4o-mini** for AI mention testing (two-step: entity + category query)
-- Models via OpenRouter: `google/gemini-2.0-flash-001` (Flash), `google/gemini-2.5-pro-preview-03-25` (Pro)
+- Models via OpenRouter: `google/gemini-2.5-flash` (Flash), `google/gemini-2.5-pro` (Pro). **OBS:** OpenRouter fasar ut gamla modell-id:n (2.0-serien gav 404 i juni 2026 → alla Flash-checks blev `notMeasured`) — verifiera mot `GET https://openrouter.ai/api/v1/models` om "Kunde inte analyseras" dyker upp brett.
 - Output: 37 `CheckResult` objects across 5 categories: `technical`, `local`, `aireadiness`, `content`, `premium`
 - Free tier: 29 checks (scores.free), Premium: 36 scoreable + synthesis = 37 total (scores.full)
 - Synthesis rules: no preamble, no timeframes, starts directly with `## Prioriterad åtgärdsplan`

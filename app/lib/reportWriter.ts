@@ -68,7 +68,7 @@ const BATCH_CATEGORIES: string[][] = [
   ['content', 'ai-test', 'gbp'],
 ]
 
-const PRO_MODEL = 'google/gemini-2.5-pro-preview-03-25'
+const PRO_MODEL = 'google/gemini-2.5-pro'
 
 /**
  * Defensiv tvätt av Pro-genererad richCodeExample. Pro envisas ibland med att

@@ -4,15 +4,15 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
 // Fallback-modeller om primära är rate-limited
 const FLASH_MODELS = [
-  'google/gemini-2.0-flash-001',
-  'google/gemini-2.0-flash-lite-001',
+  'google/gemini-2.5-flash',
+  'google/gemini-2.5-flash-lite',
   'mistralai/mistral-small-3.1-24b-instruct',
 ]
 
 const PRO_MODELS = [
-  'google/gemini-2.5-pro-preview-03-25',
-  'anthropic/claude-3.5-sonnet',
-  'google/gemini-2.0-pro-exp-02-05',
+  'google/gemini-2.5-pro',
+  'anthropic/claude-sonnet-4.6',
+  'google/gemini-2.5-flash',
 ]
 
 function extractJson(text: string): any {

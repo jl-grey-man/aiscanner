@@ -15,8 +15,8 @@ import { APP_URL } from '@/app/lib/config'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
-const FLASH_MODEL = 'google/gemini-2.0-flash-001'
-const PRO_MODEL = 'google/gemini-2.5-pro-preview-03-25'
+const FLASH_MODEL = 'google/gemini-2.5-flash'
+const PRO_MODEL = 'google/gemini-2.5-pro'
 
 function extractJson(text: string): any {
   const trimmed = text.trim()
