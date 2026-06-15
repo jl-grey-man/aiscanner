@@ -1,5 +1,58 @@
 # AI Search Scanner -- Checklist
 
+---
+
+## 📍 SESSION LOG — 2026-06-15 (overseer planning; no code changed)
+
+Context: returned to the project after the June-10 QA run (`docs/qa-run-2026-06/RESULTS.md`,
+QA match 83% / 119-144). Synced Mac with `origin/master` (pulled 4 commits pushed from the PiPod:
+dead Gemini model fix, å/ä/ö fix, the QA run, and the scraper QA bug batch). Reviewed the open items
+and agreed a fix plan. **No code was changed this session.** Decisions below; pick up from "NEXT".
+
+### Findings
+- **Issue 1 — PSI / Core Web Vitals (`cwv` = notMeasured): RESOLVED, not a real bug.**
+  Verified live: a direct PageSpeed Insights call for sprej.nu returns a real score (0.65).
+  The June-10 `429 "Queries per day"` was **transient daily-quota exhaustion** during heavy QA
+  testing, not a misconfiguration. PSI API **is enabled** in Google Cloud project
+  `ferrous-cursor-322611` (project number 583797351490), and the existing Maps Platform key
+  (the `GOOGLE_PLACES_API_KEY`, ends `…1jyo`, no API restrictions) **already permits PSI**.
+  The scanner's `pageSpeed.ts` already falls back to that key, so PSI works again now that the
+  daily quota reset. **No new key, no quota increase, no Console change needed.**
+  - Only remaining: optional robustness — bump `getCwvMetrics` timeout 12s → 30s (`app/lib/pageSpeed.ts:45`).
+
+- **Issue 2 — Flash verdicts too harsh** (`eatSignals`, `faqSchema`, `contentDepth` set `bad` where
+  protocol says `warning`; 5 QA mismatches). DECISION: **No Anthropic models** (cost). Plan =
+  recalibrate the Flash prompt verdict thresholds to match `VERIFICATION-PROTOCOL.md` first (free).
+  Only if that's not enough, escalate **just those 3 checks** to `google/gemini-2.5-pro`
+  (already integrated in PRO_MODELS). Do NOT add Claude/OpenAI for this.
+
+- **Issue 3 — National chains with no city pick the wrong office** (bjurfors matched Spain / Kungälv
+  instead of HQ Göteborg). Plan = when Places returns multiple offices and no city was entered,
+  flag "flera kontor hittade — ange stad" in the UI instead of silently scanning a random one.
+
+- **Issue 4 — 3 "needs investigation" items** (from RESULTS.md §Behöver vidare undersökning):
+  `roranalys competitors`=notMeasured (check `places.ts` — missing location/primaryType in Place Details);
+  `bjurfors contactInfo`=good but truth says bad (log bodyText to see what window was scanned);
+  `tvakanten hreflang`=notMeasured (language switcher likely in stripped nav). Diagnose before fixing.
+
+### Recommended order (agreed)
+1. Issue 1 timeout bump (12→30s) — trivial
+2. Issue 2 recalibrate Flash prompts → re-test → escalate to 2.5 Pro only if needed
+3. Issue 3 chain/no-city UI flag
+4. Issue 4 investigations
+Test every change against the truth files in `docs/qa-run-2026-06/`; target QA match 83% → ~90%.
+Commit + push each (Mac ↔ PiPod sync via GitHub).
+
+### NEXT SESSION — start here
+- [ ] Issue 1: bump PSI timeout 12s→30s in `app/lib/pageSpeed.ts:45`
+- [ ] Issue 2: recalibrate Flash verdict thresholds (eatSignals/faqSchema/contentDepth); re-scan 4 QA sites
+- [ ] Issue 3: multi-office "ange stad" flag (no-city chains)
+- [ ] Issue 4: diagnose roranalys competitors / bjurfors contactInfo / tvakanten hreflang
+- (separate, NOT this project) `~/scan-mac.log` cron job points at missing `~/.local/bin/python3`;
+  real python3 is `/opt/homebrew/bin/python3` — one-line crontab fix if wanted.
+
+---
+
 ## Core Features
 
 ### Scanning & Analysis
