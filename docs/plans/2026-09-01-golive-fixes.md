@@ -318,15 +318,15 @@ Om raden inte finns i `.env.local`: STOPPA och rapportera "STRIPE_API_KEY saknas
 
 **Steg 2:** `printf 'NEXT_PUBLIC_APP_URL=https://analyze.pipod.net\n' >> .env` (och samma till `.env.local` om den saknas där).
 
-**Steg 3:** Om `GOOGLE_PSI_KEY` finns i `.env.local` men inte `.env`: kopiera på samma sätt. Saknas den helt: notera i slutrapporten, fortsätt.
+**Steg 3:** `GOOGLE_PSI_KEY` behövs INTE (verifierat 2026-06-15, se Checklist.md: `GOOGLE_PLACES_API_KEY` har inga API-restriktioner och täcker PSI; `pageSpeed.ts` faller redan tillbaka på den). Hoppa över den — leta inte efter någon nyckel. Bumpa i stället PSI-timeouten i `app/lib/pageSpeed.ts` (~rad 45, `getCwvMetrics`) från 12 s till 30 s.
 
 **VERIFIERING:**
 ```bash
 for v in OPENROUTER_API_KEY GOOGLE_PLACES_API_KEY TAVILY_API_KEY STRIPE_API_KEY NEXT_PUBLIC_APP_URL INTERNAL_SCAN_TOKEN; do printf '%s: %s\n' "$v" "$(grep -c "^$v=" .env)"; done
 ```
-Förväntat: `1` för samtliga sex.
+Förväntat: `1` för samtliga sex. Dessutom: `grep -n "30" app/lib/pageSpeed.ts | head -2` ska visa den nya timeouten.
 
-**Commit:** ingen (inga repo-filer ändrade).
+**Commit:** `git add app/lib/pageSpeed.ts && git commit -m "fix(psi): bump CWV timeout 12s -> 30s (per 2026-06-15 finding)"`
 
 ---
 
