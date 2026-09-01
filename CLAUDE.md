@@ -11,6 +11,7 @@ AI Search Scanner — Swedish-language tool that analyzes how well a website is 
 | **OVERSEER-PROMPT.md** | `./OVERSEER-PROMPT.md` | Generic overseer prompt — copy after /clear + specify fas |
 | **SCANNER_VERIFICATION.md** | `./SCANNER_VERIFICATION.md` | QA test results against real businesses (Apr 26) |
 | **QA-FIX-PLAN.md** | `./docs/QA-FIX-PLAN.md` | Fix plan for 5 remaining QA problems — root causes, files, fixes |
+| **Go-live-fixes plan** | `./docs/plans/2026-09-01-golive-fixes.md` | Atomic 22-task åtgärdsplan efter go-live-audit sep 2026 — DeepSeek kör Task 0–11 + 14–21, Claude kör Task 12–13 |
 
 ## Multi-machine sync (Mac ↔ pipod)
 
