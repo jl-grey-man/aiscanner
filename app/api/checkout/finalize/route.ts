@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     console.log(`[Finalize] running paid scan for ${targetUrl}`)
     const scanRes = await fetch(`${APP_URL}/api/enhanced-scan`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-internal-scan-token': process.env.INTERNAL_SCAN_TOKEN ?? '' },
       body: JSON.stringify({
         url: targetUrl,
         city: targetCity || undefined,

@@ -569,7 +569,9 @@ export async function POST(req: NextRequest) {
     try { await assertPublicUrl(url) } catch {
       return NextResponse.json({ error: 'Ogiltig eller blockerad URL' }, { status: 400, headers: corsHeaders })
     }
-    const tier: 'free' | 'paid' = tierInput === 'paid' ? 'paid' : 'free'
+    const internalToken = req.headers.get('x-internal-scan-token')
+    const tokenOk = !!process.env.INTERNAL_SCAN_TOKEN && internalToken === process.env.INTERNAL_SCAN_TOKEN
+    const tier: 'free' | 'paid' = tierInput === 'paid' && tokenOk ? 'paid' : 'free'
 
     console.log(`[Enhanced Scan] Startar för ${url}${cityInput ? ` (stad: ${cityInput})` : ''} [tier=${tier}]`)
 
