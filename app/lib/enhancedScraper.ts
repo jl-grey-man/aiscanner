@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { safeFetch } from '@/app/lib/safeFetch'
 
 const BROWSER_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -92,10 +93,9 @@ async function fetchWithTimeout(url: string, timeoutMs = 10000): Promise<Respons
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    return await fetch(url, {
+    return await safeFetch(url, {
       headers: BROWSER_HEADERS,
       signal: controller.signal,
-      redirect: 'follow',
     })
   } finally {
     clearTimeout(timeout)

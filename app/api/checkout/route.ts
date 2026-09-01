@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createCheckout } from '@/app/lib/checkoutDb'
 import { APP_URL } from '@/app/lib/config'
+import { assertPublicUrl } from '@/app/lib/safeFetch'
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
   // Använd default apiVersion från Stripe-paketet
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest) {
     if (!url || typeof url !== 'string' || !url.startsWith('http')) {
       return NextResponse.json(
         { error: 'Ogiltig URL' },
+        { status: 400, headers: corsHeaders },
+      )
+    }
+    try { await assertPublicUrl(url) } catch {
+      return NextResponse.json(
+        { error: 'Ogiltig eller blockerad URL' },
         { status: 400, headers: corsHeaders },
       )
     }

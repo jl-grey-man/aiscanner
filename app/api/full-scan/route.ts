@@ -4,12 +4,16 @@ import { analyzeWithFlash, analyzeWithPro } from '@/app/lib/gemini'
 import { buildFreePrompt, buildPremiumPrompt } from '@/app/lib/prompts'
 import { findBusinessByUrl, getPlaceDetails } from '@/app/lib/places'
 import { redis } from '@/app/lib/redis'
+import { assertPublicUrl } from '@/app/lib/safeFetch'
 
 export async function POST(req: NextRequest) {
   try {
     const { url } = await req.json()
     if (!url || !url.startsWith('http')) {
       return NextResponse.json({ error: 'Ogiltig URL' }, { status: 400 })
+    }
+    try { await assertPublicUrl(url) } catch {
+      return NextResponse.json({ error: 'Ogiltig eller blockerad URL' }, { status: 400 })
     }
 
     // 1. Kör gratis-analys internt (eller hämta cache)

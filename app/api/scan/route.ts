@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { scrapeWebsite } from '@/app/lib/scraper'
 import { analyzeWithFlash } from '@/app/lib/gemini'
 import { buildFreePrompt } from '@/app/lib/prompts'
+import { assertPublicUrl } from '@/app/lib/safeFetch'
 
 function ensurePhases(analysis: any): any {
   if (analysis.phases && analysis.phases.length > 0) {
@@ -85,6 +86,9 @@ export async function POST(req: NextRequest) {
     const { url } = await req.json()
     if (!url || !url.startsWith('http')) {
       return NextResponse.json({ error: 'Ogiltig URL' }, { status: 400 })
+    }
+    try { await assertPublicUrl(url) } catch {
+      return NextResponse.json({ error: 'Ogiltig eller blockerad URL' }, { status: 400 })
     }
 
     // Scrape + Analyze

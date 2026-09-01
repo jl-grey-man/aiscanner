@@ -12,6 +12,7 @@ import { calculateScores, ScanResultSchema, CHECK_REGISTRY } from '@/app/lib/sca
 import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
 import { enrichChecksWithReportWriter } from '@/app/lib/reportWriter'
 import { APP_URL } from '@/app/lib/config'
+import { assertPublicUrl } from '@/app/lib/safeFetch'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -564,6 +565,9 @@ export async function POST(req: NextRequest) {
     const { url, city: cityInput, tier: tierInput } = await req.json()
     if (!url || !url.startsWith('http')) {
       return NextResponse.json({ error: 'Ogiltig URL' }, { status: 400, headers: corsHeaders })
+    }
+    try { await assertPublicUrl(url) } catch {
+      return NextResponse.json({ error: 'Ogiltig eller blockerad URL' }, { status: 400, headers: corsHeaders })
     }
     const tier: 'free' | 'paid' = tierInput === 'paid' ? 'paid' : 'free'
 
