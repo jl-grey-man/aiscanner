@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createCheckout, getCheckout, markPaid, saveScanResult, markFailed, getScanResult } from '@/app/lib/checkoutDb'
 import { APP_URL } from '@/app/lib/config'
-
-const stripe = new Stripe(process.env.STRIPE_API_KEY!, { typescript: true })
+import { getStripe } from '@/app/lib/stripe'
 
 /**
  * POST /api/checkout/finalize
@@ -35,7 +34,7 @@ export async function POST(req: NextRequest) {
     // 1. Hämta session från Stripe
     let session: Stripe.Checkout.Session
     try {
-      session = await stripe.checkout.sessions.retrieve(sessionId)
+      session = await getStripe().checkout.sessions.retrieve(sessionId)
     } catch (e) {
       return NextResponse.json(
         { error: 'Ogiltig session_id' },

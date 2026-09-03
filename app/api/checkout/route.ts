@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { createCheckout } from '@/app/lib/checkoutDb'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
-
-const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
-  // Använd default apiVersion från Stripe-paketet
-  typescript: true,
-})
+import { getStripe } from '@/app/lib/stripe'
 
 // Pris för premiumrapport (öre, SEK)
 const PRICE_AMOUNT_ORE = 49900
@@ -35,7 +30,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
