@@ -1196,6 +1196,12 @@ export async function POST(req: NextRequest) {
         full: scores.full,
         google: placeForAnalysis?.rating ?? null,
         googleCount: placeForAnalysis?.userRatingCount ?? null,
+        // Mät-täckning (scanResult.ts calculateScores()) — hur många av de
+        // poängsatta checkarna som faktiskt gick att mäta i den här scanningen.
+        // Fanns redan i schemat (ScoresSchema) men saknades i API-svaret —
+        // FreeReport/PremiumReport räknade om det själva via calculateScores(checks).
+        measured: scores.measured,
+        total: scores.total,
       },
       checks,
       synthesis,

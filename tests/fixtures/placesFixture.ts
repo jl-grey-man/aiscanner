@@ -52,6 +52,12 @@ export const FIXTURE_PLACES_VALUES = [
   'Mysig uteservering och härlig stämning en solig dag.',
   'Maten var riktigt god och personalen snabb.',
   'Lite väl högt pris för portionerna.',
+  'Lisa Larsson',
+  'Johan Öberg',
+  'Sara Nilsson',
+  'https://www.google.com/maps/contrib/1000000001',
+  'https://www.google.com/maps/contrib/1000000002',
+  'https://www.google.com/maps/contrib/1000000003',
   // GBP-profilens websiteUri (http) — sajtens egen canonical (https) är skrapad data och får finnas kvar.
   'http://www.krogentest.se/',
 ]

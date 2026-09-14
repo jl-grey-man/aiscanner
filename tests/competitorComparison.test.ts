@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { COMPETITOR_COMPARISON_CHECK_COUNT } from '@/app/lib/reportDisplay'
 import {
   COMPARISON_KEYS,
   selectCompetitorsToScan,
@@ -315,5 +316,13 @@ describe('formatComparisonForPrompt', () => {
     expect(text).toContain('Alla 2 scannade konkurrenter har, men inte ni: FAQ-schema.')
     // Beta är inte uppmätt på telefon → telefon hamnar inte i något aggregat
     expect(text).not.toMatch(/Bara ni[^\n]*telefon/)
+  })
+})
+
+describe('COMPETITOR_COMPARISON_CHECK_COUNT (reportDisplay.ts) i synk med COMPARISON_KEYS', () => {
+  it('måste uppdateras manuellt om COMPARISON_KEYS ändras — se kommentaren i reportDisplay.ts', () => {
+    // reportDisplay.ts duplicerar antalet i stället för att importera denna modul
+    // (som drar in node-fetch-beroende scraper-moduler, olämpligt för klientbundlen).
+    expect(COMPETITOR_COMPARISON_CHECK_COUNT).toBe(COMPARISON_KEYS.length)
   })
 })

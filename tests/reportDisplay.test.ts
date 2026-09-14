@@ -6,8 +6,10 @@ import {
   entityKnowsLabel,
   categoryMentionedLabel,
   pickSolutionCode,
+  buildComparisonRows,
+  competitorCountFromChecks,
 } from '@/app/lib/reportDisplay'
-import type { DirectoryData } from '@/app/lib/scanResult'
+import type { CheckResult, CompetitorComparisonData, DirectoryData } from '@/app/lib/scanResult'
 
 describe('buildNapRows', () => {
   it('maps found directories with nap data to rows', () => {
@@ -140,5 +142,60 @@ describe('categoryMentionedLabel', () => {
   })
   it('reports no spontaneous mention when false', () => {
     expect(categoryMentionedLabel(false)).toBe('Nämns inte spontant i branschsökning')
+  })
+})
+
+describe('buildComparisonRows', () => {
+  const comparison: CompetitorComparisonData = {
+    keys: ['https', 'faqSchema'],
+    you: { statuses: { https: 'ok', faqSchema: 'bad' }, okCount: 1 },
+    competitors: [
+      { placeId: 'a', name: 'Alfa', website: 'https://alfa.se', rating: 4.2, reviewCount: 10, scanned: true, statuses: { https: 'ok', faqSchema: 'ok' }, okCount: 2 },
+      { placeId: 'b', name: 'Beta', website: 'https://beta.se', rating: null, reviewCount: null, scanned: false, statuses: {}, okCount: null },
+    ],
+  }
+
+  it('en rad per kontroll, med etikett ur CHECK_REGISTRY', () => {
+    const rows = buildComparisonRows(comparison)
+    expect(rows).toEqual([
+      { key: 'https', label: 'HTTPS', you: 'ok', competitors: ['ok', null] },
+      { key: 'faqSchema', label: 'FAQ-schema', you: 'bad', competitors: ['ok', null] },
+    ])
+  })
+
+  it('oscannad konkurrent (scanned: false) blir null i varje rad, inte notMeasured', () => {
+    const rows = buildComparisonRows(comparison)
+    for (const row of rows) expect(row.competitors[1]).toBeNull()
+  })
+
+  it('saknad status för en scannad konkurrent faller tillbaka på notMeasured', () => {
+    const partial: CompetitorComparisonData = {
+      keys: ['https'],
+      you: { statuses: {}, okCount: 0 },
+      competitors: [{ placeId: 'c', name: 'Gamma', website: 'https://gamma.se', rating: null, reviewCount: null, scanned: true, statuses: {}, okCount: 0 }],
+    }
+    const rows = buildComparisonRows(partial)
+    expect(rows[0]).toEqual({ key: 'https', label: 'HTTPS', you: 'notMeasured', competitors: ['notMeasured'] })
+  })
+})
+
+describe('competitorCountFromChecks', () => {
+  function checksWith(data: Record<string, unknown> | null): CheckResult[] {
+    return [{
+      id: 36, key: 'competitors', status: 'ok', source: 'api', finding: '', fix: null,
+      data, codeExample: null, priority: null, tier: 'premium',
+    }]
+  }
+
+  it('räknar konkurrenterna i check #36 data', () => {
+    expect(competitorCountFromChecks(checksWith({ competitors: [{}, {}, {}] }))).toBe(3)
+  })
+
+  it('null när checken saknar data (notMeasured — ingen GBP-matchning)', () => {
+    expect(competitorCountFromChecks(checksWith(null))).toBeNull()
+  })
+
+  it('null när check #36 saknas helt', () => {
+    expect(competitorCountFromChecks([])).toBeNull()
   })
 })

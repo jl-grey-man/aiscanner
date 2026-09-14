@@ -13,6 +13,14 @@
  * "reply rate" can never be measured from it either — kept separate from this
  * module because it's a different, structural limitation (no data exists to
  * validate), not something a quote-check can fix.
+ *
+ * Places policy — "You must always credit the author when displaying photos or
+ * reviews" (verified against developers.google.com/maps/documentation/places/
+ * web-service/policies, 2026-09-14): every quote carries `authorName`/`authorUri`
+ * (Review.authorAttribution.displayName/uri) so PremiumReport can show a link to
+ * the reviewer's profile next to their quote. Author name/uri are Places content
+ * just like the quote itself — never persisted (placesContent.ts strips them
+ * before storage and re-derives them from fresh Places data on read).
  */
 
 import { withRetry } from './retry'
@@ -24,6 +32,11 @@ export interface ReviewInsightTheme {
   theme: string
   sentiment: 'positive' | 'negative' | 'mixed'
   quote: string
+  // Places policy: "You must always credit the author when displaying photos or
+  // reviews" — namn + länk till profilen för recensionen citatet kom ifrån.
+  // null när recensionen saknar authorAttribution.
+  authorName: string | null
+  authorUri: string | null
 }
 
 export interface ReviewInsights {
@@ -33,15 +46,20 @@ export interface ReviewInsights {
   sampleNote: string
 }
 
-interface ReviewForInsights {
+export interface ReviewForInsights {
   rating: number | null
   text: string
+  authorName: string | null
+  authorUri: string | null
 }
 
 /**
- * Plockar ut upp till 5 riktiga recensionstexter (betyg + ordagrann text) ur en rå
- * Places `reviews`-array. Places API (New) ger max 5 recensioner per anrop och har
- * ingen sortering/paginering — detta är hela stickprovet vi någonsin har.
+ * Plockar ut upp till 5 riktiga recensionstexter (betyg + ordagrann text + författar-
+ * attribution) ur en rå Places `reviews`-array. Places API (New) ger max 5 recensioner
+ * per anrop och har ingen sortering/paginering — detta är hela stickprovet vi någonsin
+ * har. `authorAttribution.displayName`/`.uri` följer med varje Review-objekt (fältmasken
+ * 'reviews' i places.ts hämtar hela resursen) — krävs för att kreditera författaren
+ * (Places policy) vid varje citat i reviewInsights.
  */
 export function extractReviewTexts(reviews: unknown): ReviewForInsights[] {
   if (!Array.isArray(reviews)) return []
@@ -50,9 +68,12 @@ export function extractReviewTexts(reviews: unknown): ReviewForInsights[] {
       const rec = r as Record<string, unknown>
       const ratingVal = rec?.rating
       const textObj = rec?.text as Record<string, unknown> | undefined
+      const author = rec?.authorAttribution as Record<string, unknown> | undefined
       return {
         rating: typeof ratingVal === 'number' ? ratingVal : null,
         text: typeof textObj?.text === 'string' ? textObj.text.trim() : '',
+        authorName: typeof author?.displayName === 'string' && author.displayName.trim() ? author.displayName.trim() : null,
+        authorUri: typeof author?.uri === 'string' && author.uri.trim() ? author.uri.trim() : null,
       }
     })
     .filter((r) => r.text.length > 0)
@@ -97,9 +118,18 @@ REGLER:
  * av de faktiska recensionstexterna — kastar allt annat. Detta är hela poängen med
  * modulen: modellen får föreslå teman men aldrig hitta på belägg för dem.
  *
+ * Tar hela recensionsobjekt (inte bara texterna) för att kunna kreditera rätt
+ * författare (Places policy) — se `ReviewInsightTheme.authorName/authorUri`: citatets
+ * författare hittas genom att slå upp vilken recension som innehåller det exakta
+ * utdraget. Matchar flera recensioner samma utdrag (osannolikt, men möjligt vid korta
+ * citat) används den första — samma ordning som citatvalideringen redan litar på.
+ *
  * Exporterad separat för tester.
  */
-export function validateReviewInsights(raw: unknown, reviewTexts: string[]): ReviewInsights | null {
+export function validateReviewInsights(
+  raw: unknown,
+  reviews: Pick<ReviewForInsights, 'text' | 'authorName' | 'authorUri'>[],
+): ReviewInsights | null {
   if (!raw || typeof raw !== 'object') return null
   const obj = raw as Record<string, unknown>
 
@@ -113,14 +143,20 @@ export function validateReviewInsights(raw: unknown, reviewTexts: string[]): Rev
         typeof t.theme === 'string' && t.theme.trim().length > 0 &&
         validSentiments.has(t.sentiment as string) &&
         quote.length > 0 &&
-        reviewTexts.some((text) => text.includes(quote))
+        reviews.some((r) => r.text.includes(quote))
       )
     })
-    .map((t) => ({
-      theme: (t.theme as string).trim(),
-      sentiment: t.sentiment as ReviewInsightTheme['sentiment'],
-      quote: (t.quote as string).trim(),
-    }))
+    .map((t) => {
+      const quote = (t.quote as string).trim()
+      const source = reviews.find((r) => r.text.includes(quote))
+      return {
+        theme: (t.theme as string).trim(),
+        sentiment: t.sentiment as ReviewInsightTheme['sentiment'],
+        quote,
+        authorName: source?.authorName ?? null,
+        authorUri: source?.authorUri ?? null,
+      }
+    })
     .slice(0, 5)
 
   const strArray = (v: unknown): string[] =>
@@ -165,7 +201,7 @@ export async function analyzeReviewInsights(
       () => call(FLASH_MODEL, systemPrompt, prompt, 30000, false, 2000),
       { attempts: 2, baseDelayMs: 1000, isRetryable: (err) => !(err as { permanent?: boolean })?.permanent },
     )
-    return validateReviewInsights(raw, reviewTexts.map((r) => r.text))
+    return validateReviewInsights(raw, reviewTexts)
   } catch (err) {
     console.error('[ReviewInsights] Kunde inte generera:', (err as Error).message)
     return null

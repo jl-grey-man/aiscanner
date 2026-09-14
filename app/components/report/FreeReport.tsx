@@ -3,7 +3,8 @@
 import React, { useState } from 'react'
 import type { ScanResult, CheckResult, CheckRegistryEntry } from '@/app/lib/scanResult'
 import { CHECK_REGISTRY, calculateScores } from '@/app/lib/scanResult'
-import { ScoreCircle, PriorityCard, SolutionCard, LockedSection, CheckTable, Glossary } from '@/app/components/report'
+import { ScoreCircle, PriorityCard, SolutionCard, LockedSection, CheckTable, Glossary, GoogleAttribution } from '@/app/components/report'
+import { competitorCountFromChecks, COMPETITOR_COMPARISON_CHECK_COUNT } from '@/app/lib/reportDisplay'
 import { APP_DOMAIN } from '@/app/lib/config'
 
 // ---------------------------------------------------------------------------
@@ -126,6 +127,10 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
   const topBad = getTopBadChecks(freeChecks, 3)
   const allSolutions = getAllFreeSolutionChecks(checks)
   const premiumPriority = getPremiumPriorityChecks(checks)
+  // Ärlig gratisteaser för den låsta konkurrentsektionen — bara antal, aldrig
+  // namn/betyg (de är låsta bakom fullständig rapport). Räknas ur check #36
+  // (Google Places Nearby Search), som mäts i båda tiers.
+  const competitorCount = competitorCountFromChecks(checks)
 
   // Stripe checkout handler — POST:ar url+city till /api/checkout, redirectar till Stripe
   const [checkoutLoading, setCheckoutLoading] = useState(false)
@@ -222,9 +227,10 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
                 <div className="flex justify-center gap-0.5 mb-1">
                   <span className="text-yellow-700 text-lg">{renderStars(scores.google)}</span>
                 </div>
-                <p className="text-gray-400 text-xs">
+                <p className="text-gray-400 text-xs mb-2">
                   Google{scores.googleCount !== null ? ` (${scores.googleCount} recensioner)` : ''}
                 </p>
+                <GoogleAttribution className="mx-auto" />
               </div>
             )}
           </div>
@@ -403,30 +409,21 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
           error={checkoutError}
         >
           <p className="text-gray-500 text-sm mb-4">
-            Vi hämtar era närmaste konkurrenter via Google (verifierade namn, betyg och antal
-            recensioner — aldrig påhittade) och ger en skriven analys av hur ni står er mot dem.
+            Vi jämför er mot upp till 3 närliggande konkurrenter med egen webbplats, på samma
+            deterministiska kontroller som er sajt — plus en skriven analys av hur ni står er mot dem.
           </p>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-              <div className="text-gray-400 text-sm w-6 text-center font-bold">1</div>
-              <div className="flex-1">
-                <p className="text-gray-900 text-sm font-medium">Konkurrent A</p>
-                <p className="text-gray-400 text-xs mt-0.5">300 m bort</p>
-              </div>
-              <span className="text-amber-700 text-sm font-semibold">
-                ★ 4.6 <span className="text-gray-400 font-normal">(128)</span>
-              </span>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-4 bg-white rounded-lg text-center">
+              <p className="text-2xl font-bold text-gray-900">{competitorCount ?? '—'}</p>
+              <p className="text-gray-400 text-xs mt-1">Konkurrenter hittade via Google i närheten</p>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-              <div className="text-gray-400 text-sm w-6 text-center font-bold">2</div>
-              <div className="flex-1">
-                <p className="text-gray-900 text-sm font-medium">Konkurrent B</p>
-                <p className="text-gray-400 text-xs mt-0.5">450 m bort</p>
-              </div>
-              <span className="text-amber-700 text-sm font-semibold">
-                ★ 4.2 <span className="text-gray-400 font-normal">(64)</span>
-              </span>
+            <div className="p-4 bg-white rounded-lg text-center">
+              <p className="text-2xl font-bold text-gray-900">{COMPETITOR_COMPARISON_CHECK_COUNT}</p>
+              <p className="text-gray-400 text-xs mt-1">Kontroller jämförda per konkurrent</p>
             </div>
+          </div>
+          <div className="flex justify-end mt-3">
+            <GoogleAttribution />
           </div>
         </LockedSection>
 
@@ -451,6 +448,9 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
               <li>Skriven bedömning av ert betyg och er recensionsvolym</li>
               <li>Konkreta tips för att öka antal recensioner</li>
             </ul>
+          </div>
+          <div className="flex justify-end mt-3">
+            <GoogleAttribution />
           </div>
         </LockedSection>
 

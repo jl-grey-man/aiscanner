@@ -22,7 +22,7 @@ describe('extractReviewTexts', () => {
     ]
     const out = extractReviewTexts(raw)
     expect(out).toHaveLength(5)
-    expect(out[0]).toEqual({ rating: 5, text: 'Fantastisk mat!' })
+    expect(out[0]).toEqual({ rating: 5, text: 'Fantastisk mat!', authorName: null, authorUri: null })
     expect(out.map(r => r.text)).not.toContain('Sjätte — ska klippas bort')
   })
 
@@ -31,12 +31,28 @@ describe('extractReviewTexts', () => {
     expect(extractReviewTexts(undefined)).toEqual([])
     expect(extractReviewTexts('not an array')).toEqual([])
   })
+
+  it('plockar ut authorAttribution.displayName/uri (Places policy — kreditering)', () => {
+    const raw = [
+      {
+        rating: 5,
+        text: { text: 'Toppenställe!' },
+        authorAttribution: { displayName: 'Anna Andersson', uri: 'https://www.google.com/maps/contrib/123', photoUri: 'https://x/y.jpg' },
+      },
+      { rating: 3, text: { text: 'Okej.' } }, // ingen authorAttribution
+      { rating: 4, text: { text: 'Bra.' }, authorAttribution: { displayName: '' } }, // tomt namn → null
+    ]
+    const out = extractReviewTexts(raw)
+    expect(out[0]).toMatchObject({ authorName: 'Anna Andersson', authorUri: 'https://www.google.com/maps/contrib/123' })
+    expect(out[1]).toMatchObject({ authorName: null, authorUri: null })
+    expect(out[2]).toMatchObject({ authorName: null, authorUri: null })
+  })
 })
 
 describe('buildReviewInsightsPrompt', () => {
   it('inkluderar recensionstexterna ordagrant och företagsnamn/bransch', () => {
     const prompt = buildReviewInsightsPrompt(
-      [{ rating: 5, text: 'Fantastisk mat och trevlig personal!' }],
+      [{ rating: 5, text: 'Fantastisk mat och trevlig personal!', authorName: null, authorUri: null }],
       meta,
     )
     expect(prompt).toContain('Fantastisk mat och trevlig personal!')
@@ -48,8 +64,8 @@ describe('buildReviewInsightsPrompt', () => {
 
 describe('validateReviewInsights — citatvalidering', () => {
   const reviewTexts = [
-    'Fantastisk mat och mycket trevlig personal!',
-    'Långsam service men god mat.',
+    { text: 'Fantastisk mat och mycket trevlig personal!', authorName: 'Anna Andersson', authorUri: 'https://maps.google.com/contrib/1' },
+    { text: 'Långsam service men god mat.', authorName: 'Bertil Berg', authorUri: 'https://maps.google.com/contrib/2' },
   ]
 
   it('behåller teman vars citat är ett exakt utdrag ur en recension', () => {
@@ -68,6 +84,27 @@ describe('validateReviewInsights — citatvalidering', () => {
     expect(out!.themes[0].quote).toBe('mycket trevlig personal')
     expect(out!.praise).toEqual(['God mat'])
     expect(out!.complaints).toEqual(['Service kan vara långsam'])
+  })
+
+  it('kreditera rätt författare per citat (Places policy) — inte bara den första recensionen', () => {
+    const raw = {
+      themes: [
+        { theme: 'Trevlig personal', sentiment: 'positive', quote: 'mycket trevlig personal' },
+        { theme: 'Långsam service', sentiment: 'negative', quote: 'Långsam service' },
+      ],
+      praise: [],
+      complaints: [],
+      sampleNote: '',
+    }
+    const out = validateReviewInsights(raw, reviewTexts)
+    expect(out!.themes[0]).toMatchObject({ authorName: 'Anna Andersson', authorUri: 'https://maps.google.com/contrib/1' })
+    expect(out!.themes[1]).toMatchObject({ authorName: 'Bertil Berg', authorUri: 'https://maps.google.com/contrib/2' })
+  })
+
+  it('författare null när recensionen saknar authorAttribution', () => {
+    const raw = { themes: [{ theme: 'X', sentiment: 'positive', quote: 'Långsam service' }], praise: [], complaints: [], sampleNote: '' }
+    const out = validateReviewInsights(raw, [{ text: 'Långsam service men god mat.', authorName: null, authorUri: null }])
+    expect(out!.themes[0]).toMatchObject({ authorName: null, authorUri: null })
   })
 
   it('kastar teman vars citat INTE finns ordagrant i någon recension (påhittat)', () => {

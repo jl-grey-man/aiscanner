@@ -12,7 +12,8 @@
  * in ScanResult (scanResult.ts) but was never rendered.
  */
 
-import type { AIMentionData, CheckResult, DirectoryData } from './scanResult'
+import { CHECK_REGISTRY } from './scanResult'
+import type { AIMentionData, CheckKey, CheckResult, CompetitorComparisonData, DirectoryData } from './scanResult'
 
 // ---------------------------------------------------------------------------
 // NAP table (per-directory Name/Address/Phone)
@@ -131,4 +132,57 @@ export function pickSolutionCode(
   }
   const showCode = code !== null && (!isTemplate || unlocked)
   return { code, isTemplate, showCode, codeRef }
+}
+
+// ---------------------------------------------------------------------------
+// Konkurrentjämförelse — tabellrader (PremiumReport) + ärlig gratisteaser
+// ---------------------------------------------------------------------------
+
+/**
+ * Antal kontroller i konkurrentjämförelsen (`COMPARISON_KEYS.length`,
+ * app/lib/competitorComparison.ts). Duplicerad här som en egen konstant i
+ * stället för importerad, eftersom competitorComparison.ts drar in
+ * serverberoende moduler (scraper.ts/enhancedScraper.ts, node-fetch) som
+ * aldrig får hamna i klientbundlen — FreeReport.tsx/PremiumReport.tsx är
+ * 'use client'. Hålls i synk av ett test i competitorComparison.test.ts som
+ * jämför mot COMPARISON_KEYS.length.
+ */
+export const COMPETITOR_COMPARISON_CHECK_COUNT = 14
+
+export type ComparisonStatus = CheckResult['status']
+
+export interface ComparisonRow {
+  key: CheckKey
+  label: string
+  you: ComparisonStatus
+  /** null = konkurrenten kunde inte scannas (scanned: false) — visas som "—" med förklaring. */
+  competitors: (ComparisonStatus | null)[]
+}
+
+/**
+ * Bygger tabellrader (en per kontroll) för PremiumReport:s konkurrentjämförelse
+ * ur `ScanResult.competitorComparison`. Ren funktion — komponenten renderar bara.
+ */
+export function buildComparisonRows(comparison: CompetitorComparisonData): ComparisonRow[] {
+  const labels = new Map(CHECK_REGISTRY.map((e) => [e.key, e.label]))
+  return comparison.keys.map((key) => ({
+    key,
+    label: labels.get(key) ?? key,
+    you: comparison.you.statuses[key] ?? 'notMeasured',
+    competitors: comparison.competitors.map((c) =>
+      c.scanned ? (c.statuses[key] ?? 'notMeasured') : null
+    ),
+  }))
+}
+
+/**
+ * Antal närliggande konkurrenter Google Places hittade (check #36 `competitors`,
+ * `data.competitors` — mäts i både free och paid, se route.ts `competitorListPromise`).
+ * Används för den ärliga gratisteasern (räknar bara, visar aldrig namn/betyg).
+ * null när ingen GBP-matchning/positionsdata fanns (checken är notMeasured).
+ */
+export function competitorCountFromChecks(checks: CheckResult[]): number | null {
+  const data = checks.find((c) => c.key === 'competitors')?.data
+  const list = data?.competitors
+  return Array.isArray(list) ? list.length : null
 }

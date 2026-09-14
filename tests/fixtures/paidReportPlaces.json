@@ -652,17 +652,23 @@
     {
      "theme": "Uteservering",
      "sentiment": "positive",
-     "quote": "Mysig uteservering och härlig stämning en solig dag."
+     "quote": "Mysig uteservering och härlig stämning en solig dag.",
+     "authorName": "Lisa Larsson",
+     "authorUri": "https://www.google.com/maps/contrib/1000000001"
     },
     {
      "theme": "Mat och service",
      "sentiment": "positive",
-     "quote": "Maten var riktigt god och personalen snabb."
+     "quote": "Maten var riktigt god och personalen snabb.",
+     "authorName": "Johan Öberg",
+     "authorUri": "https://www.google.com/maps/contrib/1000000002"
     },
     {
      "theme": "Prisvärdhet",
      "sentiment": "negative",
-     "quote": "Lite väl högt pris för portionerna."
+     "quote": "Lite väl högt pris för portionerna.",
+     "authorName": "Sara Nilsson",
+     "authorUri": "https://www.google.com/maps/contrib/1000000003"
     }
    ],
    "praise": [
@@ -919,30 +925,55 @@
     "rating": 5,
     "text": {
      "text": "Vi satt ute hela kvällen. Mysig uteservering och härlig stämning en solig dag. Kommer tillbaka."
+    },
+    "authorAttribution": {
+     "displayName": "Lisa Larsson",
+     "uri": "https://www.google.com/maps/contrib/1000000001",
+     "photoUri": "https://lh3.googleusercontent.com/a/fixture-lisa"
     }
    },
    {
     "rating": 4,
     "text": {
      "text": "Maten var riktigt god och personalen snabb."
+    },
+    "authorAttribution": {
+     "displayName": "Johan Öberg",
+     "uri": "https://www.google.com/maps/contrib/1000000002",
+     "photoUri": "https://lh3.googleusercontent.com/a/fixture-johan"
     }
    },
    {
     "rating": 3,
     "text": {
      "text": "Okej besök. Lite väl högt pris för portionerna."
+    },
+    "authorAttribution": {
+     "displayName": "Sara Nilsson",
+     "uri": "https://www.google.com/maps/contrib/1000000003",
+     "photoUri": "https://lh3.googleusercontent.com/a/fixture-sara"
     }
    },
    {
     "rating": 5,
     "text": {
      "text": "Fint ställe mitt i stan, trevligt bemötande."
+    },
+    "authorAttribution": {
+     "displayName": "Peter Svensson",
+     "uri": "https://www.google.com/maps/contrib/1000000004",
+     "photoUri": "https://lh3.googleusercontent.com/a/fixture-peter"
     }
    },
    {
     "rating": 4,
     "text": {
      "text": "Bra dryckeslista och lagom ljudnivå."
+    },
+    "authorAttribution": {
+     "displayName": "Eva Karlsson",
+     "uri": "https://www.google.com/maps/contrib/1000000005",
+     "photoUri": "https://lh3.googleusercontent.com/a/fixture-eva"
     }
    }
   ]

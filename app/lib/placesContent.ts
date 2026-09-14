@@ -185,6 +185,8 @@ export const PLACES_CONTENT_FIELDS = [
   'reviewReplies.total',
   'reviewReplies.sampleNote',
   'reviewInsights.themes[].quote',
+  'reviewInsights.themes[].authorName',
+  'reviewInsights.themes[].authorUri',
   'competitorComparison.competitors[].name',
   'competitorComparison.competitors[].website',
   'competitorComparison.competitors[].rating',
@@ -351,6 +353,11 @@ export function stripPlacesContent(result: ScanResult): StoredReport {
       const quote = typeof theme.quote === 'string' ? theme.quote : ''
       refs.reviewQuotes.push({ sha256: sha256(quote), length: quote.length })
       theme.quote = ''
+      // Places policy: författarens namn/profillänk är precis som citatet Places-
+      // innehåll — får inte lagras. Rehydrateras från samma recension som citatet
+      // (findQuote → author lookup), ingen egen referens behövs.
+      if ('authorName' in theme) theme.authorName = null
+      if ('authorUri' in theme) theme.authorUri = null
     }
   }
 
@@ -498,12 +505,17 @@ export function rehydratePlacesContent(stored: StoredReport, fresh: FreshPlaces)
   }
 
   if (isRecord(out.reviewInsights) && Array.isArray(out.reviewInsights.themes)) {
-    const texts = extractReviewTexts(parts.reviews).map(r => r.text)
+    const freshReviews = extractReviewTexts(parts.reviews)
+    const texts = freshReviews.map(r => r.text)
     const themes = out.reviewInsights.themes
       .map((theme, i) => {
         const ref = refs.reviewQuotes[i]
         const quote = ref ? findQuote(texts, ref) : null
-        return quote ? { ...theme, quote } : null
+        if (!quote) return null
+        // Places policy: kreditera författaren — hitta vilken färsk recension
+        // citatet kom ifrån och sätt dess authorAttribution på temat.
+        const author = freshReviews.find(r => r.text.includes(quote))
+        return { ...theme, quote, authorName: author?.authorName ?? null, authorUri: author?.authorUri ?? null }
       })
       .filter((t): t is NonNullable<typeof t> => t !== null)
     const dropped = out.reviewInsights.themes.length - themes.length

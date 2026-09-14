@@ -56,7 +56,7 @@ describe('stripPlacesContent — den riktiga paid-rapportens form', () => {
   })
 
   it('varje fält i PLACES_CONTENT_FIELDS är tomt i den lagrade rapporten', () => {
-    expect(PLACES_CONTENT_FIELDS.length).toBeGreaterThanOrEqual(18)
+    expect(PLACES_CONTENT_FIELDS.length).toBeGreaterThanOrEqual(20)
     const stored = stripPlacesContent(buildPaidReport())
     expect(stored.meta.companyName).toBe('')
     expect(stored.meta.bransch).toBe('')
@@ -66,6 +66,7 @@ describe('stripPlacesContent — den riktiga paid-rapportens form', () => {
     expect(stored.reviewReplies.total).toBe(0)
     expect(stored.reviewReplies.sampleNote).toBe('')
     expect(stored.reviewInsights!.themes.every(t => t.quote === '')).toBe(true)
+    expect(stored.reviewInsights!.themes.every(t => t.authorName === null && t.authorUri === null)).toBe(true)
     for (const c of stored.competitorComparison!.competitors) {
       expect([c.name, c.website, c.rating, c.reviewCount]).toEqual(['', '', null, null])
     }
@@ -174,6 +175,16 @@ describe('rehydratePlacesContent', () => {
     expect(rehydrated.checks.map(c => c.status)).toEqual(report.checks.map(c => c.status))
     // Huvudschemat byggs ändå — av sajtens egna uppgifter.
     expect(rehydrated.checks.find(c => c.key === 'localBusiness')!.richCodeExample).toContain('031-555 66 77'.replace(/^0/, '+46 ').replace(/-/g, ' '))
+  })
+
+  it('kreditera författaren igen vid läsning (Places policy) — rätt namn/länk per citat', () => {
+    const report = buildPaidReport()
+    const rehydrated = rehydratePlacesContent(stripPlacesContent(report), freshPlacesFor())
+    expect(rehydrated.reviewInsights!.themes.map(t => [t.theme, t.authorName, t.authorUri])).toEqual([
+      ['Uteservering', 'Lisa Larsson', 'https://www.google.com/maps/contrib/1000000001'],
+      ['Mat och service', 'Johan Öberg', 'https://www.google.com/maps/contrib/1000000002'],
+      ['Prisvärdhet', 'Sara Nilsson', 'https://www.google.com/maps/contrib/1000000003'],
+    ])
   })
 
   it('ett recensionstema vars citat inte längre finns hos Google utelämnas', () => {

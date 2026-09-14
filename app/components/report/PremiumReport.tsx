@@ -8,6 +8,8 @@ import PriorityCard from './PriorityCard'
 import SolutionCard from './SolutionCard'
 import CheckTable from './CheckTable'
 import Glossary from './Glossary'
+import GoogleAttribution from './GoogleAttribution'
+import CompetitorComparisonTable from './CompetitorComparisonTable'
 import { renderMarkdown } from './RichMarkdown'
 import { APP_DOMAIN } from '@/app/lib/config'
 import {
@@ -67,7 +69,7 @@ const PRIORITY_GROUP_CONFIG: {
 // ---------------------------------------------------------------------------
 
 export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React.JSX.Element {
-  const { meta, scores, checks, synthesis, reviewReplies, reviewInsights, gbp, directories, aiMentions } = scanResult
+  const { meta, scores, checks, synthesis, reviewReplies, reviewInsights, gbp, directories, aiMentions, competitorComparison } = scanResult
 
   // Build a registry lookup for weights
   const registryByKey = new Map(CHECK_REGISTRY.map(e => [e.key, e]))
@@ -193,9 +195,10 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
                   <div className="flex justify-center gap-0.5 mb-1">
                     <span className="text-yellow-700 text-lg">{renderStars(scores.google)}</span>
                   </div>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-gray-400 text-xs mb-2">
                     Google ({scores.googleCount ?? 0} recensioner)
                   </p>
+                  <GoogleAttribution className="mx-auto" />
                 </>
               ) : (
                 <>
@@ -375,12 +378,15 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
         {/* ==================== 7. GOOGLE BUSINESS PROFILE ==================== */}
         {gbp && (
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-            <div className="flex items-center gap-2 mb-5">
-              <span className="text-amber-700">&#9733;</span>
-              <h2 className="text-xl font-bold text-gray-900">Google Business Profile</h2>
-              <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
-                Premium
-              </span>
+            <div className="flex items-center justify-between gap-2 mb-5 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-700">&#9733;</span>
+                <h2 className="text-xl font-bold text-gray-900">Google Business Profile</h2>
+                <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
+                  Premium
+                </span>
+              </div>
+              <GoogleAttribution />
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
@@ -493,12 +499,15 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
 
         {/* ==================== 9. KONKURRENTANALYS ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex items-center gap-2 mb-5">
-            <span className="text-amber-700">&#9733;</span>
-            <h2 className="text-xl font-bold text-gray-900">Konkurrentanalys</h2>
-            <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
-              Premium
-            </span>
+          <div className="flex items-center justify-between gap-2 mb-5 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-700">&#9733;</span>
+              <h2 className="text-xl font-bold text-gray-900">Konkurrentanalys</h2>
+              <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
+                Premium
+              </span>
+            </div>
+            <GoogleAttribution />
           </div>
 
           {synthesis.competitorNote ? (
@@ -509,19 +518,33 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           ) : (
             <p className="text-gray-400 text-sm">Ingen konkurrentanalys tillgänglig.</p>
           )}
+
+          {/* Kontroll-för-kontroll-tabell — samma deterministiska kontroller som
+              bedömer "er" sajt, körda på konkurrenternas egna webbplatser
+              (competitorComparison.ts, inga LLM-bedömningar). */}
+          {competitorComparison && competitorComparison.competitors.length > 0 ? (
+            <CompetitorComparisonTable comparison={competitorComparison} />
+          ) : (
+            <p className="text-gray-400 text-sm mt-4">
+              Ingen konkurrent med egen webbplats kunde jämföras kontroll för kontroll.
+            </p>
+          )}
         </div>
 
         {/* ==================== 10. RECENSIONSANALYS ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex items-center gap-2 mb-5">
-            <span className="text-amber-700">&#9733;</span>
-            <h2 className="text-xl font-bold text-gray-900">
-              Recensionsanalys
-              {scores.googleCount !== null ? ` \u2014 ${scores.googleCount} Google-recensioner` : ''}
-            </h2>
-            <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
-              Premium
-            </span>
+          <div className="flex items-center justify-between gap-2 mb-5 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-700">&#9733;</span>
+              <h2 className="text-xl font-bold text-gray-900">
+                Recensionsanalys
+                {scores.googleCount !== null ? ` \u2014 ${scores.googleCount} Google-recensioner` : ''}
+              </h2>
+              <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
+                Premium
+              </span>
+            </div>
+            <GoogleAttribution />
           </div>
 
           {/* Recensionssvar — Audit #3: Google Places API (New) har inget fält för
@@ -548,7 +571,29 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
                       }`}>
                         {t.theme}
                       </span>
-                      <p className="text-gray-500 text-sm italic">&ldquo;{t.quote}&rdquo;</p>
+                      <div>
+                        <p className="text-gray-500 text-sm italic">&ldquo;{t.quote}&rdquo;</p>
+                        {/* Places policy: "You must always credit the author when
+                            displaying photos or reviews" — namn länkat till profilen. */}
+                        {t.authorName && (
+                          <p className="text-gray-400 text-xs mt-0.5">
+                            &mdash;{' '}
+                            {t.authorUri ? (
+                              <a
+                                href={t.authorUri}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-500 hover:underline"
+                              >
+                                {t.authorName}
+                              </a>
+                            ) : (
+                              t.authorName
+                            )}
+                            , Google-recension
+                          </p>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

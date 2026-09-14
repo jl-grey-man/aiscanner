@@ -241,10 +241,18 @@ const ReviewReplyDataSchema = z.object({
 // Flash får de faktiska recensionstexterna (max 5, Places API-gränsen) i JSON-läge;
 // varje `quote` är validerad i kod (app/lib/reviewInsights.ts) att vara ett ordagrant
 // utdrag ur en riktig recensionstext — citat som inte matchar kastas innan de når hit.
+// Places policy — "You must always credit the author when displaying photos or
+// reviews" (developers.google.com/maps/documentation/places/web-service/policies,
+// verifierad 2026-09-14): varje citat visas med författarens namn + länk till
+// profilen (Places API Review.authorAttribution.displayName/uri). Optional/
+// nullable: en recension kan sakna authorAttribution, och äldre lagrade rapporter
+// (sparade innan detta fält fanns) saknar det helt.
 const ReviewInsightThemeSchema = z.object({
   theme: z.string(),
   sentiment: z.enum(['positive', 'negative', 'mixed']),
   quote: z.string(),
+  authorName: z.string().nullable().optional(),
+  authorUri: z.string().nullable().optional(),
 })
 
 const ReviewInsightsSchema = z.object({
