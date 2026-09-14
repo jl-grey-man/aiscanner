@@ -11,6 +11,7 @@ import { buildCheckResults } from '@/app/lib/checkBuilder'
 import { calculateScores, ScanResultSchema, CHECK_REGISTRY } from '@/app/lib/scanResult'
 import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
 import { enrichChecksWithReportWriter } from '@/app/lib/reportWriter'
+import { fillTemplate } from '@/app/lib/templateFill'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
@@ -946,6 +947,17 @@ export async function POST(req: NextRequest) {
           check.richRelevance = rich.richRelevance
           check.richSteps = rich.richSteps
           check.richCodeExample = rich.richCodeExample
+        }
+      }
+
+      // Fyll generiska kodmallar med kända fakta (namn/adress/telefon/domän)
+      // så premiumkunder aldrig ser ett kort utan kod bara för att Report Writer
+      // saknade rikt innehåll för just den checken — reserv-nivån under
+      // richCodeExample (Task 17 / Audit #2). Free-tier rörs inte: SolutionCard
+      // döljer fortfarande mall-koden helt där.
+      for (const check of checks) {
+        if (check.genericCodeTemplate) {
+          check.genericCodeTemplate = fillTemplate(check.genericCodeTemplate, reportWriterMeta)
         }
       }
 

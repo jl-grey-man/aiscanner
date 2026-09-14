@@ -9,6 +9,11 @@ import { renderMarkdown } from './RichMarkdown'
 
 interface SolutionCardProps {
   check: CheckResult
+  /**
+   * true = kortet visas i ett upplåst (betalt) läge — premiumrapporten.
+   * Default false = gratisrapportens beteende (mall-kod döljs helt), oförändrat.
+   */
+  unlocked?: boolean
 }
 
 type Priority = NonNullable<CheckResult['priority']>
@@ -52,7 +57,7 @@ const PRIORITY_STYLE: Record<
   },
 }
 
-export default function SolutionCard({ check }: SolutionCardProps) {
+export default function SolutionCard({ check, unlocked = false }: SolutionCardProps) {
   const [copied, setCopied] = useState(false)
   const priority = check.priority ?? 'nice'
   const style = PRIORITY_STYLE[priority]
@@ -160,14 +165,26 @@ export default function SolutionCard({ check }: SolutionCardProps) {
           </div>
         )}
 
-        {/* Block 4: Kod att kopiera — döljs i gratisrapporten (codeIsTemplate=true).
-            Datan finns kvar i scanResult, vi visar bara inte den för free-tier. */}
-        {codeToShow && !codeIsTemplate && (
+        {/* Block 4: Kod att kopiera.
+            Free-läge (unlocked=false): mall-kod (codeIsTemplate=true) döljs helt,
+            precis som tidigare — datan finns kvar i scanResult, vi visar den bara inte.
+            Premium-läge (unlocked=true): mall-koden visas ALDRIG dold — genericCodeTemplate
+            är redan ifylld med kända fakta på servern (se templateFill.ts), och eventuella
+            kvarvarande platshållare markeras tydligt med en badge i stället för att gömma
+            hela kortet (Task 17 / Audit #2 — betalande kunder fick tomma kort). */}
+        {codeToShow && (!codeIsTemplate || unlocked) && (
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Kod att kopiera
-              </p>
+            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Kod att kopiera
+                </p>
+                {codeIsTemplate && (
+                  <span className="inline-flex items-center text-[11px] font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                    Mall — ersätt värden inom hakparenteser
+                  </span>
+                )}
+              </div>
               <button
                 onClick={handleCopy}
                 className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"

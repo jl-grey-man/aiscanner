@@ -314,7 +314,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
                 {cat.label}
               </h3>
               {cat.items.map((check) => (
-                <SolutionCard key={check.key} check={check} />
+                <SolutionCard key={check.key} check={check} unlocked />
               ))}
             </div>
           ))}

@@ -81,6 +81,7 @@ app/
     checkExplanations.ts      # Hardcoded "Vad är detta?" texts per check key (used by SolutionCard header)
     genericFixes.ts           # Hardcoded generic fix templates for all 29 free-tier checks (steps + codeTemplate with <PLACEHOLDERS>) — used in free reports, no LLM call needed
     reportWriter.ts           # enrichChecksWithReportWriter() — parallel Pro calls for rich report content; sanitizeCodeExample() strips ANPASSA/PLACEHOLDER lines defensively
+    templateFill.ts           # fillTemplate(template, meta) — fills genericCodeTemplate's <PLACEHOLDERS> with known facts (name/phone/address/domain), paid tier only
     enhancedScraper.ts        # Enhanced scraping: robots.txt, OG, FAQ schema, sitemap, E-A-T
     scraper.ts                # Basic scraping + PageSummary extraction
     directoryChecker.ts       # Swedish directory check via Tavily API (Eniro, Hitta) + NAP consistency
@@ -109,7 +110,7 @@ Request body: `{ url, city?, tier?: 'free' | 'paid' }` — default `tier='free'`
 7. **Tier branch:**
    - `tier='free'` — **skip Pro entirely**. Build synthesis deterministically from check findings via `buildFreeSynthesis()`. ~10–20s scan, ~$0.10 cost.
    - `tier='paid'` — Pro synthesis + Report Writer in parallel. ~60–90s scan, ~$0.35 cost. Synthesis uses **parallel-race fallback** (Pro 120s primary + Flash 45s backup always ready).
-8. Merge rich data (richRelevance, richSteps, richCodeExample) back into checks (paid only)
+8. Merge rich data (richRelevance, richSteps, richCodeExample) back into checks (paid only), then fill remaining `genericCodeTemplate`s with known facts via `fillTemplate()` (paid only — see `templateFill.ts`)
 9. `calculateScores()` — weighted scoring → `scores.free` (29 checks) + `scores.full` (36 checks)
 10. Zod-validate → return `ScanResult`
 
@@ -127,7 +128,7 @@ The same scan runs in two modes, differing only in the synthesis/Pro stage:
 | Latency | ~15s | ~70s |
 | Cost | ~$0.10 (Places + Tavily) | ~$0.35 (+ Pro tokens) |
 
-The UI renders generic templates with `<PLACEHOLDERS>` only when there is no rich content. In free reports, the "Kod att kopiera"-block is hidden entirely (data is still present in scanResult, just not displayed) — the user only sees "Så här fixar ni det" with generic steps. **Paid reports show real code with the company's actual address/phone/openingHours filled in.**
+The UI renders generic templates with `<PLACEHOLDERS>` only when there is no rich content. In **free** reports, the "Kod att kopiera"-block is hidden entirely (data is still present in scanResult, just not displayed) — the user only sees "Så här fixar ni det" with generic steps. **Paid reports never hide a code block that exists** (`SolutionCard`'s `unlocked` prop): richCodeExample is shown as-is; failing that, `genericCodeTemplate` — pre-filled server-side by `fillTemplate()` (`templateFill.ts`) with known facts (company name, phone, street address, city, postal code, domain) — is shown with a "Mall — ersätt värden inom hakparenteser" badge instead of being hidden. Placeholders `fillTemplate()` has no verified data for (e.g. `<VERKSAMHETSTYP>`, `<ORGNUMMER>`, FAQ example questions) are deliberately left as-is rather than guessed.
 
 ### Report Writer (`reportWriter.ts`) — paid only
 
@@ -332,6 +333,7 @@ Every frontend change MUST pass the following gate before being presented to the
 - **Competitors check #36:** Uses Places API (New) Nearby Search with the business's `location.latitude/longitude` + `primaryType` (radius 1.5 km, max 6 results, deduped on normalized name). Returns `notMeasured` if no GBP match. The synthesis prompt is given the verified list and instructed to NEVER invent competitor names — when the list is empty it falls back to industry-generic insights. Konkurrenternas hemsidor scannas INTE — bara namn/betyg/recensioner via Places.
 - **sanitizeCodeExample (paid):** Defensive line-based strip in `reportWriter.ts` that removes `<!-- ANPASSA -->`, `<DITT ...>`, `<PLACEHOLDER>` and similar placeholder patterns from Pro's `richCodeExample`. Pro's prompt forbids placeholders but it sometimes ignores the rule. The strip cleans trailing commas, collapses excess newlines, and returns null if nothing substantial remains (UI falls back to `genericCodeTemplate`).
 - **Generic fixes coverage:** `app/lib/genericFixes.ts` has hardcoded `steps` + `codeTemplate` for all 29 free-tier checks (43 fix variants, 26 with code templates). When adding a new check to `CHECK_REGISTRY`, also add a generic fix here for free-tier UX. Placeholders use the convention `<FÖRETAGSNAMN>`, `<TJÄNST>`, `<STAD>`, `<GATUADRESS>`, `<TELEFONNUMMER>`, `<DOMÄN>`, etc.
+- **templateFill.ts (paid) — premium never hides a code block:** Audit sep 2026 found premium customers got an empty "Kod att kopiera" block whenever Report Writer produced no `richCodeExample` for a check and only `genericCodeTemplate` (raw, with `<PLACEHOLDERS>`) was available — `SolutionCard.tsx` hid template-sourced code unconditionally, in both tiers. Fix: `SolutionCard` takes an `unlocked` prop (`PremiumReport` passes `true`, `FreeReport` omits it → free behavior unchanged); when `unlocked`, template-sourced code is shown with a "Mall — ersätt värden inom hakparenteser" badge instead of being hidden. Server-side, `route.ts` calls `fillTemplate()` on every check's `genericCodeTemplate` (paid tier only, after the Report Writer merge) with a lean fact set (`companyName`, `phone`, `streetAddress`, `city`, `postalCode`, `domain`, `url`, `email` — all already available in `reportWriterMeta`). `fillTemplate()` deliberately does NOT fill `<TJÄNST>` (branch word — needs grammatical agreement it can't guarantee) or any free-text placeholder (`<VERKSAMHETSTYP>`, `<ORGNUMMER>`, FAQ questions) — those stay visible placeholders rather than risk a wrong or invented value.
 - **Tavily directory check:** Uses `TAVILY_API_KEY`. If missing, directory check returns warning status with empty results. Gulasidorna removed from ACTIVE_CHECK_DIRS — do not add back (rate-limiting issues).
 - **AI mention city guard:** Category query is skipped entirely if no city is resolved. Never use "Sverige" as fallback — it produces meaningless national-level results.
 - **Places API reviews:** Returns max 5 reviews per call. The New Places API REST endpoint has no `reviewSort` parameter or pagination — what you get is what you get.
