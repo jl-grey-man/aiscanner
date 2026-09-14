@@ -119,10 +119,10 @@ export async function POST(req: NextRequest) {
       { headers: corsHeaders },
     )
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Okänt fel'
-    console.error('[Finalize] error:', msg)
+    const errorId = crypto.randomUUID().slice(0, 8)
+    console.error(`[Finalize] error [${errorId}]:`, err)
     return NextResponse.json(
-      { error: 'Internt fel', detail: msg },
+      { error: 'Internt fel', errorId },
       { status: 500, headers: corsHeaders },
     )
   }

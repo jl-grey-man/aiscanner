@@ -1014,9 +1014,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(scanResult, { headers: corsHeaders })
 
   } catch (err: any) {
-    console.error('[Enhanced Scan] Error:', err)
+    const errorId = crypto.randomUUID().slice(0, 8)
+    console.error(`[Enhanced Scan] Error [${errorId}]:`, err)
     return NextResponse.json(
-      { error: 'Enhanced scan misslyckades', detail: err.message },
+      { error: 'Internt fel', errorId },
       { status: 500, headers: corsHeaders }
     )
   }

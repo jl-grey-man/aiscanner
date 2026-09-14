@@ -90,10 +90,10 @@ export async function POST(req: NextRequest) {
       { headers: corsHeaders },
     )
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Okänt fel'
-    console.error('[Checkout] error:', msg)
+    const errorId = crypto.randomUUID().slice(0, 8)
+    console.error(`[Checkout] error [${errorId}]:`, err)
     return NextResponse.json(
-      { error: 'Kunde inte starta betalning', detail: msg },
+      { error: 'Kunde inte starta betalning', errorId },
       { status: 500, headers: corsHeaders },
     )
   }
