@@ -23,6 +23,15 @@
 import type { CheckResult } from './scanResult'
 import { CHECK_REGISTRY } from './scanResult'
 import { withRetry } from './retry'
+import {
+  applyMasterSchema,
+  buildMasterSchema,
+  dedupeCodeExamples,
+  pickMasterOwner,
+  referencingKeys,
+  type MasterSchema,
+  type OpeningPeriod,
+} from './masterSchema'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +45,15 @@ export interface RichCheckData {
   richSteps: string | null
   richCodeExample: string | null
   richStatus: RichStatus
+  /** Checken vars kodblock redan täcker den här (huvudschemat eller en dubblett). richCodeExample = bara delta. */
+  codeRef?: string
+}
+
+/** Huvudschemat (Audit #7) och checken som äger dess kodblock. */
+interface MasterContext {
+  ownerKey: string
+  ownerLabel: string
+  master: MasterSchema
 }
 
 type RichContent = Omit<RichCheckData, 'richStatus'>
@@ -60,6 +78,8 @@ export interface BusinessMeta {
   googleRating?: number | null
   reviewCount?: number | null
   weekdayHours?: string[] | null
+  /** Places `regularOpeningHours.periods` — används för huvudschemats openingHoursSpecification. */
+  openingPeriods?: OpeningPeriod[] | null
   schemaTypes?: string[]
   socialLinks?: string[]
   title?: string | null
@@ -312,12 +332,32 @@ export async function enrichChecksWithReportWriter(
   const deadline = startedAt + opts.budgetMs
   const batches = planBatches(enrichable, opts.batchSize)
 
+  // Audit #7: ETT huvudschema, byggt deterministiskt av verifierad data och ägt av
+  // den mest relevanta schema-checken. Övriga schema-checks hänvisar dit.
+  const ownerKey = pickMasterOwner(enrichable)
+  const master = ownerKey ? buildMasterSchema(meta) : null
+  const masterCtx: MasterContext | null = ownerKey && master
+    ? { ownerKey, ownerLabel: CHECK_REGISTRY.find(e => e.key === ownerKey)?.label ?? ownerKey, master }
+    : null
+
   const batchResults = await runWithConcurrency(batches, opts.concurrency, batch =>
-    enrichBatch(batch, meta, callOpenRouter, opts, deadline, now)
+    enrichBatch(batch, meta, callOpenRouter, opts, deadline, now, masterCtx)
   )
 
   const result: Record<string, RichCheckData> = {}
   for (const batchResult of batchResults) Object.assign(result, batchResult)
+
+  if (masterCtx) {
+    applyMasterSchema(result, masterCtx.ownerKey, masterCtx.master)
+    const refs = Object.keys(result).filter(k => result[k].codeRef === masterCtx.ownerKey)
+    console.log(`[ReportWriter] Huvudschema (${masterCtx.master.type}) i ${masterCtx.ownerKey}; hänvisar: ${refs.join(', ') || 'inga'}`)
+  }
+  // Säkerhetsnät: kodblock som ändå är för lika visas bara en gång. Bara kort som
+  // renderas (fix-text finns) får vara mål för en hänvisning.
+  dedupeCodeExamples(result, {
+    first: masterCtx?.ownerKey ?? null,
+    referenceable: new Set(enrichable.filter(c => c.fix !== null).map(c => c.key)),
+  })
 
   const counts: Record<RichStatus, number> = { pro: 0, flash: 0, missing: 0 }
   for (const data of Object.values(result)) counts[data.richStatus]++
@@ -344,6 +384,7 @@ export function applyRichData(checks: CheckResult[], rich: Record<string, RichCh
       check.richSteps = data.richSteps
       check.richCodeExample = data.richCodeExample
       check.richStatus = data.richStatus
+      if (data.codeRef) check.codeRef = data.codeRef
     } else {
       check.richStatus = 'missing'
       console.error(`[ReportWriter] Rikt innehåll SAKNAS för ${check.key}: inget resultat från Report Writer`)
@@ -366,6 +407,7 @@ async function enrichBatch(
   opts: Required<Omit<ReportWriterOptions, 'now'>>,
   deadline: number,
   now: () => number,
+  masterCtx: MasterContext | null = null,
 ): Promise<Record<string, RichCheckData>> {
   const out: Record<string, RichCheckData> = {}
   const partial = new Map<string, RichContent>()
@@ -387,7 +429,7 @@ async function enrichBatch(
     const reserveMs = hasFallback ? callLimitsFor('flash', pending.length).timeoutMs : 0
 
     try {
-      const parsed = await callStage(stage, pending, meta, callOpenRouter, opts, deadline, reserveMs, now)
+      const parsed = await callStage(stage, pending, meta, callOpenRouter, opts, deadline, reserveMs, now, masterCtx)
       const stillPending: CheckResult[] = []
       for (const check of pending) {
         const data = parsed[check.key]
@@ -432,8 +474,9 @@ async function callStage(
   deadline: number,
   reserveMs: number,
   now: () => number,
+  masterCtx: MasterContext | null,
 ): Promise<Record<string, RichContent>> {
-  const { systemPrompt, userPrompt } = buildBatchPrompt(checks, meta)
+  const { systemPrompt, userPrompt } = buildBatchPrompt(checks, meta, masterCtx)
   const limits = callLimitsFor(stage.kind, checks.length)
 
   return withRetry(
@@ -510,7 +553,11 @@ function missingFields(data: RichContent): string {
   return [!data.richRelevance && 'richRelevance', !data.richSteps && 'richSteps'].filter(Boolean).join(', ')
 }
 
-function buildBatchPrompt(checks: CheckResult[], meta: BusinessMeta): { systemPrompt: string; userPrompt: string } {
+function buildBatchPrompt(
+  checks: CheckResult[],
+  meta: BusinessMeta,
+  masterCtx: MasterContext | null = null,
+): { systemPrompt: string; userPrompt: string } {
   const systemPrompt = `Du är en senior svensk AI-sökningskonsult som skriver kundrapporter. Du skriver alltid på svenska. Dina texter är professionella, konkreta och handlingsbara. Du svarar ENBART med giltig JSON.`
 
   const checkDescriptions = checks.map(c => {
@@ -557,9 +604,29 @@ function buildBatchPrompt(checks: CheckResult[], meta: BusinessMeta): { systemPr
 
   const keyList = checks.map(c => `"${c.key}"`).join(', ')
 
+  // Huvudschemat (Audit #7): visas bara för batchar som berörs, och modellen får inte upprepa det.
+  let masterBlock = ''
+  const masterRules: string[] = []
+  if (masterCtx) {
+    const { ownerKey, ownerLabel, master } = masterCtx
+    const batchKeys = checks.map(c => c.key as string)
+    const ownerInBatch = batchKeys.includes(ownerKey)
+    const refs = referencingKeys(batchKeys, ownerKey, master)
+    if (ownerInBatch || refs.length > 0) {
+      masterBlock = `\nHUVUDSCHEMA — företagets JSON-LD är redan genererat av oss från den verifierade datan ovan och visas som kodblock i kortet "${ownerLabel}":\n${master.code}\n`
+    }
+    if (ownerInBatch) {
+      masterRules.push(`- "${ownerKey}": sätt richCodeExample till null — huvudschemat ovan läggs in i det kortet automatiskt. richSteps ska förklara hur ${meta.companyName} lägger in kodblocket på sajten och kontrollerar att det fungerar.`)
+    }
+    if (refs.length > 0) {
+      masterRules.push(`- ${refs.map(k => `"${k}"`).join(', ')}: upprepa ALDRIG huvudschemat eller delar av det — skriv i richSteps att grundkoden finns i kortet "${ownerLabel}". richCodeExample får bara innehålla det som INTE redan finns i huvudschemat (t.ex. en synlig HTML-rad på sajten), annars null.`)
+    }
+    masterRules.push(`- Schema för annat än själva företaget (t.ex. Service, Menu, FAQPage) ska referera till företaget med {"@id": "${master.id}"} i stället för att upprepa namn, adress och telefon.`)
+  }
+
   const userPrompt = `Företagsinformation (allt nedan är verifierad data — använd EXAKT dessa värden, hitta inte på):
 ${knownFacts.join('\n')}
-
+${masterBlock}
 Dessa kontroller har problem. Skriv FÖR VARJE en rapport-text med tre delar:
 
 ${JSON.stringify(checkDescriptions, null, 2)}
@@ -583,7 +650,7 @@ REGLER:
 - Om en Google Maps-länk finns i Företagsinformation ovan: använd den EXAKT som sameAs-värde. Konstruera ALDRIG en egen Google Maps-URL av Place ID:t (t.ex. \`?cid=<Place ID>\`) — Place ID är inte samma sak som ett cid, och en sådan länk blir trasig.
 - KONKRET EXEMPEL: om openingHours saknas i META → utelämna hela "openingHoursSpecification"-arrayen, inkludera den INTE med ANPASSA-värden. Om "image" saknas → utelämna "image"-fältet helt. Om "servesCuisine" saknas → utelämna det.
 - Bättre att lämna ett kort men 100% korrekt schema än ett långt med fyllnadstexter.
-- Svara ENBART med giltig JSON — inga kodblock-markeringar, ingen text utanför JSON
+${masterRules.length > 0 ? masterRules.join('\n') + '\n' : ''}- Svara ENBART med giltig JSON — inga kodblock-markeringar, ingen text utanför JSON
 - Alla texter på svenska`
 
   return { systemPrompt, userPrompt }

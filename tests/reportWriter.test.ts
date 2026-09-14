@@ -196,6 +196,53 @@ describe('enrichChecksWithReportWriter', () => {
   })
 })
 
+describe('huvudschema i Report Writer (Audit #7)', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+  })
+  afterEach(() => { vi.restoreAllMocks() })
+
+  const withFix = (key: CheckKey, status: CheckResult['status'] = 'bad'): CheckResult => ({ ...check(key, status), fix: 'Åtgärda' })
+  const richMeta = { ...meta, phone: '031-12 34 56', placeId: 'ChIJtest', primaryType: 'restaurant' }
+
+  it('ett kodblock i ägarkortet, övriga schema-checks får codeRef och följer med in på checkarna', async () => {
+    const call = vi.fn<CallOpenRouterFn>(async (_m, _s, user) => fullAnswer(keysInPrompt(user)))
+    const checks = [withFix('https'), withFix('socialPresence', 'warning'), withFix('localBusiness'), withFix('jsonLd')]
+    const rich = await enrichChecksWithReportWriter(checks, richMeta, call, fast)
+
+    expect(rich.localBusiness.richCodeExample).toContain('"@id": "https://test.se/#localbusiness"')
+    expect(rich.localBusiness.richCodeExample).toContain('+46 31 12 34 56')
+    expect(rich.localBusiness.codeRef).toBeUndefined()
+    expect(rich.jsonLd.codeRef).toBe('localBusiness')
+    expect(rich.jsonLd.richCodeExample).toBeNull()
+    expect(rich.socialPresence.codeRef).toBe('localBusiness')
+    expect(rich.https.codeRef).toBeUndefined()
+
+    // Prompten visar huvudschemat och förbjuder upprepning
+    const prompts = call.mock.calls.map(c => c[2])
+    const ownerPrompt = prompts.find(p => keysInPrompt(p).includes('localBusiness'))!
+    const refPrompt = prompts.find(p => keysInPrompt(p).includes('jsonLd'))!
+    expect(ownerPrompt).toContain('HUVUDSCHEMA')
+    expect(ownerPrompt).toContain('"localBusiness": sätt richCodeExample till null')
+    expect(refPrompt).toContain('"jsonLd": upprepa ALDRIG huvudschemat')
+
+    applyRichData(checks, rich)
+    expect(checks.find(c => c.key === 'jsonLd')!.codeRef).toBe('localBusiness')
+    expect(checks.find(c => c.key === 'localBusiness')!.codeRef).toBeUndefined()
+  })
+
+  it('utan schema-check som behöver fixas byggs inget huvudschema', async () => {
+    const call = vi.fn<CallOpenRouterFn>(async (_m, _s, user) => fullAnswer(keysInPrompt(user)))
+    const checks = [withFix('localBusiness', 'ok'), withFix('socialPresence', 'warning')]
+    const rich = await enrichChecksWithReportWriter(checks, richMeta, call, fast)
+    expect(call.mock.calls[0][2]).not.toContain('HUVUDSCHEMA')
+    expect(rich.socialPresence.codeRef).toBeUndefined()
+    expect(rich.socialPresence.richCodeExample).toContain('Testbolaget socialPresence')
+  })
+})
+
 describe('applyRichData', () => {
   it('skriver in rika fält + richStatus och markerar checks utan resultat som missing', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})

@@ -881,6 +881,8 @@ export async function POST(req: NextRequest) {
       googleRating: placeForAnalysis?.rating ?? null,
       reviewCount: placeForAnalysis?.userRatingCount ?? null,
       weekdayHours: placeForAnalysis?.regularOpeningHours?.weekdayDescriptions ?? null,
+      // Strukturerade perioder → deterministisk openingHoursSpecification i huvudschemat
+      openingPeriods: placeForAnalysis?.regularOpeningHours?.periods ?? null,
       schemaTypes: mainPage?.schemaTypes ?? [],
       socialLinks: enhancedData.sameAsLinks ?? [],
       title: mainPage?.title ?? null,

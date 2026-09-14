@@ -81,6 +81,7 @@ app/
     checkExplanations.ts      # Hardcoded "Vad är detta?" texts per check key (used by SolutionCard header)
     genericFixes.ts           # Hardcoded generic fix templates for all 29 free-tier checks (steps + codeTemplate with <PLACEHOLDERS>) — used in free reports, no LLM call needed
     reportWriter.ts           # enrichChecksWithReportWriter() — parallel Pro calls for rich report content; sanitizeCodeExample() strips ANPASSA/PLACEHOLDER lines defensively
+    masterSchema.ts           # Audit #7: buildMasterSchema() — ONE deterministic LocalBusiness JSON-LD from verified data; codeRef/delta for other schema checks; dedupeCodeExamples() similarity safety net
     enhancedScraper.ts        # Enhanced scraping: robots.txt, OG, FAQ schema, sitemap, E-A-T
     scraper.ts                # Basic scraping + PageSummary extraction
     directoryChecker.ts       # Swedish directory check via Tavily API (Eniro, Hitta) + NAP consistency
@@ -145,6 +146,13 @@ Receives a rich `BusinessMeta` (companyName, bransch, city, streetAddress, posta
 - `callLimitsFor()` scales timeout/max_tokens with batch size (Pro: 30 s + 25 s/check, 4000 + 2500 tokens/check; Flash: 20 s + 10 s/check, 2000 + 2000 tokens/check).
 - Total time budget `budgetMs` = 170 s. Pro calls reserve time for the Flash fallback of the same batch; no call starts with < 15 s left.
 - route.ts passes `callOpenRouterOnce` (NOT `callOpenRouter`, which has its own withRetry — nested retries would multiply latency).
+**Huvudschema — ett kodblock i stället för 3–5 kopior (Audit #7, `masterSchema.ts`):**
+- `pickMasterOwner()` väljer ägaren: första bad/warning-check med fix-text i ordningen `localBusiness` → `localSubtype` → `schemaAny` → `jsonLd`. Finns ingen → inget huvudschema.
+- `buildMasterSchema(meta)` bygger huvudschemat **deterministiskt, utan LLM**, enbart av verifierad data: `@type` från Places `primaryType` (`PLACES_TO_SCHEMA_TYPE`, suffix `_restaurant`/`_store`, annars sajtens subtyp, annars `LocalBusiness`), `@id` = `<origin>/#localbusiness`, name, url, telefon (+46), e-post, PostalAddress, geo, `openingHoursSpecification` från Places `regularOpeningHours.periods` (`meta.openingPeriods`, ogiltiga perioder → utelämnas), `sameAs` = Maps-länk + sajtens egna sameAs. Aldrig aggregateRating/description/priceRange.
+- Batch-prompten visar huvudschemat för berörda batchar: ägaren ska ge `richCodeExample: null`, täckta checks får inte upprepa det och ska bara ge delta; annan schema-typ ska referera `{"@id": ...}`.
+- Efter sammanslagningen: `applyMasterSchema()` sätter huvudschemat som ägarens `richCodeExample`. Checks i `MASTER_COVERAGE` (localSubtype/schemaAny/jsonLd/aiMentions alltid; socialPresence/gbpData om `sameAs`, openingHours om öppettider, napConsistency/phone/contactInfo om adress/telefon/e-post finns i schemat) får `codeRef` = ägarens nyckel och `extractSchemaDelta()` rensar deras kod till bara det som inte redan finns i huvudschemat (företagsnoder reduceras till nya egenskaper under samma `@id`, nästlade företagsobjekt → `{"@id"}`, inget kvar/≥ 0,6 likt → null).
+- `dedupeCodeExamples()` är ett generellt säkerhetsnät: token-baserad Ratcliff/Obershelp-likhet (`codeSimilarity()`, gemener, utan citattecken och JSON-LD-omslag) ≥ `DUPLICATE_THRESHOLD` 0,6 mot ett tidigare kodblock (ägaren först, sedan registerordning) → koden tas bort och `codeRef` pekar på det behållna kortet. Bara kort med fix-text (som renderas) kan vara mål.
+- `applyRichData()` kopierar `codeRef` till checken (Zod-fältet `codeRef` i `CheckResultSchema` — annars strippas det). `SolutionCard` visar då en hänvisningsruta med länk `#fix-<codeRef>` + ev. delta-kod, och faller ALDRIG tillbaka på mall-/Flash-kod.
 - Every bad/warning check gets `richStatus`: `'pro'` | `'flash'` | `'missing'`. `'missing'` is logged with its reason (`[ReportWriter] Rikt innehåll SAKNAS för <key>: ...`); partial content is kept. `applyRichData()` merges into checks and also marks checks absent from the result as missing. Every failed attempt is logged too (`[ReportWriter] Pro-försök misslyckades ...`).
 
 ### Synthesis Flash-fallback (paid)
@@ -155,7 +163,7 @@ The paid synthesis call uses a **parallel race**: Pro (120s timeout) AND Flash (
 
 The `ScanResult` Zod schema defines:
 - `meta` — domain, companyName, city, scanDate, tier
-- `checks` — array of exactly 37 `CheckResult` objects (each with key, status, tier, category, finding, fix, priority, weight, + optional richRelevance/richSteps/richCodeExample/richStatus)
+- `checks` — array of exactly 37 `CheckResult` objects (each with key, status, tier, category, finding, fix, priority, weight, + optional richRelevance/richSteps/richCodeExample/richStatus/codeRef)
 - `scores` — `{ free: 0-100, full: 0-100 }`
 - `synthesis` — structured synthesis (actionPlan, competitorNote, reviewAnalysis)
 - `reviewReplies` — review reply analysis

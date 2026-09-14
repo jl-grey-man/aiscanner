@@ -98,6 +98,7 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 - [x] checkExplanations.ts — hardcoded "Vad är detta?" texts for all check keys
 - [x] richRelevance/richSteps/richCodeExample fields in CheckResult schema
 - [x] richStatus ('pro' | 'flash' | 'missing') per bad/warning check — missing is always logged, never silent
+- [x] ONE master schema (deterministic LocalBusiness JSON-LD from verified data) owned by the most relevant schema check; other schema checks get `codeRef` + delta only; similarity dedup safety net (Audit #7)
 - [x] Report Writer runs parallel with Pro synthesis
 
 ### Premium / Full Scan

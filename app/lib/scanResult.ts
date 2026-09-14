@@ -94,6 +94,9 @@ export const CheckResultSchema = z.object({
   // Vilken modell som levererade rikt innehåll ('pro' | 'flash'), eller 'missing' om
   // checken saknar komplett rikt innehåll (orsaken loggas). Sätts för alla bad/warning-checks i paid.
   richStatus: z.enum(['pro', 'flash', 'missing']).optional(),
+  // Nyckeln till checken vars kodblock (t.ex. huvudschemat) redan täcker den här checken.
+  // Sätts bara i paid (masterSchema.ts); richCodeExample innehåller då enbart ev. delta.
+  codeRef: z.string().optional(),
   // Generic fix fields (populated by genericFixes.ts for bad/warning checks — both tiers)
   genericSteps: z.string().nullable().optional(),
   genericCodeTemplate: z.string().nullable().optional(),

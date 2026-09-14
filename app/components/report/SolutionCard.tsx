@@ -61,6 +61,13 @@ export default function SolutionCard({ check }: SolutionCardProps) {
 
   const explanation = CHECK_EXPLANATIONS[check.key]
 
+  // Hänvisning (paid): ett annat kort har redan kodblocket som täcker den här checken
+  // (huvudschemat eller en dubblett). Då visas bara hänvisningen + ev. delta-kod —
+  // aldrig mall- eller Flash-koden, som skulle upprepa samma block igen.
+  const codeRefLabel = check.codeRef
+    ? CHECK_REGISTRY.find((e) => e.key === check.codeRef)?.label ?? check.codeRef
+    : null
+
   // Välj kod-källa i prioritetsordning: rich (paid, riktig data) > generic (mall) > flash (varierar).
   // codeIsTemplate = true betyder att koden har <PLACEHOLDERS> som användaren själv måste fylla i.
   let codeToShow: string | null = null
@@ -68,13 +75,14 @@ export default function SolutionCard({ check }: SolutionCardProps) {
   if (check.richCodeExample && check.richCodeExample.trim().length > 0) {
     codeToShow = check.richCodeExample
     codeIsTemplate = false
-  } else if (check.genericCodeTemplate && check.genericCodeTemplate.trim().length > 0) {
+  } else if (!check.codeRef && check.genericCodeTemplate && check.genericCodeTemplate.trim().length > 0) {
     codeToShow = check.genericCodeTemplate
     codeIsTemplate = true
-  } else if (check.codeExample && check.codeExample.trim().length > 0) {
+  } else if (!check.codeRef && check.codeExample && check.codeExample.trim().length > 0) {
     codeToShow = check.codeExample
     codeIsTemplate = false
   }
+  const showCode = !!codeToShow && !codeIsTemplate
 
   const handleCopy = () => {
     if (codeToShow) {
@@ -162,31 +170,57 @@ export default function SolutionCard({ check }: SolutionCardProps) {
 
         {/* Block 4: Kod att kopiera — döljs i gratisrapporten (codeIsTemplate=true).
             Datan finns kvar i scanResult, vi visar bara inte den för free-tier. */}
-        {codeToShow && !codeIsTemplate && (
+        {(showCode || codeRefLabel) && (
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Kod att kopiera
               </p>
-              <button
-                onClick={handleCopy}
-                className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
-              >
-                {copied ? (
-                  <span className="text-emerald-600 font-medium">Kopierat!</span>
-                ) : (
-                  <>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    Kopiera
-                  </>
-                )}
-              </button>
+              {showCode && (
+                <button
+                  onClick={handleCopy}
+                  className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
+                >
+                  {copied ? (
+                    <span className="text-emerald-600 font-medium">Kopierat!</span>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Kopiera
+                    </>
+                  )}
+                </button>
+              )}
             </div>
-            <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed">
-              <code className="font-mono">{codeToShow}</code>
-            </pre>
+            {codeRefLabel && (
+              <div className={`rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-gray-800 leading-relaxed${showCode ? ' mb-3' : ''}`}>
+                <p>
+                  {showCode ? (
+                    <>
+                      Grundkoden ingår i kodblocket under <strong>”{codeRefLabel}”</strong>. Nedan finns bara det som tillkommer för just den här punkten.
+                    </>
+                  ) : (
+                    <>
+                      Koden för den här punkten ingår redan i kodblocket under <strong>”{codeRefLabel}”</strong>. Lägg in det blocket en gång – det täcker flera punkter i rapporten.
+                    </>
+                  )}
+                </p>
+                <a
+                  href={`#fix-${check.codeRef}`}
+                  className="mt-2 inline-flex items-center gap-1 font-medium text-blue-700 hover:text-blue-900 hover:underline underline-offset-2"
+                >
+                  Gå till kodblocket
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            )}
+            {showCode && (
+              <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs overflow-x-auto leading-relaxed">
+                <code className="font-mono">{codeToShow}</code>
+              </pre>
+            )}
           </div>
         )}
       </div>
