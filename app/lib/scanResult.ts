@@ -185,12 +185,26 @@ const DirectoryDataSchema = z.object({
   fix: z.string(),
 })
 
-// AI mention data (from aiMentionChecker.ts)
+// AI mention fact-check claim (Audit #4) — a concrete claim the AI made about the
+// company's location/city/industry, checked against known GBP facts.
+const FactCheckClaimSchema = z.object({
+  claim: z.string(),
+  verdict: z.enum(['correct', 'wrong', 'unverifiable']),
+  correctFact: z.string().nullable(),
+})
+
+// AI mention data (from aiMentionChecker.ts). Audit #4: entityKnows/entitySentiment
+// used to come from a length/keyword heuristic — now derived from a real Flash
+// classification (entityClassification) plus a fact-check of the AI's concrete claims
+// against known GBP data (factChecks), so the report can show exactly what the AI got
+// wrong instead of just asserting "knows"/"doesn't know".
 const AIMentionDataSchema = z.object({
   entityQuery: z.string(),
   entityResponse: z.string(),
   entityKnows: z.boolean(),
+  entityClassification: z.enum(['knows', 'doesNotKnow', 'wrongFacts']),
   entitySentiment: z.enum(['positive', 'neutral', 'negative', 'unknown']),
+  factChecks: z.array(FactCheckClaimSchema),
   extractedNiche: z.string(),
   categoryQuery: z.string(),
   categoryResponse: z.string(),
@@ -256,6 +270,7 @@ export type ScanSynthesis = z.infer<typeof SynthesisSchema>
 export type GBPData = z.infer<typeof GBPDataSchema>
 export type DirectoryData = z.infer<typeof DirectoryDataSchema>
 export type AIMentionData = z.infer<typeof AIMentionDataSchema>
+export type FactCheckClaimData = z.infer<typeof FactCheckClaimSchema>
 export type ReviewReplyData = z.infer<typeof ReviewReplyDataSchema>
 export type ReviewInsightTheme = z.infer<typeof ReviewInsightThemeSchema>
 export type ReviewInsightsData = z.infer<typeof ReviewInsightsSchema>

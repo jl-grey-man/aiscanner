@@ -1,14 +1,41 @@
 import { APP_URL } from './config'
+import { withRetry } from './retry'
+import type { CallOpenRouterFn } from './reportWriter'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // GPT-4o-mini: cheap, has broad web training data — good for simulating ChatGPT user queries
 const AI_MENTION_MODEL = 'openai/gpt-4o-mini'
+// Klassificeringen av AI-svaret (Audit #4) körs mot Flash i JSON-läge — samma modell
+// som övriga JSON-klassificeringar i appen (reviewInsights.ts, reportWriter.ts).
+const FLASH_MODEL = 'google/gemini-2.5-flash'
+
+/**
+ * Audit #4: entityKnows sattes tidigare av en längdheuristik (`svar.length > 80`),
+ * som gav `entityKnows: true` även när AI:t uttryckligen sa att det saknade
+ * information (så länge svaret var långt nog / inte innehöll en av tre exakta
+ * fraser). Ersatt med en riktig klassificering (`classifyEntityResponse`, Flash i
+ * JSON-läge) i tre klasser — och en faktagranskning av AI:ns konkreta påståenden
+ * (plats, stad, bransch) mot kända GBP-fakta, så rapporten kan visa exakt VAD AI:t
+ * har fel om ("AI tror att ni ligger i Haga — fel, ni ligger på Kungsportsavenyen 27").
+ */
+export type EntityClassification = 'knows' | 'doesNotKnow' | 'wrongFacts'
+
+export interface FactCheckClaim {
+  /** Kort svensk beskrivning av vad AI:t påstår, t.ex. "Ligger i Haga". */
+  claim: string
+  verdict: 'correct' | 'wrong' | 'unverifiable'
+  /** Den kända, korrekta uppgiften — bara satt när verdict === 'wrong'. */
+  correctFact: string | null
+}
 
 export interface AIMentionResult {
   entityQuery: string
   entityResponse: string
-  entityKnows: boolean
+  entityKnows: boolean   // = entityClassification === 'knows'
+  entityClassification: EntityClassification
   entitySentiment: 'positive' | 'neutral' | 'negative' | 'unknown'
+  /** Faktagranskning av AI:ns konkreta påståenden om plats/stad/bransch mot kända GBP-fakta. */
+  factChecks: FactCheckClaim[]
 
   extractedNiche: string   // niche extracted from entity response
   categoryQuery: string
@@ -168,25 +195,140 @@ Bara orden — ingen förklaring. Om du inte kan avgöra nischen, svara med "${f
   return fallbackBransch
 }
 
+interface EntityClassificationResult {
+  classification: EntityClassification
+  factChecks: FactCheckClaim[]
+}
+
+export function buildClassificationPrompt(
+  companyName: string,
+  city: string,
+  bransch: string,
+  address: string | null,
+  entityResponse: string,
+): string {
+  const knownFacts = [
+    `Företagsnamn: ${companyName}`,
+    city ? `Stad: ${city}` : null,
+    bransch ? `Bransch: ${bransch}` : null,
+    address ? `Adress (Google Business Profile): ${address}` : null,
+  ].filter(Boolean).join('\n')
+
+  return `Du utvärderar ett AI-svar om ett specifikt företag. Svara ENDAST i giltig JSON.
+
+KÄNDA, VERIFIERADE FAKTA (Google Business Profile):
+${knownFacts}
+
+AI-SVARET SOM SKA UTVÄRDERAS:
+"${entityResponse}"
+
+Gör två saker:
+
+1. Klassificera svaret som ETT av:
+   - "knows": svaret visar konkret, korrekt kunskap om just det här företaget — inte en generisk gissning.
+   - "doesNotKnow": svaret säger uttryckligen att det saknar information, är för vagt/generiskt för att räknas som kunskap, eller beskriver ett annat/okänt företag.
+   - "wrongFacts": svaret gör ett eller flera konkreta sakpåståenden om företaget (t.ex. plats, stad, bransch) som MOTSÄGER de kända fakta ovan.
+
+2. Faktagranska: lista varje konkret, kontrollerbart sakpåstående i svaret om PLATS, STAD eller BRANSCH/NISCH (ignorera vaga omdömen som "populär" eller "bra"). För varje påstående:
+   - "claim": kort svensk beskrivning av vad AI:t påstår (t.ex. "Ligger i Haga")
+   - "verdict": "correct" om det stämmer mot fakta ovan, "wrong" om det motsäger fakta ovan, "unverifiable" om det inte går att kontrollera mot fakta ovan
+   - "correctFact": ENDAST vid "wrong" — den korrekta uppgiften enligt fakta ovan (t.ex. "Kungsportsavenyen 27"). Annars null.
+
+Hitta inte på påståenden som inte finns i AI-svaret. Om AI-svaret inte gör några konkreta påståenden om plats/stad/bransch: returnera en tom factChecks-lista.
+
+Returnera EXAKT detta JSON-format, inget annat:
+{
+  "classification": "knows" | "doesNotKnow" | "wrongFacts",
+  "factChecks": [
+    { "claim": "...", "verdict": "correct" | "wrong" | "unverifiable", "correctFact": "..." | null }
+  ]
+}`
+}
+
+/** Exporterad separat för tester — kastar vid ogiltig/oanvändbar klassificering. */
+export function validateClassification(raw: unknown): EntityClassificationResult {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('Klassificeringssvaret var inte ett JSON-objekt')
+  }
+  const obj = raw as Record<string, unknown>
+
+  const validClassifications = new Set(['knows', 'doesNotKnow', 'wrongFacts'])
+  if (!validClassifications.has(obj.classification as string)) {
+    throw new Error(`Ogiltig klassificering i AI-svaret: ${String(obj.classification)}`)
+  }
+  const classification = obj.classification as EntityClassification
+
+  const validVerdicts = new Set(['correct', 'wrong', 'unverifiable'])
+  const factChecksRaw = Array.isArray(obj.factChecks) ? obj.factChecks : []
+  const factChecks: FactCheckClaim[] = factChecksRaw
+    .filter((c): c is Record<string, unknown> => !!c && typeof c === 'object')
+    .filter((c) => typeof c.claim === 'string' && c.claim.trim().length > 0 && validVerdicts.has(c.verdict as string))
+    .map((c) => ({
+      claim: (c.claim as string).trim(),
+      verdict: c.verdict as FactCheckClaim['verdict'],
+      correctFact:
+        c.verdict === 'wrong' && typeof c.correctFact === 'string' && c.correctFact.trim().length > 0
+          ? (c.correctFact as string).trim()
+          : null,
+    }))
+    .slice(0, 10)
+
+  return { classification, factChecks }
+}
+
+/**
+ * Klassificerar AI:ns svar om företaget mot kända fakta (Flash, JSON-läge, med retry
+ * — samma mönster som reviewInsights.ts/reportWriter.ts). Kastar vid permanent fel
+ * eller trasigt/ogiltigt svar efter retry — checkAIMentions() fångar det och mappar
+ * hela checken till notMeasured (aldrig 'bad'), se Task 9-mönstret.
+ */
+async function classifyEntityResponse(
+  companyName: string,
+  city: string,
+  bransch: string,
+  address: string | null,
+  entityResponse: string,
+  call: CallOpenRouterFn,
+): Promise<EntityClassificationResult> {
+  const prompt = buildClassificationPrompt(companyName, city, bransch, address, entityResponse)
+  const systemPrompt = 'Du är en svensk AI-sökningsanalytiker. Svara ENDAST i giltig JSON. Ingen markdown, ingen text utanför JSON.'
+  // Valideringen körs INNANFÖR försöket (samma mönster som JSON-parsningen i
+  // callOpenRouterOnce/route.ts) — en syntaktiskt giltig men semantiskt oanvändbar
+  // klassificering (fel enum-värde) ger då ett nytt Flash-anrop i stället för att
+  // direkt falla till notMeasured.
+  return withRetry(
+    async () => {
+      const raw = await call(FLASH_MODEL, systemPrompt, prompt, 20000, false, 1200)
+      return validateClassification(raw)
+    },
+    { attempts: 2, baseDelayMs: 1000, isRetryable: (err) => !(err as { permanent?: boolean })?.permanent },
+  )
+}
+
 export async function checkAIMentions(
   companyName: string,
   city: string,
   bransch: string,
   apiKey: string,
-  placesTypes?: string[]
+  call: CallOpenRouterFn,
+  placesTypes?: string[],
+  address?: string | null,
 ): Promise<AIMentionResult> {
   try {
-    return await runAIMentionCheck(companyName, city, bransch, apiKey, placesTypes)
+    return await runAIMentionCheck(companyName, city, bransch, apiKey, call, placesTypes, address ?? null)
   } catch (err: any) {
-    // A real API/network error (not the intentional "no city" skip below, which never
-    // throws) — never let this collapse into a 'bad' verdict. checkBuilder.ts maps
-    // errored:true to status 'notMeasured' regardless of the fields below.
+    // A real API/network error — either the entity/category GPT call, or the Flash
+    // classification (Audit #4) — never let this collapse into a 'bad' verdict.
+    // checkBuilder.ts maps errored:true to status 'notMeasured' regardless of the
+    // fields below.
     console.error(`[AI Mention] checkAIMentions failed: ${err.message}`)
     return {
       entityQuery: '',
       entityResponse: '',
       entityKnows: false,
+      entityClassification: 'doesNotKnow',
       entitySentiment: 'unknown',
+      factChecks: [],
       extractedNiche: bransch,
       categoryQuery: '',
       categoryResponse: '',
@@ -204,16 +346,20 @@ async function runAIMentionCheck(
   city: string,
   bransch: string,
   apiKey: string,
-  placesTypes?: string[]
+  call: CallOpenRouterFn,
+  placesTypes: string[] | undefined,
+  address: string | null,
 ): Promise<AIMentionResult> {
   // Step 1: Entity query — what does AI know about this company?
   const entityQuery = `Vad vet du om "${companyName}" i ${city || 'Sverige'}? Berätta vad du känner till om företaget.`
   const entityResponse = await callGPT(apiKey, entityQuery)
 
-  const entityKnows = entityResponse.length > 80
-    && !entityResponse.toLowerCase().includes('har ingen information')
-    && !entityResponse.toLowerCase().includes('känner inte till')
-    && !entityResponse.toLowerCase().includes('vet inte')
+  // Step 1b (Audit #4): classify the answer + fact-check its concrete claims against
+  // known GBP data, instead of a length/keyword heuristic.
+  const { classification, factChecks } = await classifyEntityResponse(
+    companyName, city, bransch, address, entityResponse, call
+  )
+  const entityKnows = classification === 'knows'
 
   const entitySentiment = entityKnows ? detectEntitySentiment(entityResponse) : 'unknown'
 
@@ -239,7 +385,19 @@ async function runAIMentionCheck(
   let finding: string
   let fix: string
 
-  if (entityKnows && categoryMentioned) {
+  if (classification === 'wrongFacts') {
+    // Audit #4: aktiv felinformation är värre än att inte synas alls — AI:t kan skicka
+    // kunder till fel adress eller beskriva fel bransch. Alltid 'bad', oavsett
+    // categoryMentioned.
+    status = 'bad'
+    const wrongClaims = factChecks.filter((c) => c.verdict === 'wrong')
+    finding = wrongClaims.length > 0
+      ? `AI ger felaktig information om företaget: ${wrongClaims
+          .map((c) => `tror att "${c.claim}"${c.correctFact ? ` — men rätt uppgift är "${c.correctFact}"` : ''}`)
+          .join('; ')}.`
+      : 'AI ger felaktig information om företaget som motsäger verifierade uppgifter.'
+    fix = 'Rätta bilden AI har av er: se till att adress, stad och bransch är konsekventa och tydligt strukturerade i Google Business Profile, schema-markup (LocalBusiness) och kataloger som Eniro/Hitta — AI-modeller tränas delvis på den typen av data.'
+  } else if (entityKnows && categoryMentioned) {
     status = 'ok'
     finding = `AI känner till företaget och nämner det i nischsökningar ("${extractedNiche}"). Stark entitetsprofil.`
     fix = ''
@@ -263,7 +421,9 @@ async function runAIMentionCheck(
     entityQuery,
     entityResponse,
     entityKnows,
+    entityClassification: classification,
     entitySentiment,
+    factChecks,
     extractedNiche,
     categoryQuery,
     categoryResponse,

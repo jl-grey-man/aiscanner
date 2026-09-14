@@ -779,7 +779,7 @@ export async function POST(req: NextRequest) {
           fix: '',
         }
       }),
-      checkAIMentions(companyName, city, bransch, OPENROUTER_API_KEY!, placeTypes).catch((err) => {
+      checkAIMentions(companyName, city, bransch, OPENROUTER_API_KEY!, callOpenRouterOnce, placeTypes, placeForAnalysis?.formattedAddress ?? null).catch((err) => {
         console.error('[Enhanced Scan] AI mention check failed:', err.message)
         return null
       }),

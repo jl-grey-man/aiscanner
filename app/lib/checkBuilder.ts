@@ -873,6 +873,13 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         aiMentionResult.fix || null,
         {
           entityKnows: aiMentionResult.entityKnows,
+          // Audit #4: klassificering (knows/doesNotKnow/wrongFacts) + AI:ns citat och
+          // faktagranskning mot kända GBP-fakta, så rapporten kan visa "AI tror att ni
+          // ligger i Haga — fel, ni ligger på Kungsportsavenyen 27" i stället för bara
+          // en längdheuristik.
+          entityClassification: aiMentionResult.entityClassification,
+          entityResponse: aiMentionResult.entityResponse,
+          factChecks: aiMentionResult.factChecks,
           entitySentiment: aiMentionResult.entitySentiment,
           categoryMentioned: aiMentionResult.categoryMentioned,
           extractedNiche: aiMentionResult.extractedNiche,

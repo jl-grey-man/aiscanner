@@ -72,7 +72,7 @@ export const CHECK_EXPLANATIONS: Partial<Record<CheckKey, string>> = {
 
   internalLinks: 'Internlänkning hjälper AI-crawlers att navigera mellan relaterade sidor och förstå hur sajten hänger ihop. God internlänkning gör att mer av ert innehåll indexeras och används i AI-svar.',
 
-  aiMentions: 'AI-omnämnandetest kontrollerar om AI-modeller (som GPT-4) redan känner till ert företag och nämner er spontant vid branschrelaterade frågor. Det mäter er faktiska synlighet i AI-sökmotorer.',
+  aiMentions: 'AI-omnämnandetest kontrollerar om AI-modeller (som GPT-4) redan känner till ert företag och nämner er spontant vid branschrelaterade frågor. Svaret faktagranskas dessutom mot er Google Business Profile (adress, stad, bransch) — så att felaktig information AI:t sprider om er upptäcks, inte bara om AI:t känner till er.',
 
   reviewReplies: 'Recensionssvar visar AI-motorer att företaget är aktivt och engagerat. Google AI Overviews inkluderar företagssvar i sin analys, och ett högt svarsfrekvens signalerar god kundservice.',
 
