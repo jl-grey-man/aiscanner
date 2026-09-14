@@ -99,6 +99,8 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 - [x] richRelevance/richSteps/richCodeExample fields in CheckResult schema
 - [x] richStatus ('pro' | 'flash' | 'missing') per bad/warning check — missing is always logged, never silent
 - [x] ONE master schema (deterministic LocalBusiness JSON-LD from verified data) owned by the most relevant schema check; other schema checks get `codeRef` + delta only; similarity dedup safety net (Audit #7)
+- [x] Faktaförankring: verifierade fakta (telefon, öppettider, kända URL:er, skrapat meny-/tjänsteinnehåll, FAQ-frågor) + förbud mot påhittade fakta i syntes- och Report Writer-prompterna; efterkontroll `groundReport()` rättar/tar bort påhittade öppettider, telefon, interna URL:er, menyrätter och priser och loggar `[FactCheck]` (Audit #6)
+- [ ] Uppföljning Audit #6: FAQ-svar i fri text kan inte verifieras automatiskt — bara promptregeln skyddar; överväg att endast tillåta FAQPage-svar byggda på verifierade fakta
 - [x] Report Writer runs parallel with Pro synthesis
 
 ### Premium / Full Scan

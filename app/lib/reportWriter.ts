@@ -32,6 +32,7 @@ import {
   type MasterSchema,
   type OpeningPeriod,
 } from './masterSchema'
+import { formatFactsForPrompt, GROUNDING_RULES, type VerifiedFacts } from './factGuard'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +85,8 @@ export interface BusinessMeta {
   socialLinks?: string[]
   title?: string | null
   h1?: string | null
+  /** Audit #6: verifierade fakta (kända URL:er, skrapat meny-/tjänsteinnehåll, FAQ-frågor) + förbud mot påhittade fakta. */
+  verifiedFacts?: VerifiedFacts | null
 }
 
 /**
@@ -624,9 +627,14 @@ function buildBatchPrompt(
     masterRules.push(`- Schema för annat än själva företaget (t.ex. Service, Menu, FAQPage) ska referera till företaget med {"@id": "${master.id}"} i stället för att upprepa namn, adress och telefon.`)
   }
 
+  // Audit #6: kända undersidor, skrapat meny-/tjänsteinnehåll och FAQ-frågor + förbud mot påhittade fakta.
+  // Telefon/öppettider finns redan i knownFacts ovan.
+  const factsBlock = meta.verifiedFacts ? `\n${formatFactsForPrompt(meta.verifiedFacts, { includeContact: false })}\n` : ''
+  const groundingRules = meta.verifiedFacts ? `${GROUNDING_RULES}\n` : ''
+
   const userPrompt = `Företagsinformation (allt nedan är verifierad data — använd EXAKT dessa värden, hitta inte på):
 ${knownFacts.join('\n')}
-${masterBlock}
+${factsBlock}${masterBlock}
 Dessa kontroller har problem. Skriv FÖR VARJE en rapport-text med tre delar:
 
 ${JSON.stringify(checkDescriptions, null, 2)}
@@ -650,7 +658,7 @@ REGLER:
 - Om en Google Maps-länk finns i Företagsinformation ovan: använd den EXAKT som sameAs-värde. Konstruera ALDRIG en egen Google Maps-URL av Place ID:t (t.ex. \`?cid=<Place ID>\`) — Place ID är inte samma sak som ett cid, och en sådan länk blir trasig.
 - KONKRET EXEMPEL: om openingHours saknas i META → utelämna hela "openingHoursSpecification"-arrayen, inkludera den INTE med ANPASSA-värden. Om "image" saknas → utelämna "image"-fältet helt. Om "servesCuisine" saknas → utelämna det.
 - Bättre att lämna ett kort men 100% korrekt schema än ett långt med fyllnadstexter.
-${masterRules.length > 0 ? masterRules.join('\n') + '\n' : ''}- Svara ENBART med giltig JSON — inga kodblock-markeringar, ingen text utanför JSON
+${masterRules.length > 0 ? masterRules.join('\n') + '\n' : ''}${groundingRules}- Svara ENBART med giltig JSON — inga kodblock-markeringar, ingen text utanför JSON
 - Alla texter på svenska`
 
   return { systemPrompt, userPrompt }

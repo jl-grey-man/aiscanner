@@ -15,6 +15,8 @@ import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
 import { withRetry } from '@/app/lib/retry'
+import { buildVerifiedFacts, formatFactsForPrompt, GROUNDING_RULES, groundReport } from '@/app/lib/factGuard'
+import type { VerifiedFacts } from '@/app/lib/factGuard'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -407,7 +409,8 @@ function buildSynthesisPrompt(
   reviewReplyResult: any,
   aiMentionResult: any,
   competitorList: NearbyCompetitor[] | null,
-  cwvMetrics: any
+  cwvMetrics: any,
+  verifiedFacts: VerifiedFacts
 ): string {
   const competitorBlock = competitorList && competitorList.length > 0
     ? `NÄRLIGGANDE KONKURRENTER (Google Places, ≤1,5 km — VERIFIERAD data):
@@ -499,6 +502,8 @@ SIDSAMMANFATTNING:
 - Kontaktinfo: ${pageSummary?.hasContactInfo ? 'Ja' : 'Nej'}
 - Orter: ${pageSummary?.cities?.join(', ') || 'Inga'}
 
+${formatFactsForPrompt(verifiedFacts)}
+
 Returnera ett JSON-objekt med exakt dessa 4 nycklar:
 
 {
@@ -516,7 +521,8 @@ REGLER:
 - reviewAnalysis: null om reviewReplyResult visar 0 recensioner
 - summary: max 5 meningar, konkret och handlingsbar
 - Alla texter på svenska
-- Var konkret — ge färdig kod, exakta steg, specifika verktyg
+- Var konkret — exakta steg, specifika verktyg och färdig kod som BARA innehåller verifierade värden
+${GROUNDING_RULES}
 - Prioritera det som har störst påverkan på AI-sökningar (ChatGPT, Perplexity, Google AI Overview)
 - Lyft fram AI-omnämnanden som en nyckelinsikt`
 }
@@ -829,6 +835,19 @@ export async function POST(req: NextRequest) {
       competitorList,
     })
 
+    // Audit #6: verifierade fakta till prompterna + efterkontrollen (factGuard.ts)
+    const verifiedFacts = buildVerifiedFacts({
+      url,
+      pages: scrapedData.pages,
+      sitemapXml: scrapedData.sitemapXml,
+      placePhone: placeForAnalysis?.nationalPhoneNumber ?? null,
+      weekdayHours: placeForAnalysis?.regularOpeningHours?.weekdayDescriptions ?? null,
+      openingPeriods: placeForAnalysis?.regularOpeningHours?.periods ?? null,
+      schemaHours: enhancedData.openingHoursFromSchema,
+      faqQuestions: enhancedData.faqQuestions,
+      extraUrls: [enhancedData.ogImage, placeForAnalysis?.websiteUri, ...enhancedData.blogPaths],
+    })
+
     // Run Pro synthesis + Report Writer in parallel
     const synthesisPrompt = buildSynthesisPrompt(
       technicalResult,
@@ -841,7 +860,8 @@ export async function POST(req: NextRequest) {
       reviewReplyResult,
       aiMentionResult,
       competitorList,
-      cwvMetrics
+      cwvMetrics,
+      verifiedFacts
     )
 
     const SynthesisResponseSchema = z.object({
@@ -887,6 +907,7 @@ export async function POST(req: NextRequest) {
       socialLinks: enhancedData.sameAsLinks ?? [],
       title: mainPage?.title ?? null,
       h1: mainPage?.h1 ?? null,
+      verifiedFacts,
     }
 
     let synthesis: { actionPlan: string; competitorNote: string; reviewAnalysis: string | null; summary: string }
@@ -979,6 +1000,10 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+
+      // Audit #6: efterkontroll — rättar/tar bort öppettider, telefon, interna URL:er,
+      // menyrätter och priser som inte stämmer med verifierade fakta. Loggar varje ändring.
+      groundReport(checks, synthesis, verifiedFacts)
     } else {
       // FREE flow — no Pro calls. Build a deterministic action plan from check findings.
       synthesis = buildFreeSynthesis(checks)

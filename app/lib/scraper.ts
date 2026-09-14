@@ -55,6 +55,8 @@ export interface PageSummary {
     hasContactLink: boolean
     hasAboutLink: boolean
     hasServicesLink: boolean
+    /** Normaliserade interna sökvägar som faktiskt länkas (max 300) — kända URL:er för factGuard. */
+    paths: string[]
   }
   semanticHTML: {
     hasMain: boolean
@@ -362,6 +364,7 @@ export function extractSummary(html: string, url: string): PageSummary {
     hasContactLink,
     hasAboutLink,
     hasServicesLink,
+    paths: Array.from(internalHrefs).slice(0, 300),
   }
 
   // 3d. Semantisk HTML + språk (task 1.4) — INNAN nav/aside/article tas bort
