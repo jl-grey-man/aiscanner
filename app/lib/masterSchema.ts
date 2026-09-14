@@ -491,13 +491,23 @@ export interface DedupeOptions {
   /** Nycklar vars kort renderas och därför får vara mål för en hänvisning. Default: alla. */
   referenceable?: Set<string>
   threshold?: number
+  /**
+   * Huvudschemat, om `first` äger ett. Textlikhet räcker INTE för att hänvisa till
+   * ägaren — det kräver att MASTER_COVERAGE faktiskt listar checken (`referencesMaster()`).
+   * Utan detta kan t.ex. ett Service-schema (delar företagsnamn/adress/telefon med
+   * LocalBusiness-schemat) felaktigt länkas till huvudschemat trots att det inte
+   * innehåller någon tjänst alls — se Audit sep 2026.
+   */
+  master?: MasterSchema | null
 }
 
 /**
  * Generellt säkerhetsnät mot upprepad kod: går igenom kodblocken i rapportordning
  * (ev. `first` först, sedan CHECK_REGISTRY-ordning). Ett block som är för likt ett
  * tidigare behållet block tas bort och får `codeRef` till det (om det inte redan
- * hänvisar någonstans). Muterar och returnerar `rich`.
+ * hänvisar någonstans) — MEN en hänvisning till huvudschemats ägare (`first`) kräver
+ * dessutom att MASTER_COVERAGE täcker checken; annars behålls blockets egen kod.
+ * Muterar och returnerar `rich`.
  */
 export function dedupeCodeExamples<T extends CodeCarrier>(
   rich: Record<string, T>,
@@ -513,7 +523,11 @@ export function dedupeCodeExamples<T extends CodeCarrier>(
     const data = rich[key]
     const code = data.richCodeExample
     if (!code || !code.trim()) continue
-    const duplicateOf = kept.find(k => codeSimilarity(k.code, code) >= threshold)
+    const duplicateOf = kept.find(k => {
+      if (codeSimilarity(k.code, code) < threshold) return false
+      if (k.key === options.first && options.master && !referencesMaster(key, options.master)) return false
+      return true
+    })
     if (duplicateOf) {
       data.richCodeExample = null
       if (!data.codeRef) data.codeRef = duplicateOf.key

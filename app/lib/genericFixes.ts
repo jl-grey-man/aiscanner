@@ -961,6 +961,49 @@ GENERIC_FIXES.internalLinks = {
   },
 }
 
+// #24 Service/Product/Menu-schema (vikt 3, premium) — bad = saknas helt, warning = ofullständigt
+// OBS: mallen är en ärlig utgångspunkt med <PLACEHOLDERS> — den listar INGA riktiga
+// tjänster. Visas när Report Writer inte har verifierade tjänster att fylla i med
+// (huvudschemat, Audit #7, innehåller aldrig ett Service-schema — se masterSchema.ts).
+GENERIC_FIXES.serviceSchema = {
+  bad: {
+    steps:
+`1. Lista era faktiska tjänster/produkter (eller rätter, om ni är en restaurang) med namn, kort beskrivning och pris om ni vill visa det publikt.
+2. Välj rätt schema.org-typ: \`Service\` för tjänsteföretag (hantverkare, salonger, konsulter m.fl.), \`Product\` för produkter, \`Menu\`/\`MenuItem\` för restauranger.
+3. Kopiera mallen nedan och byt ut alla \`<PLACEHOLDERS>\` mot era riktiga tjänster — hitta ALDRIG på tjänster eller priser ni inte faktiskt erbjuder.
+4. Lägg in koden mellan \`<head>\` och \`</head>\`, gärna på den sida där tjänsten faktiskt beskrivs.
+5. Validera på \`https://validator.schema.org/\` och \`https://search.google.com/test/rich-results\`.`,
+    codeTemplate:
+`<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "<TJÄNST>",
+  "provider": {
+    "@type": "LocalBusiness",
+    "name": "<FÖRETAGSNAMN>",
+    "url": "https://<DOMÄN>"
+  },
+  "areaServed": "<STAD>",
+  "description": "<KORT BESKRIVNING AV TJÄNSTEN>"
+}
+</script>`,
+  },
+  warning: {
+    steps:
+`1. Ni har Service/Product-schema men det täcker inte alla era tjänster eller saknar viktiga fält (namn, beskrivning, pris).
+2. Lägg till en post per tjänst/produkt ni faktiskt erbjuder — hitta ALDRIG på tjänster eller priser.
+3. Fyll i \`offers\` med pris (\`price\` + \`priceCurrency\`) bara om priset stämmer och ni vill visa det publikt.`,
+    codeTemplate:
+`<!-- Lägg till fler poster i er befintliga Service/Product-lista -->
+{
+  "@type": "Service",
+  "serviceType": "<TJÄNST>",
+  "description": "<KORT BESKRIVNING>"
+}`,
+  },
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------

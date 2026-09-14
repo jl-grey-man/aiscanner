@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { codeSimilarity, dedupeCodeExamples, type CodeCarrier } from '@/app/lib/masterSchema'
+import { codeSimilarity, dedupeCodeExamples, buildMasterSchema, type CodeCarrier } from '@/app/lib/masterSchema'
 
 // Två verkliga Pro-block från Sprejs paid-scan före Audit #7 (difflib-likhet 0,72)
 const sprejLocalBusiness = `<script type="application/ld+json">
@@ -96,5 +96,47 @@ describe('dedupeCodeExamples', () => {
     dedupeCodeExamples(rich, { referenceable: new Set(['localBusiness']) })
     expect(rich.localBusiness).toEqual({ richCodeExample: sprejLocalBusiness })
     expect(rich.socialPresence.richCodeExample).toBe(sprejLocalSubtype)
+  })
+
+  // Audit sep 2026: serviceSchema fick codeRef till huvudschemats ägare enbart för att
+  // dess kod råkade vara textmässigt lik (delar företagsnamn/adress/telefon) — trots att
+  // MASTER_COVERAGE inte listar 'serviceSchema' alls, dvs. huvudschemat innehåller aldrig
+  // ett Service-schema. SolutionCard visade då "koden ingår redan" utan att den gjorde det.
+  it('BUGGEN: utan huvudschemat skickat länkas serviceSchema till ägaren enbart via textlikhet', () => {
+    const rich: Record<string, CodeCarrier> = {
+      serviceSchema: { richCodeExample: sprejLocalSubtype },
+      localBusiness: { richCodeExample: sprejLocalBusiness },
+    }
+    dedupeCodeExamples(rich, { first: 'localBusiness' }) // ingen master skickas — dokumenterar rotorsaken
+    expect(rich.serviceSchema).toEqual({ richCodeExample: null, codeRef: 'localBusiness' })
+  })
+
+  it('FIXEN: med huvudschemat skickat behåller serviceSchema sin egen kod — MASTER_COVERAGE saknar serviceSchema helt', () => {
+    const master = buildMasterSchema({
+      companyName: 'Sprej Hårstudio', url: 'https://sprej.nu', city: 'Sundsvall',
+      phone: '060-61 45 00', streetAddress: 'Varvsgränd 2', postalCode: '852 32',
+    })!
+    const rich: Record<string, CodeCarrier> = {
+      serviceSchema: { richCodeExample: sprejLocalSubtype },
+      localBusiness: { richCodeExample: sprejLocalBusiness },
+    }
+    dedupeCodeExamples(rich, { first: 'localBusiness', master })
+    expect(rich.serviceSchema.richCodeExample).toBe(sprejLocalSubtype)
+    expect(rich.serviceSchema.codeRef).toBeUndefined()
+    expect(rich.localBusiness.richCodeExample).toBe(sprejLocalBusiness)
+  })
+
+  it('täckta checks (MASTER_COVERAGE) länkas fortfarande till ägaren när huvudschemat verkligen täcker dem', () => {
+    const master = buildMasterSchema({
+      companyName: 'Sprej Hårstudio', url: 'https://sprej.nu', city: 'Sundsvall',
+      socialLinks: ['https://www.facebook.com/sprej'],
+    })!
+    expect(master.data.sameAs).toBeDefined() // täcker socialPresence (MASTER_COVERAGE: ['sameAs'])
+    const rich: Record<string, CodeCarrier> = {
+      socialPresence: { richCodeExample: sprejLocalSubtype },
+      localBusiness: { richCodeExample: sprejLocalBusiness },
+    }
+    dedupeCodeExamples(rich, { first: 'localBusiness', master })
+    expect(rich.socialPresence).toEqual({ richCodeExample: null, codeRef: 'localBusiness' })
   })
 })

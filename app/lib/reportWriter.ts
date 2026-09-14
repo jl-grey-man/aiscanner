@@ -369,6 +369,7 @@ export async function enrichChecksWithReportWriter(
   dedupeCodeExamples(result, {
     first: masterCtx?.ownerKey ?? null,
     referenceable: new Set(enrichable.filter(c => c.fix !== null).map(c => c.key)),
+    master: masterCtx?.master ?? null,
   })
 
   const counts: Record<RichStatus, number> = { pro: 0, flash: 0, missing: 0 }
