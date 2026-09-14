@@ -100,7 +100,16 @@ export type CallOpenRouterFn = (
   timeoutMs: number,
   expectMarkdown: boolean,
   maxTokensOverride?: number,
+  /** Utelämnad = anroparens standard (0.2). Bedömningsanrop skickar ASSESSMENT_TEMPERATURE. */
+  temperature?: number,
 ) => Promise<any>
+
+/**
+ * Temperatur för Flash-BEDÖMNINGAR (status-avgörande anrop: teknik/FAQ/E-A-T i route.ts,
+ * AI-svarsklassificeringen i aiMentionChecker.ts). 0 = samma indata ger så långt det går
+ * samma status → stabila poäng. Textgenerering (syntes, Report Writer) behåller 0.2.
+ */
+export const ASSESSMENT_TEMPERATURE = 0
 
 export interface ReportWriterOptions {
   /** Max antal checks per LLM-anrop. */

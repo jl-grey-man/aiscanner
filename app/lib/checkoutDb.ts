@@ -15,6 +15,13 @@
  *   created_at       INTEGER NOT NULL   — ms sedan epoch
  *   updated_at       INTEGER NOT NULL
  *
+ * Tabellen `scan_cache` (Task 12) håller den senaste lyckade free-scanen per
+ * normaliserad URL + stad (nyckel från scanCache.ts `scanCacheKey`) så paid-scanen
+ * kan återanvända samma mätning i stället för att scanna om:
+ *   cache_key   TEXT PRIMARY KEY   — "<normaliserad url>|<stad i gemener>"
+ *   result_json TEXT NOT NULL      — serializeFreeScan(): { v, scanResult, context }
+ *   created_at  INTEGER NOT NULL   — ms sedan epoch; rader äldre än TTL rensas vid skrivning
+ *
  * OBS: SQLite-filen ligger i ./data/checkouts.db. Railway raderar disk vid
  * deploy om ingen volume är monterad — för permanent persistens, montera en
  * volume på /app/data. För MVP är det OK att data försvinner vid deploy
@@ -58,7 +65,39 @@ function getDb(): Database.Database {
       updated_at       INTEGER NOT NULL
     )
   `)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS scan_cache (
+      cache_key   TEXT PRIMARY KEY,
+      result_json TEXT NOT NULL,
+      created_at  INTEGER NOT NULL
+    )
+  `)
   return db
+}
+
+/** Hur länge en cachad free-scan får återanvändas av paid-flödet. */
+export const SCAN_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Sparar (ersätter) en free-scan under cacheKey och rensar rader äldre än maxAgeMs,
+ * så tabellen inte växer obegränsat med publika gratisscans.
+ */
+export function saveFreeScan(cacheKey: string, resultJson: string, maxAgeMs: number = SCAN_CACHE_TTL_MS): void {
+  const now = Date.now()
+  const conn = getDb()
+  conn.prepare('DELETE FROM scan_cache WHERE created_at < ?').run(now - maxAgeMs)
+  conn.prepare(`
+    INSERT OR REPLACE INTO scan_cache (cache_key, result_json, created_at) VALUES (?, ?, ?)
+  `).run(cacheKey, resultJson, now)
+}
+
+/** Cachad free-scan som JSON, eller null om den saknas eller är äldre än maxAgeMs. */
+export function getFreeScan(cacheKey: string, maxAgeMs: number): string | null {
+  const row = getDb().prepare('SELECT result_json, created_at FROM scan_cache WHERE cache_key = ?')
+    .get(cacheKey) as { result_json: string; created_at: number } | undefined
+  if (!row) return null
+  if (Date.now() - row.created_at > maxAgeMs) return null
+  return row.result_json
 }
 
 export function createCheckout(sessionId: string, url: string, city: string | null): void {

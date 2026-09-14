@@ -10,7 +10,10 @@ import { getCwvMetrics } from '@/app/lib/pageSpeed'
 import { buildCheckResults } from '@/app/lib/checkBuilder'
 import { calculateScores, ScanResultSchema, CHECK_REGISTRY } from '@/app/lib/scanResult'
 import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
-import { enrichChecksWithReportWriter, applyRichData } from '@/app/lib/reportWriter'
+import { enrichChecksWithReportWriter, applyRichData, ASSESSMENT_TEMPERATURE } from '@/app/lib/reportWriter'
+import { getFreeScan, saveFreeScan, SCAN_CACHE_TTL_MS } from '@/app/lib/checkoutDb'
+import { scanCacheKey, cacheSkipReason, serializeFreeScan, parseCachedFreeScan } from '@/app/lib/scanCache'
+import type { ScanContext, CachedFreeScan, ReviewReplyAnalysis } from '@/app/lib/scanCache'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
@@ -33,6 +36,8 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
 const FLASH_MODEL = 'google/gemini-2.5-flash'
 const PRO_MODEL = 'google/gemini-2.5-pro'
+/** Textgenerering (syntes, Report Writer, recensionsinsikter). Bedömningar: ASSESSMENT_TEMPERATURE. */
+const DEFAULT_TEMPERATURE = 0.2
 
 function rateLimitResponse(retryAfterSec: number, headers: Record<string, string>) {
   return NextResponse.json(
@@ -81,6 +86,7 @@ async function callOpenRouterOnce(
   timeoutMs: number,
   expectMarkdown: boolean,
   maxTokensOverride?: number,
+  temperature: number = DEFAULT_TEMPERATURE,
 ): Promise<any> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
@@ -100,7 +106,7 @@ async function callOpenRouterOnce(
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.2,
+        temperature,
         max_tokens: maxTokensOverride ?? (expectMarkdown ? 12000 : 6000),
         ...(expectMarkdown ? {} : { response_format: { type: 'json_object' } }),
       }),
@@ -139,9 +145,10 @@ async function callOpenRouter(
   timeoutMs: number,
   expectMarkdown = false,
   maxTokensOverride?: number,
+  temperature?: number,
 ): Promise<any> {
   return withRetry(
-    () => callOpenRouterOnce(model, systemPrompt, userPrompt, timeoutMs, expectMarkdown, maxTokensOverride),
+    () => callOpenRouterOnce(model, systemPrompt, userPrompt, timeoutMs, expectMarkdown, maxTokensOverride, temperature),
     {
       attempts: 3,
       baseDelayMs: 1000,
@@ -363,13 +370,7 @@ REGLER:
  * "reviewReply"/"ownerResponse"). En svarsfrekvens går därför ALDRIG att mäta via
  * detta API — checken blir alltid notMeasured, aldrig ett påstått 0 %.
  */
-function analyzeReviewReplies(reviews: any[], totalReviewCount?: number): {
-  total: number
-  status: 'notMeasured'
-  finding: string
-  fix: string
-  sampleNote: string
-} {
+function analyzeReviewReplies(reviews: any[], totalReviewCount?: number): ReviewReplyAnalysis {
   // Sanity-check: if knownTotal < reviews.length the reported total is unreliable — never
   // emit "X av totalt Y" where Y < X, as that is self-contradictory.
   const knownTotal = (totalReviewCount != null && totalReviewCount >= reviews.length)
@@ -591,6 +592,301 @@ function buildFreeSynthesis(checks: CheckResult[]): {
   }
 }
 
+/** Audit #9: scannar topp 3 närliggande konkurrenters egna sajter (inga LLM-anrop). Kastar aldrig. */
+async function scanTopCompetitors(list: NearbyCompetitor[], url: string): Promise<CompetitorScanOutcome[]> {
+  try {
+    const selected = selectCompetitorsToScan(list, url)
+    const started = Date.now()
+    const outcomes = await scanCompetitorSites(selected)
+    const okScans = outcomes.filter(o => o.statuses !== null).length
+    console.log(`[Competitors] ${outcomes.length} konkurrentsajter på ${Date.now() - started} ms (${okScans} scannade, ${outcomes.length - okScans} misslyckade)`)
+    return outcomes
+  } catch (err: any) {
+    console.error('[Competitors] Konkurrentscanningen misslyckades:', err?.message)
+    return []
+  }
+}
+
+interface CollectedScan {
+  context: ScanContext
+  /** Flash-bedömningar som föll tillbaka på "Kunde inte analyseras" (teknik/FAQ/E-A-T). */
+  failedAssessments: string[]
+  /** Paid: konkurrentsajterna scannas redan här, parallellt med Flash-anropen. Free: []. */
+  competitorScansPromise: Promise<CompetitorScanOutcome[]>
+}
+
+/**
+ * Insamlingsfasen: scraping, Places, 3× Flash-bedömning, katalogkontroll, AI-test, PSI,
+ * Nearby Search. Allt paid-berikningen behöver hamnar i ScanContext så det kan cachas
+ * (Task 12) och återanvändas av paid-flödet utan att scanna om.
+ */
+async function collectScanData(url: string, cityInput: string | undefined, tier: 'free' | 'paid'): Promise<CollectedScan> {
+  // Run enhanced scrape + normal scrape + places lookup in parallel
+  const [enhancedData, scrapedData] = await Promise.all([
+    scrapeEnhanced(url),
+    scrapeWebsite(url),
+  ])
+
+  const mainPage = scrapedData.pages[0]
+
+  // Get places data — use user-supplied city first, then scraped city
+  const cityHint = cityInput || mainPage?.cities?.[0] || undefined
+  const place = await findBusinessByUrl(url, cityHint).catch(() => null)
+  let placeDetails = null
+  if (place?.id) {
+    placeDetails = await getPlaceDetails(place.id).catch(() => null)
+    if (placeDetails) {
+      placeDetails = { ...placeDetails, _domainMatch: place._domainMatch, _warning: place._warning }
+    }
+  }
+  const placeForAnalysis = placeDetails || place
+
+  // Extract company name first — deriveBransch needs it to guard against ever
+  // landing on the same value (Audit #10).
+  const companyName = placeForAnalysis?.displayName?.text || mainPage?.title?.split(/\s*[\|–\-]\s*/)[0]?.trim() || ''
+
+  const placeTypes: string[] = placeForAnalysis?.types || []
+  const bransch = deriveBransch({
+    primaryType: placeForAnalysis?.primaryType ?? null,
+    types: placeTypes,
+    title: mainPage?.title ?? null,
+    companyName,
+  })
+
+  // City priority: 1) user input, 2) Places address, 3) scraped — never use 'Sverige'
+  const cityFromPlace = placeForAnalysis?.formattedAddress
+    ? (() => {
+        const m = placeForAnalysis.formattedAddress.match(/\d{5}\s+([A-ZÅÄÖ][a-zåäö]+)/)
+        return m ? m[1] : null
+      })()
+    : null
+  const city = cityInput || cityFromPlace || mainPage?.cities?.[0] || ''
+
+  console.log(`[Enhanced Scan] Scraping klar. Startar Flash-anrop + katalog + AI-test...`)
+
+  // Task 1.5: HTTPS check — derived early from URL before any other analysis
+  const isHttps = url.startsWith('https://')
+
+  // Review reply analysis (from place details) — pass total count for disclaimer
+  const reviews = placeDetails?.reviews || []
+  const reviewReplyResult = analyzeReviewReplies(reviews, placeDetails?.userRatingCount)
+
+  // Run 3 Flash calls + directory check + AI mention check in parallel
+  const flashSystem = 'Du är en svensk AI-sökningsanalytiker. Svara ENDAST i giltig JSON. Ingen markdown, ingen text utanför JSON.'
+  const failedAssessments: string[] = []
+
+  const competitorListPromise = (async (): Promise<NearbyCompetitor[]> => {
+    const lat = placeForAnalysis?.location?.latitude
+    const lng = placeForAnalysis?.location?.longitude
+    const ptype = placeForAnalysis?.primaryType
+    if (typeof lat !== 'number' || typeof lng !== 'number' || !ptype || !placeForAnalysis?.id) return []
+    return findNearbyCompetitors(lat, lng, ptype, placeForAnalysis.id).catch((err) => {
+      console.error('[Enhanced Scan] Nearby competitors failed:', err.message)
+      return []
+    })
+  })()
+
+  // Audit #9 (konkurrentdelen), paid-only: topp 3 konkurrenter med egen webbplats
+  // scannas deterministiskt (inga LLM-anrop) direkt när Nearby-listan finns — i samma
+  // parallella fas som Flash-anropen, så syntesen inte behöver vänta extra.
+  // scanTopCompetitors kastar aldrig; varje sajt har egen tidsgräns (25 s).
+  const competitorScansPromise: Promise<CompetitorScanOutcome[]> = tier === 'paid'
+    ? competitorListPromise.then((list) => scanTopCompetitors(list, url))
+    : Promise.resolve([])
+
+  // Flash-bedömningarna avgör checkstatus → poäng, så de körs med ASSESSMENT_TEMPERATURE (0).
+  const [technicalResult, faqResult, eatResult, directoryResult, aiMentionResult, cwvMetrics, competitorList] = await Promise.all([
+    callOpenRouter(
+      FLASH_MODEL,
+      flashSystem,
+      buildTechnicalPrompt({
+        robotsTxt: enhancedData.robotsTxt,
+        aiCrawlersBlocked: enhancedData.aiCrawlersBlocked,
+        ogTitle: enhancedData.ogTitle,
+        ogDescription: enhancedData.ogDescription,
+        ogImage: enhancedData.ogImage,
+        socialLinks: enhancedData.socialLinks,
+        sameAsLinks: enhancedData.sameAsLinks,
+        hreflangTags: enhancedData.hreflangTags,
+        isHttps,
+        llmsTxt: scrapedData.llmsTxt,
+        canonical: mainPage?.canonical ?? null,
+        hasGoogleMaps: mainPage?.hasGoogleMaps ?? false,
+        menuSummary: mainPage?.menuSummary ?? '',
+      }),
+      45000,
+      false,
+      undefined,
+      ASSESSMENT_TEMPERATURE,
+    ).catch((err) => {
+      console.error('[Enhanced Scan] Technical Flash failed:', err.message)
+      failedAssessments.push('technical')
+      return {
+        https: { status: isHttps ? 'ok' : 'bad', exists: isHttps, finding: isHttps ? 'Webbplatsen använder HTTPS.' : 'Webbplatsen använder HTTP.', fix: isHttps ? '' : 'Aktivera HTTPS via SSL-certifikat (t.ex. Let\'s Encrypt).' },
+        aiCrawlers: { status: 'unknown', blocked: [], finding: 'Kunde inte analyseras', fix: '' },
+        ogTags: { status: 'unknown', missing: [], finding: 'Kunde inte analyseras', fix: '', codeExample: '' },
+        socialPresence: { status: 'unknown', found: [], finding: 'Kunde inte analyseras', fix: '' },
+        hreflang: { status: 'unknown', finding: 'Kunde inte analyseras', fix: '' },
+        llmsTxt: { status: 'unknown', exists: !!scrapedData.llmsTxt, finding: 'Kunde inte analyseras', fix: '' },
+      }
+    }),
+    callOpenRouter(
+      FLASH_MODEL,
+      flashSystem,
+      buildFAQContentPrompt({
+        hasFAQSchema: enhancedData.hasFAQSchema,
+        faqQuestions: enhancedData.faqQuestions,
+        hasFAQContent: enhancedData.hasFAQContent,
+        sitemapPageCount: enhancedData.sitemapPageCount,
+        hasBlogOrGuide: enhancedData.hasBlogOrGuide,
+        blogPaths: enhancedData.blogPaths,
+        hasServiceSchema: enhancedData.hasServiceSchema,
+        hasMenuSchema: enhancedData.hasMenuSchema,
+        serviceSchemaTypes: enhancedData.serviceSchemaTypes,
+        bransch,
+      }),
+      45000,
+      false,
+      undefined,
+      ASSESSMENT_TEMPERATURE,
+    ).catch((err) => {
+      console.error('[Enhanced Scan] FAQ Flash failed:', err.message)
+      failedAssessments.push('faq')
+      return {
+        faqSchema: { status: 'unknown', questionsFound: [], finding: 'Kunde inte analyseras', fix: '', codeExample: '' },
+        contentDepth: { status: 'unknown', pageCount: 0, hasBlog: false, finding: 'Kunde inte analyseras', fix: '' },
+        serviceSchema: { status: 'unknown', typesFound: [], finding: 'Kunde inte analyseras', fix: '', codeExample: '' },
+      }
+    }),
+    callOpenRouter(
+      FLASH_MODEL,
+      flashSystem,
+      buildEATPrompt({
+        hasAboutPage: enhancedData.hasAboutPage,
+        orgNumberFound: enhancedData.orgNumberFound,
+        certificationKeywords: enhancedData.certificationKeywords,
+        hasPersonSchema: enhancedData.hasPersonSchema,
+        namedPersons: enhancedData.namedPersons,
+        bransch,
+      }),
+      45000,
+      false,
+      undefined,
+      ASSESSMENT_TEMPERATURE,
+    ).catch((err) => {
+      console.error('[Enhanced Scan] EAT Flash failed:', err.message)
+      failedAssessments.push('eat')
+      return {
+        eatSignals: { status: 'unknown', found: [], missing: [], finding: 'Kunde inte analyseras', fix: '' },
+        orgNumber: { status: 'unknown', finding: 'Kunde inte analyseras' },
+        certifications: { status: 'unknown', found: [], finding: 'Kunde inte analyseras', fix: '' },
+      }
+    }),
+    checkSwedishDirectories(companyName, city, enhancedData.sameAsLinks).catch((err) => {
+      console.error('[Enhanced Scan] Directory check failed:', err.message)
+      return {
+        foundInSameAs: [],
+        directories: [],
+        foundCount: 0,
+        totalChecked: 0,
+        napConsistency: {
+          checked: false,
+          consistent: null,
+          phone: { values: [], consistent: false },
+          address: { values: [], consistent: false },
+          finding: 'Kunde inte kontrollera.',
+          fix: '',
+        },
+        status: 'warning' as const,
+        finding: 'Katalogkontroll kunde inte genomföras.',
+        fix: '',
+      }
+    }),
+    checkAIMentions(companyName, city, bransch, OPENROUTER_API_KEY!, callOpenRouterOnce, placeTypes, placeForAnalysis?.formattedAddress ?? null).catch((err) => {
+      console.error('[Enhanced Scan] AI mention check failed:', err.message)
+      return null
+    }),
+    getCwvMetrics(url).catch((err) => {
+      console.error('[Enhanced Scan] PSI failed:', err.message)
+      return null
+    }),
+    competitorListPromise,
+  ])
+
+  return {
+    context: {
+      url,
+      city,
+      companyName,
+      bransch,
+      isHttps,
+      enhancedData,
+      scrapedData,
+      placeForAnalysis,
+      reviews,
+      reviewReplyResult,
+      technicalResult,
+      faqResult,
+      eatResult,
+      directoryResult,
+      aiMentionResult,
+      cwvMetrics,
+      competitorList,
+    },
+    failedAssessments,
+    competitorScansPromise,
+  }
+}
+
+/**
+ * Task 12: hämtar en cachad free-scan (≤ 24 h) för paid-flödet. Nyckeln bygger på
+ * paid-anropets url + city, som checkout tar från gratisrapportens meta.url/meta.city.
+ * Alla fel (DB, trasig rad) blir en cachemiss — paid kör då fullt flöde som tidigare.
+ */
+function loadCachedFreeScan(url: string, city: string | undefined): CachedFreeScan | null {
+  const key = scanCacheKey(url, city)
+  if (!key) return null
+  try {
+    const json = getFreeScan(key, SCAN_CACHE_TTL_MS)
+    if (!json) {
+      console.log(`[ScanCache] Miss för ${key} — kör fullt flöde`)
+      return null
+    }
+    const entry = parseCachedFreeScan(json)
+    if (!entry) {
+      console.warn(`[ScanCache] Ogiltig cachad rad för ${key} — kör fullt flöde`)
+      return null
+    }
+    console.log(`[ScanCache] Träff för ${key} (scannad ${entry.scanResult.meta.scanDate}) — hoppar över scraping/Flash/Places/Tavily/PSI/AI-test`)
+    return entry
+  } catch (err: any) {
+    console.error(`[ScanCache] Kunde inte läsa cachen för ${key}:`, err?.message)
+    return null
+  }
+}
+
+/** Task 12: sparar en lyckad free-scan (nyckel = scannad URL + stad den landade i). Kastar aldrig. */
+function storeFreeScanInCache(
+  scanResult: ScanResult,
+  context: ScanContext,
+  failedAssessments: string[],
+  scanResultValid: boolean,
+): void {
+  const key = scanCacheKey(context.url, context.city)
+  if (!key) return
+  const skip = cacheSkipReason({ failedAssessments, aiMentionResult: context.aiMentionResult, scanResultValid })
+  if (skip) {
+    console.warn(`[ScanCache] Sparar inte ${key}: ${skip}`)
+    return
+  }
+  try {
+    saveFreeScan(key, serializeFreeScan(scanResult, context))
+    console.log(`[ScanCache] Sparad: ${key}`)
+  } catch (err: any) {
+    console.error(`[ScanCache] Kunde inte spara ${key}:`, err?.message)
+  }
+}
+
 export async function POST(req: NextRequest) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -645,215 +941,72 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Enhanced Scan] Startar för ${url}${cityInput ? ` (stad: ${cityInput})` : ''} [tier=${tier}]`)
 
-    // Run enhanced scrape + normal scrape + places lookup in parallel
-    const [enhancedData, scrapedData] = await Promise.all([
-      scrapeEnhanced(url),
-      scrapeWebsite(url),
-    ])
+    // Task 12: paid återanvänder den cachade free-scanen (samma mätning som kunden såg och
+    // betalade för → exakt samma scores.free). Träff → ingen scraping/Flash/Places/Tavily/
+    // PSI/AI-test; bara paid-berikningen nedan körs på cachens checks. Miss → fullt flöde.
+    const cached = tier === 'paid' ? loadCachedFreeScan(url, cityInput) : null
 
-    const mainPage = scrapedData.pages[0]
+    let context: ScanContext
+    let checks: CheckResult[]
+    let failedAssessments: string[] = []
+    let competitorScansPromise: Promise<CompetitorScanOutcome[]>
 
-    // Get places data — use user-supplied city first, then scraped city
-    const cityHint = cityInput || mainPage?.cities?.[0] || undefined
-    const place = await findBusinessByUrl(url, cityHint).catch(() => null)
-    let placeDetails = null
-    if (place?.id) {
-      placeDetails = await getPlaceDetails(place.id).catch(() => null)
-      if (placeDetails) {
-        placeDetails = { ...placeDetails, _domainMatch: place._domainMatch, _warning: place._warning }
-      }
-    }
-    const placeForAnalysis = placeDetails || place
+    if (cached) {
+      context = cached.context
+      checks = cached.scanResult.checks
+      competitorScansPromise = scanTopCompetitors(context.competitorList, context.url)
+    } else {
+      const collected = await collectScanData(url, cityInput, tier)
+      context = collected.context
+      failedAssessments = collected.failedAssessments
+      competitorScansPromise = collected.competitorScansPromise
 
-    // Extract company name first — deriveBransch needs it to guard against ever
-    // landing on the same value (Audit #10).
-    const companyName = placeForAnalysis?.displayName?.text || mainPage?.title?.split(/\s*[\|–\-]\s*/)[0]?.trim() || ''
+      console.log(`[Enhanced Scan] Alla anrop klara. Bygger checks...`)
 
-    const placeTypes: string[] = placeForAnalysis?.types || []
-    const bransch = deriveBransch({
-      primaryType: placeForAnalysis?.primaryType ?? null,
-      types: placeTypes,
-      title: mainPage?.title ?? null,
-      companyName,
-    })
-
-    // City priority: 1) user input, 2) Places address, 3) scraped — never use 'Sverige'
-    const cityFromPlace = placeForAnalysis?.formattedAddress
-      ? (() => {
-          const m = placeForAnalysis.formattedAddress.match(/\d{5}\s+([A-ZÅÄÖ][a-zåäö]+)/)
-          return m ? m[1] : null
-        })()
-      : null
-    const city = cityInput || cityFromPlace || mainPage?.cities?.[0] || ''
-
-    console.log(`[Enhanced Scan] Scraping klar. Startar Flash-anrop + katalog + AI-test...`)
-
-    // Task 1.5: HTTPS check — derived early from URL before any other analysis
-    const isHttps = url.startsWith('https://')
-
-    // Review reply analysis (from place details) — pass total count for disclaimer
-    const reviews = placeDetails?.reviews || []
-    const reviewReplyResult = analyzeReviewReplies(reviews, placeDetails?.userRatingCount)
-
-    // Run 3 Flash calls + directory check + AI mention check in parallel
-    const flashSystem = 'Du är en svensk AI-sökningsanalytiker. Svara ENDAST i giltig JSON. Ingen markdown, ingen text utanför JSON.'
-
-    const competitorListPromise = (async (): Promise<NearbyCompetitor[]> => {
-      const lat = placeForAnalysis?.location?.latitude
-      const lng = placeForAnalysis?.location?.longitude
-      const ptype = placeForAnalysis?.primaryType
-      if (typeof lat !== 'number' || typeof lng !== 'number' || !ptype || !placeForAnalysis?.id) return []
-      return findNearbyCompetitors(lat, lng, ptype, placeForAnalysis.id).catch((err) => {
-        console.error('[Enhanced Scan] Nearby competitors failed:', err.message)
-        return []
+      // ---- Build checks BEFORE synthesis so Report Writer can run in parallel ----
+      checks = buildCheckResults({
+        scraperData: context.scrapedData,
+        enhancedData: context.enhancedData,
+        technicalResult: context.technicalResult,
+        faqResult: context.faqResult,
+        eatResult: context.eatResult,
+        directoryResult: context.directoryResult,
+        aiMentionResult: context.aiMentionResult,
+        reviewReplyResult: context.reviewReplyResult,
+        placeData: context.placeForAnalysis,
+        url: context.url,
+        isHttps: context.isHttps,
+        cwvMetrics: context.cwvMetrics,
+        competitorList: context.competitorList,
       })
-    })()
+    }
 
-    // Audit #9 (konkurrentdelen), paid-only: topp 3 konkurrenter med egen webbplats
-    // scannas deterministiskt (inga LLM-anrop) direkt när Nearby-listan finns — i samma
-    // parallella fas som Flash-anropen, så syntesen inte behöver vänta extra.
-    // scanCompetitorSites kastar aldrig; varje sajt har egen tidsgräns (25 s).
-    const competitorScansPromise: Promise<CompetitorScanOutcome[]> = tier === 'paid'
-      ? competitorListPromise.then(async (list) => {
-          const selected = selectCompetitorsToScan(list, url)
-          const started = Date.now()
-          const outcomes = await scanCompetitorSites(selected)
-          const okScans = outcomes.filter(o => o.statuses !== null).length
-          console.log(`[Competitors] ${outcomes.length} konkurrentsajter på ${Date.now() - started} ms (${okScans} scannade, ${outcomes.length - okScans} misslyckade)`)
-          return outcomes
-        })
-      : Promise.resolve([])
-
-    const [technicalResult, faqResult, eatResult, directoryResult, aiMentionResult, cwvMetrics, competitorList, competitorScans] = await Promise.all([
-      callOpenRouter(
-        FLASH_MODEL,
-        flashSystem,
-        buildTechnicalPrompt({
-          robotsTxt: enhancedData.robotsTxt,
-          aiCrawlersBlocked: enhancedData.aiCrawlersBlocked,
-          ogTitle: enhancedData.ogTitle,
-          ogDescription: enhancedData.ogDescription,
-          ogImage: enhancedData.ogImage,
-          socialLinks: enhancedData.socialLinks,
-          sameAsLinks: enhancedData.sameAsLinks,
-          hreflangTags: enhancedData.hreflangTags,
-          isHttps,
-          llmsTxt: scrapedData.llmsTxt,
-          canonical: mainPage?.canonical ?? null,
-          hasGoogleMaps: mainPage?.hasGoogleMaps ?? false,
-          menuSummary: mainPage?.menuSummary ?? '',
-        }),
-        45000
-      ).catch((err) => {
-        console.error('[Enhanced Scan] Technical Flash failed:', err.message)
-        return {
-          https: { status: isHttps ? 'ok' : 'bad', exists: isHttps, finding: isHttps ? 'Webbplatsen använder HTTPS.' : 'Webbplatsen använder HTTP.', fix: isHttps ? '' : 'Aktivera HTTPS via SSL-certifikat (t.ex. Let\'s Encrypt).' },
-          aiCrawlers: { status: 'unknown', blocked: [], finding: 'Kunde inte analyseras', fix: '' },
-          ogTags: { status: 'unknown', missing: [], finding: 'Kunde inte analyseras', fix: '', codeExample: '' },
-          socialPresence: { status: 'unknown', found: [], finding: 'Kunde inte analyseras', fix: '' },
-          hreflang: { status: 'unknown', finding: 'Kunde inte analyseras', fix: '' },
-          llmsTxt: { status: 'unknown', exists: !!scrapedData.llmsTxt, finding: 'Kunde inte analyseras', fix: '' },
-        }
-      }),
-      callOpenRouter(
-        FLASH_MODEL,
-        flashSystem,
-        buildFAQContentPrompt({
-          hasFAQSchema: enhancedData.hasFAQSchema,
-          faqQuestions: enhancedData.faqQuestions,
-          hasFAQContent: enhancedData.hasFAQContent,
-          sitemapPageCount: enhancedData.sitemapPageCount,
-          hasBlogOrGuide: enhancedData.hasBlogOrGuide,
-          blogPaths: enhancedData.blogPaths,
-          hasServiceSchema: enhancedData.hasServiceSchema,
-          hasMenuSchema: enhancedData.hasMenuSchema,
-          serviceSchemaTypes: enhancedData.serviceSchemaTypes,
-          bransch,
-        }),
-        45000
-      ).catch((err) => {
-        console.error('[Enhanced Scan] FAQ Flash failed:', err.message)
-        return {
-          faqSchema: { status: 'unknown', questionsFound: [], finding: 'Kunde inte analyseras', fix: '', codeExample: '' },
-          contentDepth: { status: 'unknown', pageCount: 0, hasBlog: false, finding: 'Kunde inte analyseras', fix: '' },
-          serviceSchema: { status: 'unknown', typesFound: [], finding: 'Kunde inte analyseras', fix: '', codeExample: '' },
-        }
-      }),
-      callOpenRouter(
-        FLASH_MODEL,
-        flashSystem,
-        buildEATPrompt({
-          hasAboutPage: enhancedData.hasAboutPage,
-          orgNumberFound: enhancedData.orgNumberFound,
-          certificationKeywords: enhancedData.certificationKeywords,
-          hasPersonSchema: enhancedData.hasPersonSchema,
-          namedPersons: enhancedData.namedPersons,
-          bransch,
-        }),
-        45000
-      ).catch((err) => {
-        console.error('[Enhanced Scan] EAT Flash failed:', err.message)
-        return {
-          eatSignals: { status: 'unknown', found: [], missing: [], finding: 'Kunde inte analyseras', fix: '' },
-          orgNumber: { status: 'unknown', finding: 'Kunde inte analyseras' },
-          certifications: { status: 'unknown', found: [], finding: 'Kunde inte analyseras', fix: '' },
-        }
-      }),
-      checkSwedishDirectories(companyName, city, enhancedData.sameAsLinks).catch((err) => {
-        console.error('[Enhanced Scan] Directory check failed:', err.message)
-        return {
-          foundInSameAs: [],
-          directories: [],
-          foundCount: 0,
-          totalChecked: 0,
-          napConsistency: {
-            checked: false,
-            consistent: null,
-            phone: { values: [], consistent: false },
-            address: { values: [], consistent: false },
-            finding: 'Kunde inte kontrollera.',
-            fix: '',
-          },
-          status: 'warning' as const,
-          finding: 'Katalogkontroll kunde inte genomföras.',
-          fix: '',
-        }
-      }),
-      checkAIMentions(companyName, city, bransch, OPENROUTER_API_KEY!, callOpenRouterOnce, placeTypes, placeForAnalysis?.formattedAddress ?? null).catch((err) => {
-        console.error('[Enhanced Scan] AI mention check failed:', err.message)
-        return null
-      }),
-      getCwvMetrics(url).catch((err) => {
-        console.error('[Enhanced Scan] PSI failed:', err.message)
-        return null
-      }),
-      competitorListPromise,
-      competitorScansPromise,
-    ])
-
-    console.log(`[Enhanced Scan] Alla anrop klara. Startar Pro-syntes + Report Writer...`)
-
-    // ---- Build checks BEFORE synthesis so Report Writer can run in parallel ----
-    const domain = new URL(url).hostname.replace(/^www\./, '')
-    const checks = buildCheckResults({
-      scraperData: scrapedData,
+    // Allt nedströms använder den scannade URL:en/staden ur context (vid cacheträff =
+    // free-scanens), så meta, huvudschema och faktaförankring matchar mätningen.
+    const {
       enhancedData,
+      scrapedData,
+      placeForAnalysis,
+      reviews,
+      reviewReplyResult,
       technicalResult,
       faqResult,
       eatResult,
       directoryResult,
       aiMentionResult,
-      reviewReplyResult,
-      placeData: placeForAnalysis,
-      url,
-      isHttps,
       cwvMetrics,
       competitorList,
-    })
+      companyName,
+      bransch,
+      city,
+    } = context
+    const scanUrl = context.url
+    const mainPage = scrapedData.pages[0]
+    const domain = new URL(scanUrl).hostname.replace(/^www\./, '')
 
     // Audit #6: verifierade fakta till prompterna + efterkontrollen (factGuard.ts)
     const verifiedFacts = buildVerifiedFacts({
-      url,
+      url: scanUrl,
       pages: scrapedData.pages,
       sitemapXml: scrapedData.sitemapXml,
       placePhone: placeForAnalysis?.nationalPhoneNumber ?? null,
@@ -863,32 +1016,6 @@ export async function POST(req: NextRequest) {
       faqQuestions: enhancedData.faqQuestions,
       extraUrls: [enhancedData.ogImage, placeForAnalysis?.websiteUri, ...enhancedData.blogPaths],
     })
-
-    // Audit #9: "ni" bedöms med EXAKT samma deterministiska funktion som konkurrenterna
-    // (på redan skrapad data — ingen ny hämtning), så jämförelsen blir rättvis.
-    const competitorComparison: CompetitorComparisonData | null = tier === 'paid'
-      ? buildCompetitorComparison(
-          evaluateComparisonStatuses({ url, scraperData: scrapedData, enhancedData }),
-          competitorScans,
-        )
-      : null
-
-    // Run Pro synthesis + Report Writer in parallel
-    const synthesisPrompt = buildSynthesisPrompt(
-      technicalResult,
-      faqResult,
-      eatResult,
-      placeForAnalysis,
-      mainPage,
-      url,
-      directoryResult,
-      reviewReplyResult,
-      aiMentionResult,
-      competitorList,
-      cwvMetrics,
-      verifiedFacts,
-      competitorComparison
-    )
 
     const SynthesisResponseSchema = z.object({
       actionPlan: z.string().min(1),
@@ -912,7 +1039,7 @@ export async function POST(req: NextRequest) {
       companyName,
       bransch,
       city: city || null,
-      url,
+      url: scanUrl,
       domain,
       phone: placeForAnalysis?.nationalPhoneNumber || mainPage?.phones?.[0] || undefined,
       // Utökad data så Pro kan generera komplett kod utan ANPASSA-kommentarer
@@ -941,9 +1068,45 @@ export async function POST(req: NextRequest) {
     // Förblir null i free-tier (ingen LLM-analys körs) och om det inte finns
     // recensionstexter eller inget citat gick att verifiera ordagrant.
     let reviewInsights: ReviewInsightsData | null = null
+    let competitorComparison: CompetitorComparisonData | null = null
 
     if (tier === 'paid') {
       // PAID flow — full Pro pipeline (synthesis + Report Writer in parallel).
+      // Report Writer och recensionsinsikterna behöver inga konkurrentdata → de startar
+      // direkt, parallellt med konkurrentscanningen som syntesprompten väntar på.
+      // Report Writer sköter retry + Flash-reserv själv → ge den ENKELANROPET
+      // (callOpenRouter har egen withRetry; det skulle ge nästlade retries).
+      const richDataPromise = enrichChecksWithReportWriter(checks, reportWriterMeta, callOpenRouterOnce).catch((err) => {
+        console.error('[Enhanced Scan] Report Writer failed:', err.message)
+        return {}
+      })
+      // Audit #9: skickar de faktiska recensionstexterna (max 5) till Flash i
+      // JSON-läge — analyzeReviewInsights fångar sina egna fel och kastar aldrig.
+      const reviewInsightsPromise = analyzeReviewInsights(reviews, { companyName, bransch }, callOpenRouterOnce)
+
+      // Audit #9: "ni" bedöms med EXAKT samma deterministiska funktion som konkurrenterna
+      // (på redan skrapad data — ingen ny hämtning), så jämförelsen blir rättvis.
+      competitorComparison = buildCompetitorComparison(
+        evaluateComparisonStatuses({ url: scanUrl, scraperData: scrapedData, enhancedData }),
+        await competitorScansPromise,
+      )
+
+      const synthesisPrompt = buildSynthesisPrompt(
+        technicalResult,
+        faqResult,
+        eatResult,
+        placeForAnalysis,
+        mainPage,
+        scanUrl,
+        directoryResult,
+        reviewReplyResult,
+        aiMentionResult,
+        competitorList,
+        cwvMetrics,
+        verifiedFacts,
+        competitorComparison
+      )
+
       // Synthesis uses parallel race: Pro is primary, Flash is always-ready backup.
       // If Pro succeeds → use Pro. If Pro times out/fails → use Flash (already ~10s old).
       // Both running in parallel adds ~$0.0015 per scan but guarantees real synthesis.
@@ -986,15 +1149,8 @@ export async function POST(req: NextRequest) {
               summary: 'Syntesen misslyckades — se individuella kontroller.',
             }
           }),
-        // Report Writer sköter retry + Flash-reserv själv → ge den ENKELANROPET
-        // (callOpenRouter har egen withRetry; det skulle ge nästlade retries).
-        enrichChecksWithReportWriter(checks, reportWriterMeta, callOpenRouterOnce).catch((err) => {
-          console.error('[Enhanced Scan] Report Writer failed:', err.message)
-          return {}
-        }),
-        // Audit #9: skickar de faktiska recensionstexterna (max 5) till Flash i
-        // JSON-läge — analyzeReviewInsights fångar sina egna fel och kastar aldrig.
-        analyzeReviewInsights(reviews, { companyName, bransch }, callOpenRouterOnce),
+        richDataPromise,
+        reviewInsightsPromise,
       ])
       reviewInsights = reviewInsightsResult
 
@@ -1043,7 +1199,7 @@ export async function POST(req: NextRequest) {
       synthesis = buildFreeSynthesis(checks)
     }
 
-    console.log(`[Enhanced Scan] Klar för ${url} [tier=${tier}]`)
+    console.log(`[Enhanced Scan] Klar för ${scanUrl} [tier=${tier}${cached ? ', från cachad free-scan' : ''}]`)
 
     // ---- Phase 2.8: Assemble ScanResult ----
     const scanId = `scan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -1051,12 +1207,13 @@ export async function POST(req: NextRequest) {
 
     const scanResult: ScanResult = {
       meta: {
-        url,
+        url: scanUrl,
         domain,
         city: city || null,
         bransch,
         companyName,
-        scanDate: new Date().toISOString(),
+        // Vid cacheträff hämtades datan vid free-scanen — rapporten visar "Data hämtad <scanDate>".
+        scanDate: cached ? cached.scanResult.meta.scanDate : new Date().toISOString(),
         scanId,
       },
       scores: {
@@ -1097,6 +1254,11 @@ export async function POST(req: NextRequest) {
       console.error('[Enhanced Scan] ScanResult Zod validation failed:',
         JSON.stringify(parseResult.error.issues.slice(0, 5), null, 2))
       // Don't fail the request — return the data anyway, the structure is close enough
+    }
+
+    // Task 12: en lyckad free-scan cachas så paid-flödet kan återanvända exakt samma mätning.
+    if (tier === 'free') {
+      storeFreeScanInCache(scanResult, context, failedAssessments, parseResult.success)
     }
 
     return NextResponse.json(scanResult, { headers: corsHeaders })

@@ -91,6 +91,7 @@ app/
     places.ts                 # Google Places API — Text Search + Place Details (max 5 reviews) + findNearbyCompetitors (Nearby Search for check #36, incl. websiteUri)
     competitorComparison.ts   # Audit #9: paid-only deterministic scan of top 3 competitor websites (same scrapers + buildCheckResults, no LLM) → ScanResult.competitorComparison + prompt summary
     pageSpeed.ts              # Google PageSpeed Insights API — getCwvMetrics() returns LCP/CLS/INP for check #10 (prefers CrUX field data)
+    scanCache.ts              # Task 12: ScanContext + scanCacheKey()/cacheSkipReason()/serializeFreeScan()/parseCachedFreeScan() — paid återanvänder cachad free-scan (tabell scan_cache i checkoutDb.ts)
     mockScan.json             # Frozen ScanResult fixture used by /preview route
     prompts.ts                # buildFreePrompt() / buildPremiumPrompt() (legacy)
     gemini.ts                 # OpenRouter API wrapper for Gemini Flash/Pro calls
@@ -104,18 +105,19 @@ app/
 
 Request body: `{ url, city?, tier?: 'free' | 'paid' }` — default `tier='free'`.
 
+0. **Paid:** slå upp cachad free-scan (`scan_cache`, ≤ 24 h, se "Scan cache" nedan). Träff → hoppa direkt till steg 7 med cachens checks + `ScanContext`. Miss → steg 1–6 som vanligt.
 1. Parallel: `scrapeEnhanced()` + `scrapeWebsite()` + `findBusinessByUrl(url, city)`
 2. `getPlaceDetails()` — single Places call → up to 5 reviews (API max), plus `location` + `primaryType` (needed for Nearby Search)
 3. City priority: user input → Places formattedAddress (regex `\d{5}\s+([A-ZÅÄÖ][a-zåäö]+)`) → scraped cities
-4. Parallel: 3× Gemini Flash (technical, FAQ, E-A-T) + Tavily directory check + AI mention test + PageSpeed Insights (`getCwvMetrics`) + Places Nearby Search (`findNearbyCompetitors`)
+4. Parallel: 3× Gemini Flash (technical, FAQ, E-A-T — `temperature: 0`, `ASSESSMENT_TEMPERATURE`) + Tavily directory check + AI mention test + PageSpeed Insights (`getCwvMetrics`) + Places Nearby Search (`findNearbyCompetitors`)
 5. `analyzeReviewReplies()` — always `notMeasured` (Audit #3, see below), uses merged reviews + totalReviewCount for the sample-size disclaimer (`sampleNote`)
 6. `buildCheckResults()` — assembles all raw data into 37 typed `CheckResult` objects, then attaches `genericSteps` + `genericCodeTemplate` from `genericFixes.ts` to every bad/warning check
 7. **Tier branch:**
    - `tier='free'` — **skip Pro entirely**. Build synthesis deterministically from check findings via `buildFreeSynthesis()`. ~10–20s scan, ~$0.10 cost.
-   - `tier='paid'` — Pro synthesis + Report Writer in parallel. ~130–170s scan (Report Writer is bounded by a 170 s budget), ~$0.35 cost. Synthesis uses **parallel-race fallback** (Pro 120s primary + Flash 45s backup always ready).
+   - `tier='paid'` — Report Writer + reviewInsights start immediately, in parallel with the competitor site scans; Pro synthesis starts as soon as the competitor comparison is ready. Same enrichment on cache hit and miss. ~100–170s scan (Report Writer is bounded by a 170 s budget), ~$0.35 cost. Synthesis uses **parallel-race fallback** (Pro 120s primary + Flash 45s backup always ready).
 8. `applyRichData()` merges rich data (richRelevance, richSteps, richCodeExample, richStatus) back into checks (paid only) — every bad/warning check gets `richStatus`, missing ones are logged
 9. `calculateScores()` — weighted scoring → `scores.free` (29 checks) + `scores.full` (36 checks)
-10. Zod-validate → return `ScanResult`
+10. Zod-validate → **free:** spara i `scan_cache` (om cachebar) → return `ScanResult`
 
 ### Free vs Paid tier model
 
@@ -166,6 +168,16 @@ Receives a rich `BusinessMeta` (companyName, bransch, city, streetAddress, posta
   - **Meny/pris (JSON-LD):** `MenuItem` vars namn inte finns i skrapad text och `price`/`priceRange` som inte finns där tas bort; tomma MenuSection/Menu, frågor utan svar och noder med bara `@type` försvinner.
   - Varje ändring loggas: `[FactCheck] <check>.<fält>: <typ> rättad|borttagen — <detalj>` + en summeringsrad.
 - Every bad/warning check gets `richStatus`: `'pro'` | `'flash'` | `'missing'`. `'missing'` is logged with its reason (`[ReportWriter] Rikt innehåll SAKNAS för <key>: ...`); partial content is kept. `applyRichData()` merges into checks and also marks checks absent from the result as missing. Every failed attempt is logged too (`[ReportWriter] Pro-försök misslyckades ...`).
+
+### Scan cache — paid återanvänder free-scanen (Task 12, `scanCache.ts` + `checkoutDb.ts`)
+
+- **Varför:** kunden betalar för den rapport den såg. Tidigare scannades allt om vid betalning → Flash-bedömningar och AI-test kunde landa annorlunda (uppmätt 2026-09-14, tvakanten.se: free `scores.full` 67, ny paid-körning 70; `aiMentions` bad → warning) och insamlingsfasen kördes två gånger.
+- **Spara (free):** efter lyckad free-scan sparar `storeFreeScanInCache()` (route.ts) `{ v, scanResult, context }` i SQLite-tabellen `scan_cache` (`data/checkouts.db`; `cache_key TEXT PRIMARY KEY, result_json TEXT, created_at INTEGER`). `context` = `ScanContext`: allt insamlingsfasen gav som paid-berikningen behöver men som inte finns i ScanResult — skrapad data (`scrapedData`, `enhancedData`), Places-detaljer inkl. recensionstexter, Flash-rådata (teknik/FAQ/E-A-T), katalogkontroll, AI-test, PSI, Nearby-listan, stad/bransch/företagsnamn. Rader äldre än `SCAN_CACHE_TTL_MS` (24 h) rensas vid varje skrivning.
+- **Sparas INTE** (`cacheSkipReason()`): ScanResult klarade inte Zod, någon Flash-bedömning föll tillbaka på "Kunde inte analyseras", eller AI-testet misslyckades (`errored`/null). En premiumrapport ska inte ärva ett tillfälligt API-fel — paid scannar då om från början.
+- **Nyckel** (`scanCacheKey(url, city)`): normaliserad URL (värd gemener; standardport, fragment och avslutande `/` bort; protokoll, `www.`, sökväg och query behålls) + `|` + stad (trimmad, gemener). Free sparar med staden scannet **landade** i (`meta.city`), eftersom `FreeReport` skickar `meta.url` + `meta.city` till `/api/checkout` → finalize → paid. Ett paid-anrop med annan stad (t.ex. utan stad när free landade i "Göteborg") blir en cachemiss.
+- **Läsa (paid):** `loadCachedFreeScan()` → `getFreeScan(key, 24 h)` + `parseCachedFreeScan()` (trasig JSON, fel `SCAN_CACHE_VERSION`, ogiltigt ScanResult eller ofullständig kontext = miss). **Träff:** ingen scraping/Flash/Places/Tavily/PSI/AI-test; cachens checks används oförändrade (→ `scores.free`/`scores.full` exakt som i gratisrapporten) och HELA paid-berikningen körs som vanligt: konkurrentsajter (från cachad Nearby-lista), Pro-syntes, Report Writer, reviewInsights, huvudschema, groundReport. `meta.url`/`meta.city` kommer från kontexten, `meta.scanDate` = free-scanens tid (rapporten visar "Data hämtad"), nytt `scanId`. **Miss eller DB-fel:** fullt flöde som tidigare. Loggar: `[ScanCache] Sparad | Sparar inte | Träff | Miss | Ogiltig cachad rad`.
+- Bumpa `SCAN_CACHE_VERSION` när `ScanContext` ändras inkompatibelt (gamla rader blir då missar).
+- **Temperatur:** status-avgörande Flash-bedömningar (teknik/FAQ/E-A-T i route.ts, AI-svarsklassificeringen i `aiMentionChecker.ts`) skickar `ASSESSMENT_TEMPERATURE = 0` (`reportWriter.ts`, sjunde parametern i `CallOpenRouterFn`). Textgenerering (syntes, Report Writer, reviewInsights) har kvar 0.2.
 
 ### Synthesis Flash-fallback (paid)
 
@@ -369,7 +381,7 @@ Every frontend change MUST pass the following gate before being presented to the
 - **Canonical:** Extracted BEFORE cheerio removes `<head>` elements (step 2 in extractSummary).
 - **Google Maps:** Detected BEFORE iframes are removed (step 3 in extractSummary). Order matters.
 - **Port 8010 collision:** If another service starts on 8010, the scanner silently fails. Check registry before deploying.
-- **Enhanced scan timeout:** Free ~15s, paid ~130–170s (measured 2026-09-14: sprej.nu 165 s, tvakanten.se 133 s). Production on Railway (`robotbyran.com`) has no per-request HTTP timeout. If paid Pro synthesis times out at 120s, the parallel Flash-fallback takes over automatically (see synthesis fallback above).
+- **Enhanced scan timeout:** Free ~15–25s, paid ~100–170s (measured 2026-09-14 before Task 12: sprej.nu 165 s, tvakanten.se 133 s; after Task 12 without cache: sprej.nu 131 s, tvakanten.se 105 s; with cached free-scan: sprej.nu 59 s, tvakanten.se 112 s ×2). The cache removes the collection phase, but paid total time is dominated by Report Writer: a Pro batch that hits its timeout (up to 105 s for 3 checks) + Flash fallback pushes it to ~112 s with or without cache. Production on Railway (`robotbyran.com`) has no per-request HTTP timeout. If paid Pro synthesis times out at 120s, the parallel Flash-fallback takes over automatically (see synthesis fallback above).
 - **Dev toggle + auto-paid:** `AppShell.tsx` binds `IS_DEV = process.env.NODE_ENV === 'development'`. In dev: paid scan auto-triggers in background after free completes, so toggle is instant. **In production: paid scan only runs if explicitly invoked.** This avoids burning ~$0.35 per public scan. When a payment flow is added it should call `analyzePaid(url, city)` from `useAnalysis` after the purchase confirms. To preview the paid layout without paying, use the `/preview` route (mock data).
 - **cityMentioned (#12) search surface:** The scraper strips `<header>`/`<nav>`/`<footer>` before extracting `bodyText`. Cities therefore search a wider haystack: `[title, metaDescription, h1, h2s, bodyText]`. Important so cities written only in title or header/logo area (common pattern) still match. Stad-listan i `SWEDISH_CITIES` är ~50 ord — uppdatera vid behov.
 - **PageSpeed Insights (CWV check #10):** Uses `GOOGLE_PLACES_API_KEY` (same key as Places API — PSI must be enabled on the Google Cloud project AND added to the key's API restrictions list). Falls back to `notMeasured` with a 403/timeout finding if the API call fails — never blocks the scan. Prefers CrUX field data over Lighthouse lab data.

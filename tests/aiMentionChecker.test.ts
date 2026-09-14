@@ -117,9 +117,11 @@ describe('checkAIMentions', () => {
 
     // Klassificeringsanropet ska gå mot Flash, i JSON-läge, med kända fakta i prompten
     expect(call).toHaveBeenCalledTimes(1)
-    const [model, , userPrompt, , expectMarkdown] = call.mock.calls[0]
+    const [model, , userPrompt, , expectMarkdown, , temperature] = call.mock.calls[0]
     expect(model).toBe(FLASH)
     expect(expectMarkdown).toBe(false)
+    // Task 12: statusavgörande Flash-bedömning → temperature 0 för stabila resultat
+    expect(temperature).toBe(0)
     expect(userPrompt).toContain('Kungsportsavenyen 27, 411 05 Göteborg')
   })
 

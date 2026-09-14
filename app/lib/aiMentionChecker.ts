@@ -1,5 +1,6 @@
 import { APP_URL } from './config'
 import { withRetry } from './retry'
+import { ASSESSMENT_TEMPERATURE } from './reportWriter'
 import type { CallOpenRouterFn } from './reportWriter'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
@@ -298,7 +299,7 @@ async function classifyEntityResponse(
   // direkt falla till notMeasured.
   return withRetry(
     async () => {
-      const raw = await call(FLASH_MODEL, systemPrompt, prompt, 20000, false, 1200)
+      const raw = await call(FLASH_MODEL, systemPrompt, prompt, 20000, false, 1200, ASSESSMENT_TEMPERATURE)
       return validateClassification(raw)
     },
     { attempts: 2, baseDelayMs: 1000, isRetryable: (err) => !(err as { permanent?: boolean })?.permanent },
