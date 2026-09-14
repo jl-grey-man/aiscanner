@@ -32,11 +32,11 @@ export interface BuildCheckResultsParams {
   eatResult: Record<string, unknown>
   directoryResult: DirectoryResult
   aiMentionResult: AIMentionResult | null
+  // Audit #3: Google Places API (New) har inget fält för ägarsvar på recensioner —
+  // status är därför alltid 'notMeasured', aldrig en påstådd svarsfrekvens.
   reviewReplyResult: {
     total: number
-    withReply: number
-    responseRate: number
-    status: 'ok' | 'warning' | 'bad'
+    status: 'notMeasured'
     finding: string
     fix: string
     sampleNote: string
@@ -881,24 +881,18 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     }
   }
 
-  // #34 reviewReplies (API)
+  // #34 reviewReplies (API) — Audit #3: Google tillhandahåller inte ägarsvar via
+  // Places API:t (Review-objektet saknar fältet helt, verifierat mot Googles
+  // dokumentation) — alltid notMeasured, aldrig en påstådd svarsfrekvens.
   {
-    // 0 recensioner ar inte ett negativt betyg pa svarsfrekvens — det ar ett icke-matbart
-    // lage (inget att analysera annu), och ska darfor aldrig sanka poangen.
-    const status: CheckStatus = reviewReplyResult.total === 0 ? 'notMeasured' : reviewReplyResult.status
-    const finding = reviewReplyResult.total === 0
-      ? 'Inga recensioner att analysera ännu.'
-      : reviewReplyResult.finding
     checks.push(makeCheck(
       'reviewReplies',
-      status,
+      'notMeasured',
       'api',
-      finding,
+      reviewReplyResult.finding,
       reviewReplyResult.fix || null,
       {
         total: reviewReplyResult.total,
-        withReply: reviewReplyResult.withReply,
-        responseRate: reviewReplyResult.responseRate,
         sampleNote: reviewReplyResult.sampleNote,
       },
     ))

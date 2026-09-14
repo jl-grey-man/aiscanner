@@ -180,10 +180,9 @@ export interface EnhancedReportData {
     finding: string
     fix: string
   }
+  // Audit #3: Google Places API ger inget ägarsvar-fält — alltid 'notMeasured'.
   reviewReplies: {
     total: number
-    withReply: number
-    responseRate: number
     status: string
     finding: string
     fix: string

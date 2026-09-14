@@ -200,15 +200,36 @@ const AIMentionDataSchema = z.object({
   fix: z.string(),
 })
 
-// Review reply data (from route.ts reviewReplyResult)
+// Review reply data (from route.ts reviewReplyResult).
+// Audit #3: Google Places API (New) Review-objektet har inget fält för ägarsvar
+// (verifierat mot https://developers.google.com/maps/documentation/places/web-service/reference/rest/v1/places#Review
+// — Review har name/text/originalText/rating/authorAttribution/publishTime/
+// flagContentUri/googleMapsUri/visitDate/relativePublishTimeDescription, inget
+// "reviewReply"). En svarsfrekvens går därför ALDRIG att mäta via detta API —
+// status är alltid 'notMeasured', aldrig ett påstått X %.
 const ReviewReplyDataSchema = z.object({
   total: z.number(),
-  withReply: z.number(),
-  replyRate: z.number(),
-  status: z.enum(['ok', 'warning', 'bad']),
+  status: z.literal('notMeasured'),
   finding: z.string(),
   fix: z.string(),
   sampleNote: z.string().optional(),
+})
+
+// Review insights — grunda, faktaförankrade recensionsteman (Audit #9, paid-only).
+// Flash får de faktiska recensionstexterna (max 5, Places API-gränsen) i JSON-läge;
+// varje `quote` är validerad i kod (app/lib/reviewInsights.ts) att vara ett ordagrant
+// utdrag ur en riktig recensionstext — citat som inte matchar kastas innan de når hit.
+const ReviewInsightThemeSchema = z.object({
+  theme: z.string(),
+  sentiment: z.enum(['positive', 'negative', 'mixed']),
+  quote: z.string(),
+})
+
+const ReviewInsightsSchema = z.object({
+  themes: z.array(ReviewInsightThemeSchema),
+  praise: z.array(z.string()),
+  complaints: z.array(z.string()),
+  sampleNote: z.string(),
 })
 
 // ---------------------------------------------------------------------------
@@ -224,6 +245,8 @@ export const ScanResultSchema = z.object({
   directories: DirectoryDataSchema,
   aiMentions: AIMentionDataSchema.nullable(),
   reviewReplies: ReviewReplyDataSchema,
+  // Optional/nullable: saknas i äldre sparade scans, null i free-tier (ingen LLM-analys körs).
+  reviewInsights: ReviewInsightsSchema.nullable().optional(),
 })
 
 export type ScanResult = z.infer<typeof ScanResultSchema>
@@ -234,6 +257,8 @@ export type GBPData = z.infer<typeof GBPDataSchema>
 export type DirectoryData = z.infer<typeof DirectoryDataSchema>
 export type AIMentionData = z.infer<typeof AIMentionDataSchema>
 export type ReviewReplyData = z.infer<typeof ReviewReplyDataSchema>
+export type ReviewInsightTheme = z.infer<typeof ReviewInsightThemeSchema>
+export type ReviewInsightsData = z.infer<typeof ReviewInsightsSchema>
 
 // ---------------------------------------------------------------------------
 // 5. CHECK_REGISTRY — static metadata for all 37 checks

@@ -107,7 +107,7 @@ Request body: `{ url, city?, tier?: 'free' | 'paid' }` — default `tier='free'`
 2. `getPlaceDetails()` — single Places call → up to 5 reviews (API max), plus `location` + `primaryType` (needed for Nearby Search)
 3. City priority: user input → Places formattedAddress (regex `\d{5}\s+([A-ZÅÄÖ][a-zåäö]+)`) → scraped cities
 4. Parallel: 3× Gemini Flash (technical, FAQ, E-A-T) + Tavily directory check + AI mention test + PageSpeed Insights (`getCwvMetrics`) + Places Nearby Search (`findNearbyCompetitors`)
-5. `analyzeReviewReplies()` — uses merged reviews + totalReviewCount for disclaimer (`sampleNote`)
+5. `analyzeReviewReplies()` — always `notMeasured` (Audit #3, see below), uses merged reviews + totalReviewCount for the sample-size disclaimer (`sampleNote`)
 6. `buildCheckResults()` — assembles all raw data into 37 typed `CheckResult` objects, then attaches `genericSteps` + `genericCodeTemplate` from `genericFixes.ts` to every bad/warning check
 7. **Tier branch:**
    - `tier='free'` — **skip Pro entirely**. Build synthesis deterministically from check findings via `buildFreeSynthesis()`. ~10–20s scan, ~$0.10 cost.
@@ -177,7 +177,8 @@ The `ScanResult` Zod schema defines:
 - `checks` — array of exactly 37 `CheckResult` objects (each with key, status, tier, category, finding, fix, priority, weight, + optional richRelevance/richSteps/richCodeExample/richStatus/codeRef)
 - `scores` — `{ free: 0-100, full: 0-100 }`
 - `synthesis` — structured synthesis (actionPlan, competitorNote, reviewAnalysis)
-- `reviewReplies` — review reply analysis
+- `reviewReplies` — review reply analysis (always `status: 'notMeasured'`, see Audit #3 below)
+- `reviewInsights` — optional/nullable grounded review themes (paid-only, see Audit #9 below)
 
 `CHECK_REGISTRY` (37 entries) maps each check key to label, category, tier, weight. Free tier = 29 checks, premium tier adds 8 more = 37 total (36 scoreable + synthesis).
 
@@ -208,6 +209,11 @@ Two-step flow using GPT-4o-mini:
 2. Niche extraction: from entity response, extract 1-3 word cuisine/service type (e.g. "husmanskost", "bistro")
 3. Category query: `"Var hittar jag bra [niche] i [city]?"` — checks if business is mentioned spontaneously
 - City guard: category query skipped entirely if no city is known — never uses "Sverige"
+
+### Recensionssvar & recensionsinsikter (Audit #3 + #9, `reviewInsights.ts`)
+
+- **`reviewReplies` (check #34) är alltid `notMeasured` — aldrig ett påstått X %.** Verifierat mot Googles egen dokumentation (`places#Review`): Places API (New) Review-objektet har `name`/`text`/`originalText`/`rating`/`authorAttribution`/`publishTime`/`flagContentUri`/`googleMapsUri`/`visitDate`/`relativePublishTimeDescription` — inget fält för ägarsvar. `analyzeReviewReplies()` (route.ts) räknar därför aldrig `withReply`/en svarsfrekvens; den returnerar bara `total` + en ärlig `finding` ("Google tillhandahåller inte ägarsvar via API:t — kontrollera i Google Business Profile.", eller "Inga recensioner tillgängliga för analys." vid 0 recensioner). Eftersom `isEnrichable()` i Report Writer bara berikar bad/warning-checks försvinner reviewReplies automatiskt ur Åtgärdsplan/Detaljerade lösningar/De 3 viktigaste fynden när den är notMeasured — inget särskilt filter behövs där. Synthesisprompten har en explicit regel mot att Pro nämner en svarsfrekvens i procent.
+- **`reviewInsights` (paid-only, `app/lib/reviewInsights.ts`)** — det som faktiskt ÄR mätbart: de riktiga recensionstexterna (max 5, Places API-gränsen). `analyzeReviewInsights()` skickar dem verbatim till Gemini Flash i JSON-läge och ber om `{themes:[{theme,sentiment,quote}], praise, complaints, sampleNote}`. `validateReviewInsights()` kastar varje tema vars `quote` inte är ett exakt substräng-utdrag ur en riktig recensionstext — modellen kan föreslå teman men aldrig hitta på belägg. Returnerar `null` om inga recensionstexter finns eller inget citat gick att verifiera. Körs i paid-flödet parallellt med Pro-syntesen och Report Writer (route.ts). Renderas i `PremiumReport.tsx` sektion 7 ("Vad kunderna säger").
 
 ### Directory checker (`directoryChecker.ts`)
 

@@ -59,7 +59,7 @@ const PRIORITY_GROUP_CONFIG: {
 // ---------------------------------------------------------------------------
 
 export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React.JSX.Element {
-  const { meta, scores, checks, synthesis, reviewReplies } = scanResult
+  const { meta, scores, checks, synthesis, reviewReplies, reviewInsights } = scanResult
 
   // Build a registry lookup for weights
   const registryByKey = new Map(CHECK_REGISTRY.map(e => [e.key, e]))
@@ -296,43 +296,61 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
             </span>
           </div>
 
-          {/* Review reply stats */}
-          {reviewReplies.total > 0 ? (
+          {/* Recensionssvar — Audit #3: Google Places API (New) har inget fält för
+              ägarsvar, en svarsfrekvens går därför aldrig att mäta härifrån. */}
+          <div className="bg-white rounded-lg p-4 mb-4 border border-gray-100">
+            <p className="text-gray-600 text-sm font-medium mb-1">Recensionssvar</p>
+            <p className="text-gray-400 text-sm">{reviewReplies.finding}</p>
+          </div>
+
+          {/* Recensionsinsikter — grundade teman/citat ur de faktiska recensionerna,
+              varje citat verifierat ordagrant mot originaltexten (Audit #9). */}
+          {reviewInsights && (reviewInsights.themes.length > 0 || reviewInsights.praise.length > 0 || reviewInsights.complaints.length > 0) ? (
             <div className="bg-white rounded-lg p-4 mb-4 border border-gray-100">
-              <p className="text-gray-600 text-sm font-medium mb-3">Recensionssvar</p>
-              <div className="grid grid-cols-3 gap-4 mb-3">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{reviewReplies.total}</div>
-                  <p className="text-gray-400 text-xs">Totalt</p>
+              <p className="text-gray-600 text-sm font-medium mb-3">Vad kunderna säger</p>
+
+              {reviewInsights.themes.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {reviewInsights.themes.map((t, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className={`shrink-0 mt-0.5 text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                        t.sentiment === 'positive' ? 'bg-emerald-50 text-emerald-700' :
+                        t.sentiment === 'negative' ? 'bg-red-50 text-red-700' :
+                        'bg-amber-50 text-amber-700'
+                      }`}>
+                        {t.theme}
+                      </span>
+                      <p className="text-gray-500 text-sm italic">&ldquo;{t.quote}&rdquo;</p>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{reviewReplies.withReply}</div>
-                  <p className="text-gray-400 text-xs">Med svar</p>
+              )}
+
+              {reviewInsights.praise.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-gray-500 text-xs font-medium mb-1">Beröm</p>
+                  <ul className="text-gray-600 text-sm list-disc list-inside space-y-0.5">
+                    {reviewInsights.praise.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">
-                    {Math.round(reviewReplies.replyRate * 100)}%
-                  </div>
-                  <p className="text-gray-400 text-xs">Svarsfrekvens</p>
+              )}
+
+              {reviewInsights.complaints.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-gray-500 text-xs font-medium mb-1">Klagomål</p>
+                  <ul className="text-gray-600 text-sm list-disc list-inside space-y-0.5">
+                    {reviewInsights.complaints.map((c, i) => <li key={i}>{c}</li>)}
+                  </ul>
                 </div>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full ${
-                    reviewReplies.replyRate >= 0.7 ? 'bg-emerald-500' :
-                    reviewReplies.replyRate >= 0.4 ? 'bg-amber-500' :
-                    'bg-red-500'
-                  }`}
-                  style={{ width: `${Math.round(reviewReplies.replyRate * 100)}%` }}
-                />
-              </div>
-              {reviewReplies.sampleNote && (
-                <p className="text-gray-400 text-xs mt-2">{reviewReplies.sampleNote}</p>
+              )}
+
+              {reviewInsights.sampleNote && (
+                <p className="text-gray-400 text-xs mt-2">{reviewInsights.sampleNote}</p>
               )}
             </div>
           ) : (
             <div className="bg-white rounded-lg p-4 mb-4 border border-gray-100">
-              <p className="text-gray-400 text-sm">Inga recensioner hittades att analysera.</p>
+              <p className="text-gray-400 text-sm">Ingen recensionsanalys av innehållet tillgänglig.</p>
             </div>
           )}
 

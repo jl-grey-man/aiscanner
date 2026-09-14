@@ -18,6 +18,8 @@ import { withRetry } from '@/app/lib/retry'
 import { buildVerifiedFacts, formatFactsForPrompt, GROUNDING_RULES, groundReport } from '@/app/lib/factGuard'
 import type { VerifiedFacts } from '@/app/lib/factGuard'
 import { deriveBransch } from '@/app/lib/bransch'
+import { analyzeReviewInsights } from '@/app/lib/reviewInsights'
+import type { ReviewInsightsData } from '@/app/lib/scanResult'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -344,11 +346,18 @@ REGLER:
 - Alla texter på svenska`
 }
 
+/**
+ * Audit #3: Google Places API (New) Review-objektet har INGET fält för ägarsvar
+ * (verifierat mot officiell dokumentation:
+ * https://developers.google.com/maps/documentation/places/web-service/reference/rest/v1/places#Review
+ * — Review har name/text/originalText/rating/authorAttribution/publishTime/
+ * flagContentUri/googleMapsUri/visitDate/relativePublishTimeDescription, inget
+ * "reviewReply"/"ownerResponse"). En svarsfrekvens går därför ALDRIG att mäta via
+ * detta API — checken blir alltid notMeasured, aldrig ett påstått 0 %.
+ */
 function analyzeReviewReplies(reviews: any[], totalReviewCount?: number): {
   total: number
-  withReply: number
-  responseRate: number
-  status: 'ok' | 'warning' | 'bad'
+  status: 'notMeasured'
   finding: string
   fix: string
   sampleNote: string
@@ -359,44 +368,26 @@ function analyzeReviewReplies(reviews: any[], totalReviewCount?: number): {
     ? totalReviewCount
     : null
   const sampleNote = reviews.length > 0 && knownTotal !== null && knownTotal > reviews.length
-    ? `OBS: Baserat på ett stickprov av ${reviews.length} recensioner av totalt ${knownTotal}. Det faktiska svarsfrekvensen kan vara högre.`
-    : reviews.length > 0 && knownTotal !== null && knownTotal > 0
-    ? `Baserat på ${reviews.length} av ${knownTotal} recensioner.`
+    ? `Baserat på ett stickprov av ${reviews.length} recensioner av totalt ${knownTotal} (Google Places API-gränsen).`
     : ''
 
   if (!reviews || reviews.length === 0) {
     return {
-      total: 0, withReply: 0, responseRate: 0,
-      status: 'warning',
+      total: 0,
+      status: 'notMeasured',
       finding: 'Inga recensioner tillgängliga för analys.',
-      fix: 'Be kunder lämna recensioner och svara alltid på dem.',
+      fix: 'Be kunder lämna recensioner på Google.',
       sampleNote,
     }
   }
-  const withReply = reviews.filter(r => r.reviewReply?.text).length
-  const responseRate = Math.round((withReply / reviews.length) * 100)
 
-  let status: 'ok' | 'warning' | 'bad'
-  let finding: string
-  let fix: string
-
-  if (responseRate >= 70) {
-    status = 'ok'
-    finding = `Svarar på ${responseRate}% av recensioner i stickprovet (${withReply}/${reviews.length}). AI-motorer ser ett aktivt engagerat företag.`
-    fix = ''
-  } else if (responseRate >= 30) {
-    status = 'warning'
-    const unanswered = reviews.length - withReply
-    finding = `Svarar på ${responseRate}% av recensioner i stickprovet. ${unanswered} saknar svar.`
-    fix = `Svara på de ${unanswered} obesvarade recensionerna. AI-motorer som Google AI Overviews inkluderar företagssvar i sin analys — personliga svar signalerar engagemang.`
-  } else {
-    const unanswered = reviews.length - withReply
-    status = 'bad'
-    finding = `Svarar på bara ${responseRate}% av recensioner i stickprovet (${withReply}/${reviews.length}). ${unanswered} recensioner utan svar.`
-    fix = `Svara på obesvarade recensioner snarast. Sätt upp rutin att svara inom 48h. Google AI Overviews visar företagssvar direkt — detta är AI-synlighet du missar varje dag.`
+  return {
+    total: reviews.length,
+    status: 'notMeasured',
+    finding: 'Google tillhandahåller inte ägarsvar via API:t — kontrollera i Google Business Profile.',
+    fix: 'Logga in på Google Business Profile (business.google.com) och se där hur stor andel av recensionerna som fått svar.',
+    sampleNote,
   }
-
-  return { total: reviews.length, withReply, responseRate, status, finding, fix, sampleNote }
 }
 
 function buildSynthesisPrompt(
@@ -520,6 +511,7 @@ REGLER:
 - actionPlan: inga tidsramar ("denna vecka", "denna månad", "inom X dagar" etc.)
 - competitorNote: använd ENDAST företagsnamn som finns i NÄRLIGGANDE KONKURRENTER-listan ovan. Hitta ALDRIG på namn. Om listan är tom — skriv branschinsikter utan namn.
 - reviewAnalysis: null om reviewReplyResult visar 0 recensioner
+- reviewAnalysis: nämn ALDRIG en svarsfrekvens i procent för recensionssvar (t.ex. "svarar på X%") — Google Places API tillhandahåller inte ägarsvarsdata, se RECENSIONSSVAR ovan
 - summary: max 5 meningar, konkret och handlingsbar
 - Alla texter på svenska
 - Var konkret — exakta steg, specifika verktyg och färdig kod som BARA innehåller verifierade värden
@@ -903,6 +895,10 @@ export async function POST(req: NextRequest) {
     }
 
     let synthesis: { actionPlan: string; competitorNote: string; reviewAnalysis: string | null; summary: string }
+    // Audit #9 (recensionsdelen): grundade recensionsteman/beröm/klagomål, paid-only.
+    // Förblir null i free-tier (ingen LLM-analys körs) och om det inte finns
+    // recensionstexter eller inget citat gick att verifiera ordagrant.
+    let reviewInsights: ReviewInsightsData | null = null
 
     if (tier === 'paid') {
       // PAID flow — full Pro pipeline (synthesis + Report Writer in parallel).
@@ -931,7 +927,7 @@ export async function POST(req: NextRequest) {
         return null
       })
 
-      const [synthesisRaw, richData] = await Promise.all([
+      const [synthesisRaw, richData, reviewInsightsResult] = await Promise.all([
         proPromise
           .catch(async (err) => {
             console.warn(`[Synthesis] Pro failed (${err.message}) — using Flash fallback`)
@@ -954,7 +950,11 @@ export async function POST(req: NextRequest) {
           console.error('[Enhanced Scan] Report Writer failed:', err.message)
           return {}
         }),
+        // Audit #9: skickar de faktiska recensionstexterna (max 5) till Flash i
+        // JSON-läge — analyzeReviewInsights fångar sina egna fel och kastar aldrig.
+        analyzeReviewInsights(reviews, { companyName, bransch }, callOpenRouterOnce),
       ])
+      reviewInsights = reviewInsightsResult
 
       // Merge rich data back into checks. Varje bad/warning-check får richStatus;
       // checks utan komplett rikt innehåll markeras 'missing' och loggas.
@@ -1040,13 +1040,12 @@ export async function POST(req: NextRequest) {
       aiMentions: aiMentionResult,
       reviewReplies: {
         total: reviewReplyResult.total,
-        withReply: reviewReplyResult.withReply,
-        replyRate: reviewReplyResult.responseRate,
         status: reviewReplyResult.status,
         finding: reviewReplyResult.finding,
         fix: reviewReplyResult.fix,
         sampleNote: reviewReplyResult.sampleNote,
       },
+      reviewInsights,
     }
 
     // Validate with Zod — log and continue even if validation fails
