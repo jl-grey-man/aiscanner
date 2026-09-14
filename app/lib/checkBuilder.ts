@@ -854,6 +854,16 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         'AI-omnämnandetest kunde inte köras (ingen stad identifierad eller tjänst otillgänglig).',
         null,
       ))
+    } else if (aiMentionResult.errored) {
+      // Real API/network error, not an actual "AI doesn't know you" result — must
+      // never score as 'bad'. See aiMentionChecker.ts.
+      checks.push(makeCheck(
+        'aiMentions',
+        'notMeasured',
+        'api',
+        'AI-omnämnande kunde inte mätas (tillfälligt tekniskt fel) — påverkar inte poängen.',
+        null,
+      ))
     } else {
       checks.push(makeCheck(
         'aiMentions',
@@ -873,11 +883,17 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
 
   // #34 reviewReplies (API)
   {
+    // 0 recensioner ar inte ett negativt betyg pa svarsfrekvens — det ar ett icke-matbart
+    // lage (inget att analysera annu), och ska darfor aldrig sanka poangen.
+    const status: CheckStatus = reviewReplyResult.total === 0 ? 'notMeasured' : reviewReplyResult.status
+    const finding = reviewReplyResult.total === 0
+      ? 'Inga recensioner att analysera ännu.'
+      : reviewReplyResult.finding
     checks.push(makeCheck(
       'reviewReplies',
-      reviewReplyResult.status,
+      status,
       'api',
-      reviewReplyResult.finding,
+      finding,
       reviewReplyResult.fix || null,
       {
         total: reviewReplyResult.total,

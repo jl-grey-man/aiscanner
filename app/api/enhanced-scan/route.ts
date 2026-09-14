@@ -589,6 +589,14 @@ export async function POST(req: NextRequest) {
     return new NextResponse(null, { status: 204, headers: corsHeaders })
   }
 
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.error('[Enhanced Scan] OPENROUTER_API_KEY saknas — avbryter')
+    return NextResponse.json(
+      { error: 'Servern är felkonfigurerad', errorId: 'no-api-key' },
+      { status: 503, headers: corsHeaders },
+    )
+  }
+
   try {
     const { url, city: cityInput, tier: tierInput } = await req.json()
 

@@ -18,6 +18,7 @@ export interface AIMentionResult {
   status: 'ok' | 'warning' | 'bad'
   finding: string
   fix: string
+  errored: boolean   // true = a real API/network error occurred (never treat as 'bad')
 }
 
 async function callGPT(
@@ -174,9 +175,40 @@ export async function checkAIMentions(
   apiKey: string,
   placesTypes?: string[]
 ): Promise<AIMentionResult> {
+  try {
+    return await runAIMentionCheck(companyName, city, bransch, apiKey, placesTypes)
+  } catch (err: any) {
+    // A real API/network error (not the intentional "no city" skip below, which never
+    // throws) — never let this collapse into a 'bad' verdict. checkBuilder.ts maps
+    // errored:true to status 'notMeasured' regardless of the fields below.
+    console.error(`[AI Mention] checkAIMentions failed: ${err.message}`)
+    return {
+      entityQuery: '',
+      entityResponse: '',
+      entityKnows: false,
+      entitySentiment: 'unknown',
+      extractedNiche: bransch,
+      categoryQuery: '',
+      categoryResponse: '',
+      categoryMentioned: false,
+      status: 'bad',
+      finding: '',
+      fix: '',
+      errored: true,
+    }
+  }
+}
+
+async function runAIMentionCheck(
+  companyName: string,
+  city: string,
+  bransch: string,
+  apiKey: string,
+  placesTypes?: string[]
+): Promise<AIMentionResult> {
   // Step 1: Entity query — what does AI know about this company?
   const entityQuery = `Vad vet du om "${companyName}" i ${city || 'Sverige'}? Berätta vad du känner till om företaget.`
-  const entityResponse = await callGPT(apiKey, entityQuery).catch(() => '')
+  const entityResponse = await callGPT(apiKey, entityQuery)
 
   const entityKnows = entityResponse.length > 80
     && !entityResponse.toLowerCase().includes('har ingen information')
@@ -196,7 +228,7 @@ export async function checkAIMentions(
     ? `Var hittar jag bra ${extractedNiche.toLowerCase()} i ${city}?`
     : ''
   const categoryResponse = city
-    ? await callGPT(apiKey, categoryQuery).catch(() => '')
+    ? await callGPT(apiKey, categoryQuery)
     : ''
 
   const categoryMentioned = categoryResponse
@@ -239,5 +271,6 @@ export async function checkAIMentions(
     status,
     finding,
     fix,
+    errored: false,
   }
 }
