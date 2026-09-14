@@ -14,6 +14,7 @@ import { enrichChecksWithReportWriter } from '@/app/lib/reportWriter'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
+import { withRetry } from '@/app/lib/retry'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -59,14 +60,14 @@ function extractJson(text: string): any {
   throw new Error('Kunde inte tolka AI-svaret som JSON')
 }
 
-async function callOpenRouter(
+/** En enda försök: fetch + (för JSON-svar) parsning. Kastar vid nätverksfel, icke-2xx eller trasig JSON. */
+async function callOpenRouterOnce(
   model: string,
   systemPrompt: string,
   userPrompt: string,
   timeoutMs: number,
-  expectMarkdown = false,
+  expectMarkdown: boolean,
   maxTokensOverride?: number,
-  _isRetry = false
 ): Promise<any> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
@@ -95,14 +96,13 @@ async function callOpenRouter(
 
     if (!res.ok) {
       const text = await res.text()
-      if (!_isRetry && (res.status === 429 || res.status === 504)) {
-        clearTimeout(timeout)
-        const waitMs = res.status === 429 ? 3000 : 1000
-        console.warn(`[callOpenRouter] ${model} got ${res.status}, retrying in ${waitMs}ms...`)
-        await new Promise(r => setTimeout(r, waitMs))
-        return callOpenRouter(model, systemPrompt, userPrompt, timeoutMs, expectMarkdown, maxTokensOverride, true)
+      const err = new Error(`OpenRouter ${res.status}: ${text}`)
+      // Permanenta klientfel (4xx utom 429) ska inte retryas — bara transienta fel
+      // (429 rate limit, 5xx, nätverksfel, trasig JSON) är värda ett nytt försök.
+      if (res.status !== 429 && res.status < 500) {
+        ;(err as any).permanent = true
       }
-      throw new Error(`OpenRouter ${res.status}: ${text}`)
+      throw err
     }
 
     const data = await res.json()
@@ -111,10 +111,30 @@ async function callOpenRouter(
     if (!content.trim()) throw new Error('Tomt AI-svar')
 
     if (expectMarkdown) return content
+    // JSON-parsning sker HÄR, innanför försöket — en trasig generation ger ett
+    // nytt LLM-anrop (via withRetry i callOpenRouter) i stället för notMeasured.
     return extractJson(content)
   } finally {
     clearTimeout(timeout)
   }
+}
+
+async function callOpenRouter(
+  model: string,
+  systemPrompt: string,
+  userPrompt: string,
+  timeoutMs: number,
+  expectMarkdown = false,
+  maxTokensOverride?: number,
+): Promise<any> {
+  return withRetry(
+    () => callOpenRouterOnce(model, systemPrompt, userPrompt, timeoutMs, expectMarkdown, maxTokensOverride),
+    {
+      attempts: 3,
+      baseDelayMs: 1000,
+      isRetryable: (err) => !(err as any)?.permanent,
+    }
+  )
 }
 
 function buildTechnicalPrompt(data: {
