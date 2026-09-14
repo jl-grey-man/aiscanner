@@ -99,6 +99,8 @@ export interface NearbyCompetitor {
   userRatingCount: number | null
   distanceMeters: number
   primaryType: string | null
+  /** Konkurrentens webbplats enligt Google-profilen — scannas i paid (competitorComparison.ts). */
+  websiteUri: string | null
 }
 
 /**
@@ -125,7 +127,7 @@ export async function findNearbyCompetitors(
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.userRatingCount,places.primaryType,places.location',
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.userRatingCount,places.primaryType,places.location,places.websiteUri',
       },
       body: JSON.stringify({
         includedPrimaryTypes: [primaryType],
@@ -171,6 +173,7 @@ export async function findNearbyCompetitors(
         userRatingCount: typeof p.userRatingCount === 'number' ? p.userRatingCount : null,
         distanceMeters: Math.round(distance),
         primaryType: p.primaryType ?? null,
+        websiteUri: typeof p.websiteUri === 'string' && p.websiteUri ? p.websiteUri : null,
       })
     }
     return competitors.slice(0, 5)

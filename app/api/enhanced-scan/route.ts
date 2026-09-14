@@ -19,7 +19,15 @@ import { buildVerifiedFacts, formatFactsForPrompt, GROUNDING_RULES, groundReport
 import type { VerifiedFacts } from '@/app/lib/factGuard'
 import { deriveBransch } from '@/app/lib/bransch'
 import { analyzeReviewInsights } from '@/app/lib/reviewInsights'
-import type { ReviewInsightsData } from '@/app/lib/scanResult'
+import type { ReviewInsightsData, CompetitorComparisonData } from '@/app/lib/scanResult'
+import {
+  selectCompetitorsToScan,
+  scanCompetitorSites,
+  evaluateComparisonStatuses,
+  buildCompetitorComparison,
+  formatComparisonForPrompt,
+} from '@/app/lib/competitorComparison'
+import type { CompetitorScanOutcome } from '@/app/lib/competitorComparison'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -402,7 +410,8 @@ function buildSynthesisPrompt(
   aiMentionResult: any,
   competitorList: NearbyCompetitor[] | null,
   cwvMetrics: any,
-  verifiedFacts: VerifiedFacts
+  verifiedFacts: VerifiedFacts,
+  competitorComparison: CompetitorComparisonData | null
 ): string {
   const competitorBlock = competitorList && competitorList.length > 0
     ? `NÄRLIGGANDE KONKURRENTER (Google Places, ≤1,5 km — VERIFIERAD data):
@@ -472,6 +481,8 @@ ${JSON.stringify({
 
 ${competitorBlock}
 
+${formatComparisonForPrompt(competitorComparison)}
+
 ${cwvBlock}
 
 GOOGLE BUSINESS PROFILE:
@@ -510,6 +521,9 @@ REGLER:
 - actionPlan MÅSTE börja med "### Kritiskt" (inte ##)
 - actionPlan: inga tidsramar ("denna vecka", "denna månad", "inom X dagar" etc.)
 - competitorNote: använd ENDAST företagsnamn som finns i NÄRLIGGANDE KONKURRENTER-listan ovan. Hitta ALDRIG på namn. Om listan är tom — skriv branschinsikter utan namn.
+- Konkurrenternas WEBBPLATSER: påstå ENDAST skillnader som står ordagrant under KONKURRENTJÄMFÖRELSE ovan (t.ex. "Restaurang X har FAQ-schema, ni inte"). Hitta ALDRIG på vad en konkurrents sajt har eller saknar. När en verifierad skillnad finns — använd den i competitorNote och som motivering för motsvarande åtgärd i actionPlan.
+- Generalisera ALDRIG om konkurrenternas sajter ("ingen av konkurrenterna", "alla konkurrenter", "till skillnad från konkurrenterna") utöver raderna "Bara ni" och "Alla scannade konkurrenter har, men inte ni" under KONKURRENTJÄMFÖRELSE — övriga jämförelser ska namnge den enskilda konkurrenten.
+- Varje påstående om vad en konkurrent har eller saknar ska stämma med raden för JUST den kontrollen under "Per kontroll där resultaten skiljer sig". Slå ALDRIG ihop två kontroller i samma mening om inte exakt samma företag står under "saknar" (respektive "har") för båda.
 - reviewAnalysis: null om reviewReplyResult visar 0 recensioner
 - reviewAnalysis: nämn ALDRIG en svarsfrekvens i procent för recensionssvar (t.ex. "svarar på X%") — Google Places API tillhandahåller inte ägarsvarsdata, se RECENSIONSSVAR ovan
 - summary: max 5 meningar, konkret och handlingsbar
@@ -684,7 +698,33 @@ export async function POST(req: NextRequest) {
     // Run 3 Flash calls + directory check + AI mention check in parallel
     const flashSystem = 'Du är en svensk AI-sökningsanalytiker. Svara ENDAST i giltig JSON. Ingen markdown, ingen text utanför JSON.'
 
-    const [technicalResult, faqResult, eatResult, directoryResult, aiMentionResult, cwvMetrics, competitorList] = await Promise.all([
+    const competitorListPromise = (async (): Promise<NearbyCompetitor[]> => {
+      const lat = placeForAnalysis?.location?.latitude
+      const lng = placeForAnalysis?.location?.longitude
+      const ptype = placeForAnalysis?.primaryType
+      if (typeof lat !== 'number' || typeof lng !== 'number' || !ptype || !placeForAnalysis?.id) return []
+      return findNearbyCompetitors(lat, lng, ptype, placeForAnalysis.id).catch((err) => {
+        console.error('[Enhanced Scan] Nearby competitors failed:', err.message)
+        return []
+      })
+    })()
+
+    // Audit #9 (konkurrentdelen), paid-only: topp 3 konkurrenter med egen webbplats
+    // scannas deterministiskt (inga LLM-anrop) direkt när Nearby-listan finns — i samma
+    // parallella fas som Flash-anropen, så syntesen inte behöver vänta extra.
+    // scanCompetitorSites kastar aldrig; varje sajt har egen tidsgräns (25 s).
+    const competitorScansPromise: Promise<CompetitorScanOutcome[]> = tier === 'paid'
+      ? competitorListPromise.then(async (list) => {
+          const selected = selectCompetitorsToScan(list, url)
+          const started = Date.now()
+          const outcomes = await scanCompetitorSites(selected)
+          const okScans = outcomes.filter(o => o.statuses !== null).length
+          console.log(`[Competitors] ${outcomes.length} konkurrentsajter på ${Date.now() - started} ms (${okScans} scannade, ${outcomes.length - okScans} misslyckade)`)
+          return outcomes
+        })
+      : Promise.resolve([])
+
+    const [technicalResult, faqResult, eatResult, directoryResult, aiMentionResult, cwvMetrics, competitorList, competitorScans] = await Promise.all([
       callOpenRouter(
         FLASH_MODEL,
         flashSystem,
@@ -787,16 +827,8 @@ export async function POST(req: NextRequest) {
         console.error('[Enhanced Scan] PSI failed:', err.message)
         return null
       }),
-      (async (): Promise<NearbyCompetitor[]> => {
-        const lat = placeForAnalysis?.location?.latitude
-        const lng = placeForAnalysis?.location?.longitude
-        const ptype = placeForAnalysis?.primaryType
-        if (typeof lat !== 'number' || typeof lng !== 'number' || !ptype || !placeForAnalysis?.id) return []
-        return findNearbyCompetitors(lat, lng, ptype, placeForAnalysis.id).catch((err) => {
-          console.error('[Enhanced Scan] Nearby competitors failed:', err.message)
-          return []
-        })
-      })(),
+      competitorListPromise,
+      competitorScansPromise,
     ])
 
     console.log(`[Enhanced Scan] Alla anrop klara. Startar Pro-syntes + Report Writer...`)
@@ -832,6 +864,15 @@ export async function POST(req: NextRequest) {
       extraUrls: [enhancedData.ogImage, placeForAnalysis?.websiteUri, ...enhancedData.blogPaths],
     })
 
+    // Audit #9: "ni" bedöms med EXAKT samma deterministiska funktion som konkurrenterna
+    // (på redan skrapad data — ingen ny hämtning), så jämförelsen blir rättvis.
+    const competitorComparison: CompetitorComparisonData | null = tier === 'paid'
+      ? buildCompetitorComparison(
+          evaluateComparisonStatuses({ url, scraperData: scrapedData, enhancedData }),
+          competitorScans,
+        )
+      : null
+
     // Run Pro synthesis + Report Writer in parallel
     const synthesisPrompt = buildSynthesisPrompt(
       technicalResult,
@@ -845,7 +886,8 @@ export async function POST(req: NextRequest) {
       aiMentionResult,
       competitorList,
       cwvMetrics,
-      verifiedFacts
+      verifiedFacts,
+      competitorComparison
     )
 
     const SynthesisResponseSchema = z.object({
@@ -1046,6 +1088,7 @@ export async function POST(req: NextRequest) {
         sampleNote: reviewReplyResult.sampleNote,
       },
       reviewInsights,
+      competitorComparison,
     }
 
     // Validate with Zod — log and continue even if validation fails

@@ -246,6 +246,32 @@ const ReviewInsightsSchema = z.object({
   sampleNote: z.string(),
 })
 
+// Competitor comparison — Audit #9 (konkurrentdelen, paid-only). Topp 3 närliggande
+// konkurrenter med egen webbplats scannas med samma scrapers och bedöms med samma
+// deterministiska checkBuilder-logik som "ni" (app/lib/competitorComparison.ts) —
+// inga LLM-anrop. `statuses` är nycklad på CheckKey (bara `keys`); en konkurrent som
+// inte gick att scanna har `scanned: false`, `statuses: {}` och `okCount: null`.
+const ComparisonStatusSchema = z.enum(['ok', 'warning', 'bad', 'notMeasured', 'notApplicable'])
+
+const CompetitorComparisonEntrySchema = z.object({
+  name: z.string(),
+  website: z.string(),
+  rating: z.number().nullable(),
+  reviewCount: z.number().nullable(),
+  scanned: z.boolean(),
+  statuses: z.record(z.string(), ComparisonStatusSchema),
+  okCount: z.number().int().nullable(),
+})
+
+export const CompetitorComparisonSchema = z.object({
+  keys: z.array(CheckKeyEnum),
+  you: z.object({
+    statuses: z.record(z.string(), ComparisonStatusSchema),
+    okCount: z.number().int(),
+  }),
+  competitors: z.array(CompetitorComparisonEntrySchema),
+})
+
 // ---------------------------------------------------------------------------
 // 4. ScanResult schema — top-level contract
 // ---------------------------------------------------------------------------
@@ -261,9 +287,13 @@ export const ScanResultSchema = z.object({
   reviewReplies: ReviewReplyDataSchema,
   // Optional/nullable: saknas i äldre sparade scans, null i free-tier (ingen LLM-analys körs).
   reviewInsights: ReviewInsightsSchema.nullable().optional(),
+  // Optional/nullable: saknas i äldre sparade scans, null i free-tier och när ingen
+  // närliggande konkurrent har en egen webbplats att jämföra mot.
+  competitorComparison: CompetitorComparisonSchema.nullable().optional(),
 })
 
 export type ScanResult = z.infer<typeof ScanResultSchema>
+export type CompetitorComparisonData = z.infer<typeof CompetitorComparisonSchema>
 export type ScanMeta = z.infer<typeof MetaSchema>
 export type ScanScores = z.infer<typeof ScoresSchema>
 export type ScanSynthesis = z.infer<typeof SynthesisSchema>
