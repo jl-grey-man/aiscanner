@@ -24,7 +24,7 @@ En komplett go-live-audit gjordes 2026-09-01 (4 parallella granskningar + skarpa
 3. **Ingen rate limiting** — API-krediter kan brännas obegränsat (Task 4)
 4. **`STRIPE_API_KEY` bara i `.env.local`** — systemd läser `.env`, betalflödet dött i prod (Task 5)
 5. **AI-fel blir kunddom** — misslyckade API-anrop rapporteras som "AI känner inte till företaget" (Task 9)
-6. **Paid-scan 135 s > Cloudflares 100 s-gräns** — finalize måste bli asynkron (Task 13)
+6. ~~**Paid-scan 135 s > Cloudflares 100 s-gräns** — finalize måste bli asynkron (Task 13)~~ — åtgärdat 2026-09-14: finalize svarar 202 och scannar i bakgrunden, `/report` pollar `GET /api/checkout/status`; testköp end-to-end återstår (live-nyckel)
 
 Kvalitetsproblem därutöver: aggregateRating i kodexempel bryter Googles riktlinjer (Task 10), 3× duplicerade kodblock (Task 11), poänginstabilitet mellan free/paid-körningar (Task 12), tyst mätbortfall utan täckningsvisning (Task 8, 14), "23 kontroller" hårdkodat på landningssidan (Task 15).
 

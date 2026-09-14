@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { ScanResult } from '@/app/lib/scanResult'
 import { PremiumReport } from '@/app/components/report/PremiumReport'
+import { pollScanStatus } from '@/app/lib/pollScanStatus'
 
 type State = 'idle' | 'finalizing' | 'scanning' | 'done' | 'error'
 
@@ -63,16 +64,34 @@ function ReportInner() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId }),
         })
-        const json = await res.json()
+        const json = await res.json().catch(() => ({}))
+
+        let result: ScanResult | null = null
+        if (res.status === 202) {
+          // Task 13: paid-scannet körs i bakgrunden på servern → polla status
+          const outcome = await pollScanStatus({ sessionId })
+          if (outcome.status === 'failed') {
+            throw new Error('Premiumanalysen misslyckades. Tryck på "Försök igen" så startar vi om den — ni behöver inte betala igen.')
+          }
+          if (outcome.status === 'timeout') {
+            throw new Error('Analysen tar längre tid än väntat. Tryck på "Försök igen" för att fortsätta vänta.')
+          }
+          if (outcome.status === 'notFound') {
+            throw new Error('Hittar inte er beställning. Tryck på "Försök igen" så startar vi analysen igen.')
+          }
+          result = outcome.scanResult
+        } else {
+          if (!res.ok) {
+            throw new Error(json.error || json.detail || `HTTP ${res.status}`)
+          }
+          result = json.scanResult ?? null
+        }
         clearInterval(stepInterval)
 
-        if (!res.ok) {
-          throw new Error(json.error || json.detail || `HTTP ${res.status}`)
-        }
-        if (!json.scanResult) {
+        if (!result) {
           throw new Error('Inget scan-resultat returnerades')
         }
-        setScanResult(json.scanResult)
+        setScanResult(result)
         setStepIdx(STEPS.length - 1)
         setState('done')
       } catch (e: unknown) {
@@ -143,7 +162,7 @@ function ReportInner() {
           <p className="text-gray-600 text-sm">{STEPS[stepIdx]}</p>
         </div>
         <div className="text-xs text-gray-400">
-          Det här tar ungefär en minut. Stäng inte fliken.
+          Det här tar några minuter. Analysen fortsätter även om ni laddar om sidan.
         </div>
       </div>
     </div>
