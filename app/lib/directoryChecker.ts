@@ -130,9 +130,36 @@ function normalizePhone(phone: string): string {
 function normalizeAddress(addr: string): string {
   return addr
     .toLowerCase()
-    .replace(/\d{5}\s+/, '') // strip 5-digit postal code
+    // Strip Swedish postal code (3+2 digits), written with or without the
+    // conventional space ("411 36" or "41136") — GBP's formattedAddress always
+    // uses the spaced form, while directory extractions vary.
+    .replace(/\b\d{3}\s?\d{2}\b\s*/g, '')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+// Legal-form suffixes carry no identifying value for name matching (almost every
+// Swedish company name includes one), so they are excluded from the significant-word set.
+const COMPANY_NAME_STOPWORDS = new Set(['ab', 'hb', 'kb', 'ek', 'förening'])
+
+function significantCompanyWords(companyName: string): string[] {
+  return companyName
+    .split(/\s+/)
+    .map(w => w.replace(/[.,()]/g, ''))
+    .filter(w => w.length > 1 && !COMPANY_NAME_STOPWORDS.has(w.toLowerCase()))
+}
+
+/**
+ * Does this Tavily result text actually mention the company we searched for? Tavily's
+ * `site:`-search can surface a listing for a completely unrelated business (e.g. a
+ * different company that happens to share part of the query) — such a result must not
+ * be trusted as "found" or contribute its address/phone to the NAP comparison.
+ */
+function resultMatchesCompany(text: string, companyName: string): boolean {
+  const words = significantCompanyWords(companyName)
+  if (words.length === 0) return true // nothing distinctive to match on — don't filter
+  const normText = text.toLowerCase()
+  return words.some(w => normText.includes(w.toLowerCase()))
 }
 
 async function searchViaTavily(
@@ -175,16 +202,21 @@ async function checkDirectoryViaTavily(
 
   if (results.length === 0) return { found: false }
 
+  // Only trust results that actually mention the company — a result for an unrelated
+  // business must not count as a listing at all (see resultMatchesCompany above).
+  const matching = results.filter(r => resultMatchesCompany(`${r.title} ${r.content}`, companyName))
+  if (matching.length === 0) return { found: false }
+
   // Pick best listing URL (prefer actual firm pages over search/map pages)
-  const ranked = results
+  const ranked = matching
     .map(r => ({ ...r, rank: rankListingUrl(r.url, domain) }))
     .sort((a, b) => b.rank - a.rank)
 
   const best = ranked[0]
   if (best.rank === 0) return { found: false } // only map results = not a real listing
 
-  // Extract NAP from ALL results combined (map/search pages often have address in snippet)
-  const allText = results.map(r => r.content + ' ' + r.title).join(' ')
+  // Extract NAP from the matching results combined (map/search pages often have address in snippet)
+  const allText = matching.map(r => r.content + ' ' + r.title).join(' ')
   const nap: NAP = {}
   const phone = extractPhoneFromText(allText)
   const address = extractAddressFromText(allText)
@@ -198,10 +230,12 @@ async function checkDirectoryViaTavily(
   }
 }
 
-function buildNAPConsistency(directories: DirectoryCheckItem[]): NAPConsistency {
+function buildNAPConsistency(directories: DirectoryCheckItem[], gbpNap?: NAP): NAPConsistency {
   const found = directories.filter(d => d.found && d.nap)
+  const gbpProvidesData = !!(gbpNap && (gbpNap.phone || gbpNap.address))
+  const totalSources = found.length + (gbpProvidesData ? 1 : 0)
 
-  if (found.length < 2) {
+  if (totalSources < 2) {
     return {
       checked: false,
       consistent: null,
@@ -219,6 +253,13 @@ function buildNAPConsistency(directories: DirectoryCheckItem[]): NAPConsistency 
   const addressValues = found
     .filter(d => d.nap?.address)
     .map(d => ({ directory: d.name, value: d.nap!.address! }))
+
+  // Google Business Profile är den verifierade sanningskällan (kunden äger/bekräftar
+  // den) — den ska alltid ingå som referensvärde, inte bara kataloger jämförda mot
+  // varandra. Läggs först: jämförelsen nedan tar alla värden mot phoneValues[0]/
+  // addressValues[0], så när GBP finns blir den referensen alla andra mäts mot.
+  if (gbpNap?.phone) phoneValues.unshift({ directory: 'Google Business Profile', value: gbpNap.phone })
+  if (gbpNap?.address) addressValues.unshift({ directory: 'Google Business Profile', value: gbpNap.address })
 
   const phonesNorm = phoneValues.map(v => normalizePhone(v.value))
   const addressesNorm = addressValues.map(v => normalizeAddress(v.value))
@@ -248,7 +289,8 @@ function buildNAPConsistency(directories: DirectoryCheckItem[]): NAPConsistency 
 export async function checkSwedishDirectories(
   companyName: string,
   city: string,
-  sameAsLinks: string[]
+  sameAsLinks: string[],
+  gbpNap?: NAP
 ): Promise<DirectoryResult> {
   const tavilyApiKey = process.env.TAVILY_API_KEY || ''
 
@@ -302,7 +344,7 @@ export async function checkSwedishDirectories(
 
   const foundCount = directories.filter(d => d.found).length
   const totalChecked = directories.length
-  const napConsistency = buildNAPConsistency(directories)
+  const napConsistency = buildNAPConsistency(directories, gbpNap)
 
   let status: 'ok' | 'warning' | 'bad'
   let finding: string

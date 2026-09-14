@@ -629,6 +629,14 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
   })
   const placeTypes: string[] = placeForAnalysis?.types || []
 
+  // GBP är den verifierade NAP-källan (kunden äger sin Google Business Profile) — skickas
+  // med till katalogkontrollen så den jämförs mot en sanning, inte bara kataloger mot
+  // varandra (annars kan två kataloger med samma FELAKTIGA adress markeras "konsekvent").
+  const gbpFactsForDirectories = placeFacts(placeForAnalysis)
+  const gbpNap = gbpFactsForDirectories.phone || gbpFactsForDirectories.formattedAddress
+    ? { phone: gbpFactsForDirectories.phone, address: gbpFactsForDirectories.formattedAddress ?? undefined }
+    : undefined
+
   // City priority: 1) user input, 2) Places address, 3) scraped — never use 'Sverige'
   const cityFromPlace = placeForAnalysis?.formattedAddress
     ? (() => {
@@ -745,7 +753,7 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
         certifications: { status: 'unknown', found: [], finding: 'Kunde inte analyseras', fix: '' },
       }
     }),
-    checkSwedishDirectories(companyName, city, enhancedData.sameAsLinks).catch((err) => {
+    checkSwedishDirectories(companyName, city, enhancedData.sameAsLinks, gbpNap).catch((err) => {
       console.error('[Enhanced Scan] Directory check failed:', err.message)
       return {
         foundInSameAs: [],
