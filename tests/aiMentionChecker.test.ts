@@ -199,4 +199,20 @@ describe('checkAIMentions', () => {
     expect(result.errored).toBe(true)
     expect(call).not.toHaveBeenCalled()
   })
+
+  it('callGPT (entity-frågan) skickar provider.data_collection="deny" till OpenRouter — dataskydd (Z3)', async () => {
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>
+    fetchMock
+      .mockResolvedValueOnce(gptResponse('Något svar om företaget.')) // entity query
+      .mockResolvedValueOnce(gptResponse('frisör i Sundsvall')) // category query
+
+    const call = vi.fn().mockResolvedValue({ classification: 'knows', factChecks: [] })
+    await checkAIMentions(meta.companyName, meta.city, meta.bransch, 'fake-key', call, undefined, meta.address)
+
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(0)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('https://openrouter.ai/api/v1/chat/completions')
+    const body = JSON.parse((init as RequestInit).body as string)
+    expect(body.provider).toEqual({ data_collection: 'deny' })
+  })
 })

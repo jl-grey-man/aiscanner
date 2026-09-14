@@ -78,6 +78,7 @@ app/
     scan/route.ts             # POST /api/scan — legacy free scan (Gemini Flash, 23 checks)
     full-scan/route.ts        # POST /api/full-scan — legacy premium
   lib/
+    openrouter.ts             # Z3: centraliserad OpenRouter-konfiguration — OPENROUTER_API_URL + buildOpenRouterRequestBody() sätter provider.data_collection="deny" på VARJE anrop (dataskydd, se "OpenRouter — dataskydd" nedan). ALLA fetch-anrop mot openrouter.ai i app/ MÅSTE gå via denna
     scanResult.ts             # ScanResult Zod schema — 37 CheckKeys, CheckResult, CHECK_REGISTRY, calculateScores()
     checkBuilder.ts           # buildCheckResults() — maps raw scan data → 37 typed CheckResult objects, attaches genericSteps/genericCodeTemplate
     checkExplanations.ts      # Hardcoded "Vad är detta?" texts per check key (used by SolutionCard header)
@@ -194,6 +195,16 @@ Receives a rich `BusinessMeta` (companyName, bransch, city, streetAddress, posta
 - **GRÅZON (Jens informerad):** AI-genererad text sparas som den är — `richRelevance`, `richSteps`, AI-skrivna `richCodeExample`, `synthesis.*`, `reviewInsights.praise/complaints/sampleNote`, AI-testets `aiMentions`/check #33 (svar och faktagranskningens `correctFact`). Den är härledd ur prompter med Places-data och kan innehålla adress/telefon/betyg (uppmätt tvakanten.se: gatuadressen i `richSteps` och syntesen, "942 recensioner" i syntesen). Även `meta.city` (kan komma från Places-adressen) och `checkouts.city` sparas — ortnamnet är scan-parametern och cachenyckeln.
 - Sajtens eget telefonnummer/adress i skrapad data (t.ex. check #11 `phone`, `scrapedData`, `placesRef.site.phone`) och Tavily-katalogdata är inte Places-innehåll och sparas som vanligt — de kan alltså vara samma nummer som i Google-profilen.
 - **Temperatur:** status-avgörande Flash-bedömningar (teknik/FAQ/E-A-T i route.ts, AI-svarsklassificeringen i `aiMentionChecker.ts`) skickar `ASSESSMENT_TEMPERATURE = 0` (`reportWriter.ts`, sjunde parametern i `CallOpenRouterFn`). Textgenerering (syntes, Report Writer, reviewInsights) har kvar 0.2.
+
+### OpenRouter — dataskydd (Z3, `app/lib/openrouter.ts`)
+
+Places-data och kunddata (företagsnamn, adress, telefon, recensioner, e-post, ...) skickas till OpenRouter i varenda prompt i appen — tekniska/FAQ/E-A-T-bedömningar och syntesen (`route.ts`), Report Writer, recensionsinsikter, och AI-omnämnandetestet (`aiMentionChecker.ts`).
+
+- **Problemet:** OpenRouter ruttar som DEFAULT till providers som får logga/lagra/träna på prompt-data (`provider.data_collection` default = `"allow"`, verifierat 2026-09-14 mot `openrouter.ai/docs/features/provider-routing`).
+- **Fixen:** `provider: { data_collection: "deny" }` i request-bodyn begränsar routningen till providers UTAN datalagring/träning på prompten. `app/lib/openrouter.ts` exporterar `OPENROUTER_API_URL` + `buildOpenRouterRequestBody(params)` — den senare sätter `provider` alltid till detta, och `provider` finns inte som fält i `OpenRouterRequestParams` så ett anropsställe kan inte skriva över det.
+- **VARJE direkt fetch-anrop mot openrouter.ai i app/ MÅSTE gå via denna helper** — de två anropsställena (`callOpenRouterOnce` i route.ts, `callGPT` i aiMentionChecker.ts) importerar `OPENROUTER_API_URL`/`buildOpenRouterRequestBody` i stället för att hårdkoda URL:en/`provider`-fältet själva. `reportWriter.ts`/`reviewInsights.ts` anropar aldrig fetch direkt — de tar emot `callOpenRouterOnce` som en injicerad `CallOpenRouterFn` (route.ts), så de täcks automatiskt.
+- **Verifierat 2026-09-14** (riktiga anrop mot OpenRouter med `provider.data_collection: "deny"`, `max_tokens: 5`): HTTP 200 för alla tre modeller appen använder — `google/gemini-2.5-flash`, `google/gemini-2.5-pro`, `openai/gpt-4o-mini` — dvs. minst en zero-data-retention-provider finns för var och en.
+- **Regressionsskydd:** `tests/openrouter.test.ts` grep:ar hela `app/` och kastar om strängen `openrouter.ai` eller `data_collection` förekommer i någon annan fil än `app/lib/openrouter.ts` — ett nytt anropsställe som hårdkodar URL:en/provider-fältet vid sidan av helpern får testet att slå fel.
 
 ### Google Places-attribution — branding (Z2, `GoogleAttribution.tsx`)
 

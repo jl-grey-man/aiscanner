@@ -2,8 +2,8 @@ import { APP_URL } from './config'
 import { withRetry } from './retry'
 import { ASSESSMENT_TEMPERATURE } from './reportWriter'
 import type { CallOpenRouterFn } from './reportWriter'
+import { OPENROUTER_API_URL, buildOpenRouterRequestBody } from './openrouter'
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // GPT-4o-mini: cheap, has broad web training data — good for simulating ChatGPT user queries
 const AI_MENTION_MODEL = 'openai/gpt-4o-mini'
 // Klassificeringen av AI-svaret (Audit #4) körs mot Flash i JSON-läge — samma modell
@@ -58,7 +58,7 @@ async function callGPT(
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const res = await fetch(OPENROUTER_URL, {
+    const res = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -66,12 +66,12 @@ async function callGPT(
         'HTTP-Referer': APP_URL,
         'X-Title': 'AI Search Scanner - AI Mention Check',
       },
-      body: JSON.stringify({
+      body: JSON.stringify(buildOpenRouterRequestBody({
         model: AI_MENTION_MODEL,
         messages: [{ role: 'user', content: query }],
         temperature: 0.3,
         max_tokens: 600,
-      }),
+      })),
       signal: controller.signal,
     })
     clearTimeout(timeout)

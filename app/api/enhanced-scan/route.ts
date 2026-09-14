@@ -21,6 +21,7 @@ import {
   derivePlacesParts, placeFacts, buildGbpData, competitorsForPlace, fetchPlacesForCachedScan,
 } from '@/app/lib/placesContent'
 import { APP_URL } from '@/app/lib/config'
+import { OPENROUTER_API_URL, buildOpenRouterRequestBody } from '@/app/lib/openrouter'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
 import { withRetry } from '@/app/lib/retry'
@@ -97,7 +98,7 @@ async function callOpenRouterOnce(
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const res = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,7 +106,7 @@ async function callOpenRouterOnce(
         'HTTP-Referer': APP_URL,
         'X-Title': 'AI Search Scanner Enhanced',
       },
-      body: JSON.stringify({
+      body: JSON.stringify(buildOpenRouterRequestBody({
         model,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -114,7 +115,7 @@ async function callOpenRouterOnce(
         temperature,
         max_tokens: maxTokensOverride ?? (expectMarkdown ? 12000 : 6000),
         ...(expectMarkdown ? {} : { response_format: { type: 'json_object' } }),
-      }),
+      })),
       signal: controller.signal,
     })
 
