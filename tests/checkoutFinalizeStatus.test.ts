@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import Database from 'better-sqlite3'
 import { NextRequest } from 'next/server'
+import { buildPaidReport, loadPlacesFixture, FIXTURE_PLACES_VALUES } from './fixtures/placesFixture'
 
 // Route-handlers mot en temporär databas. Stripe mockas (inget riktigt köp),
 // och det interna anropet till /api/enhanced-scan fångas via global fetch.
@@ -13,6 +14,14 @@ vi.mock('@/app/lib/stripe', () => ({
 }))
 const checkLimit = vi.fn(() => ({ ok: true, retryAfterSec: 0 }))
 vi.mock('@/app/lib/rateLimit', () => ({ checkLimit, getClientIp: () => '1.2.3.4' }))
+// Places API mockas: status/finalize hämtar färsk Places-data när en lagrad rapport öppnas.
+const places = vi.hoisted(() => ({
+  getPlaceDetails: vi.fn(),
+  getCompetitorDetails: vi.fn(),
+  findBusinessByUrl: vi.fn(),
+  findNearbyCompetitors: vi.fn(),
+}))
+vi.mock('@/app/lib/places', () => places)
 
 let dir: string
 let dbPath: string
@@ -188,5 +197,36 @@ describe('POST /api/checkout/finalize (asynkron)', () => {
     expect(res.status).toBe(402)
     expect(scan.fetchMock).not.toHaveBeenCalled()
     expect((await getStatus('cs_unpaid')).body).toEqual({ status: 'pending' })
+  })
+})
+
+describe('Places-villkoren: lagrad rapport utan Places-innehåll, rehydrerad vid läsning', () => {
+  it('status och finalize returnerar rapporten med färsk GBP-/konkurrentdata, databasen har bara place_id', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    const fixture = loadPlacesFixture()
+    places.getPlaceDetails.mockImplementation(async (id: string) => (id === fixture.freshPlace.id ? fixture.freshPlace : null))
+    places.getCompetitorDetails.mockImplementation(async (id: string) => fixture.freshCompetitors.find(c => c.placeId === id) ?? null)
+
+    const report = buildPaidReport()
+    db.createCheckout('cs_places', 'https://www.krogentest.se', 'Göteborg')
+    db.claimScan('cs_places')
+    expect(db.markScanDone('cs_places', report)).toBe(true)
+
+    const raw = new Database(dbPath)
+    const row = raw.prepare(`SELECT scan_result_json FROM checkouts WHERE session_id = 'cs_places'`).get() as { scan_result_json: string }
+    raw.close()
+    for (const value of FIXTURE_PLACES_VALUES) expect(row.scan_result_json, value).not.toContain(value)
+    expect(row.scan_result_json).toContain('ChIJtest-krogen')
+
+    const polled = await getStatus('cs_places')
+    expect(polled).toEqual({ code: 200, body: { status: 'done', scanResult: report } })
+    expect(polled.body.scanResult.gbp).toMatchObject({ phone: '031-700 12 34', rating: 4.6, address: 'Testgatan 12, 411 36 Göteborg, Sverige' })
+    expect(places.getPlaceDetails).toHaveBeenCalledWith('ChIJtest-krogen')
+
+    paidSession('cs_places')
+    const reopen = await postFinalize('cs_places')
+    expect(reopen.status).toBe(200)
+    expect(await reopen.json()).toEqual({ scanResult: report, fromCache: true })
+    vi.unstubAllEnvs()
   })
 })

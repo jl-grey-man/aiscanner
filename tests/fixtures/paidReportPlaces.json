@@ -1,0 +1,997 @@
+{
+ "_källa": "Härledd ur en riktig paid-scan av en Göteborgsrestaurang (2026-09-14): struktur, statusar och fix-texter. Allt Places-innehåll och all AI-text är utbytt mot påhittade värden. Genererad av scratchpad-skriptet gen_places_fixture.py.",
+ "report": {
+  "meta": {
+   "url": "https://www.krogentest.se",
+   "domain": "krogentest.se",
+   "city": "Göteborg",
+   "bransch": "bar",
+   "companyName": "Krogen Test",
+   "scanDate": "2026-09-14T19:19:13.012Z",
+   "scanId": "scan-fixture"
+  },
+  "scores": {
+   "free": 73,
+   "full": 70,
+   "google": 4.6,
+   "googleCount": 321
+  },
+  "checks": [
+   {
+    "id": 1,
+    "key": "https",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Webbplatsen anvander HTTPS -- sakerhetscertifikat finns.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 2,
+    "key": "robotsTxt",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Robots.txt finns och kan lasa av AI-crawlers.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 3,
+    "key": "aiCrawlers",
+    "status": "ok",
+    "source": "ai",
+    "priority": null,
+    "tier": "free",
+    "finding": "Inga AI-crawlers är blockerade, vilket är positivt för synlighet i AI-drivna sökningar.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 4,
+    "key": "sitemap",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Sitemap.xml hittades med 19 URL:er.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 5,
+    "key": "llmsTxt",
+    "status": "ok",
+    "source": "ai",
+    "priority": null,
+    "tier": "free",
+    "finding": "En llms.txt-fil finns och innehåller en tydlig struktur med sitemaps och länkar till viktiga sidor, vilket är bra för LLM-indexering.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 6,
+    "key": "canonical",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Canonical-tagg pekar pa: https://www.krogentest.se/",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 7,
+    "key": "ogTags",
+    "status": "ok",
+    "source": "ai",
+    "priority": null,
+    "tier": "free",
+    "finding": "Alla grundläggande Open Graph-taggar (title, description, image) finns implementerade.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 8,
+    "key": "socialPresence",
+    "status": "warning",
+    "source": "ai",
+    "priority": "nice",
+    "tier": "premium",
+    "finding": "Två sociala medieplattformar hittades. Att ha fler kan förbättra varumärkesnärvaron.",
+    "fix": "Överväg att lägga till länkar till fler relevanta sociala medieplattformar om webbplatsen är aktiv där (t.ex. LinkedIn, X/Twitter).",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för socialPresence.",
+    "richSteps": "1. AI-genererat steg för socialPresence.",
+    "richCodeExample": null,
+    "richStatus": "pro",
+    "codeRef": "localBusiness"
+   },
+   {
+    "id": 9,
+    "key": "hreflang",
+    "status": "notApplicable",
+    "source": "ai",
+    "priority": null,
+    "tier": "premium",
+    "finding": "Inga hreflang-taggar hittades. Eftersom webbplatsen verkar vara enspråkig (svenska) är detta inte nödvändigt.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 10,
+    "key": "cwv",
+    "status": "ok",
+    "source": "api",
+    "priority": null,
+    "tier": "free",
+    "finding": "LCP 2.00 s, CLS 0.000 (CrUX-fältdata) — Core Web Vitals klarar Googles gränser.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 11,
+    "key": "phone",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Telefonnummer hittades: 031-555 66 77",
+    "fix": null,
+    "data": {
+     "phones": [
+      "031-555 66 77"
+     ]
+    },
+    "codeExample": null
+   },
+   {
+    "id": 12,
+    "key": "cityMentioned",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Stad nämns på sidan: Göteborg",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 13,
+    "key": "googleMaps",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Google Maps-inbäddning hittades på /hitta-till-oss/.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 14,
+    "key": "localBusiness",
+    "status": "bad",
+    "source": "scraper",
+    "priority": "critical",
+    "tier": "free",
+    "finding": "Inget LocalBusiness-schema hittades.",
+    "fix": "Lägg till JSON-LD med @type: \"LocalBusiness\" (eller relevant subtyp).",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för localBusiness.",
+    "richSteps": "1. AI-genererat steg för localBusiness.",
+    "richCodeExample": null,
+    "richStatus": "pro"
+   },
+   {
+    "id": 15,
+    "key": "directories",
+    "status": "warning",
+    "source": "api",
+    "priority": "nice",
+    "tier": "free",
+    "finding": "Neutral testtext för directories.",
+    "fix": "Uppdatera kataloglistningarna så att namn, adress och telefonnummer är identiska på alla ställen. Använd exakt samma format.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för directories.",
+    "richSteps": "1. AI-genererat steg för directories.",
+    "richCodeExample": null,
+    "richStatus": "pro"
+   },
+   {
+    "id": 16,
+    "key": "napConsistency",
+    "status": "bad",
+    "source": "api",
+    "priority": "critical",
+    "tier": "free",
+    "finding": "Neutral testtext för napConsistency.",
+    "fix": "Uppdatera kataloglistningarna så att namn, adress och telefonnummer är identiska på alla ställen. Använd exakt samma format.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för napConsistency.",
+    "richSteps": "1. AI-genererat steg för napConsistency.",
+    "richCodeExample": null,
+    "richStatus": "pro",
+    "codeRef": "localBusiness"
+   },
+   {
+    "id": 17,
+    "key": "openingHours",
+    "status": "ok",
+    "source": "api",
+    "priority": null,
+    "tier": "free",
+    "finding": "Öppettider från Google Business Profile: måndag: Stängt, tisdag: 11:00–22:00...",
+    "fix": null,
+    "data": {
+     "weekdayDescriptions": [
+      "måndag: Stängt",
+      "tisdag: 11:00–22:00",
+      "onsdag: 11:00–22:00",
+      "torsdag: 11:00–23:00",
+      "fredag: 11:00–01:00",
+      "lördag: 11:00–01:00",
+      "söndag: 12:00–21:00"
+     ]
+    },
+    "codeExample": null
+   },
+   {
+    "id": 18,
+    "key": "schemaAny",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Schema markup hittades: BreadcrumbList, Organization, WebPage, WebSite",
+    "fix": null,
+    "data": {
+     "schemaTypes": [
+      "BreadcrumbList",
+      "Organization",
+      "WebPage",
+      "WebSite"
+     ]
+    },
+    "codeExample": null
+   },
+   {
+    "id": 19,
+    "key": "localSubtype",
+    "status": "bad",
+    "source": "scraper",
+    "priority": "important",
+    "tier": "free",
+    "finding": "Ingen specifik LocalBusiness-subtyp hittades.",
+    "fix": "Använd en specifik subtyp (t.ex. Restaurant, Dentist, Plumber) istället för bara LocalBusiness.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för localSubtype.",
+    "richSteps": "1. AI-genererat steg för localSubtype.",
+    "richCodeExample": null,
+    "richStatus": "pro",
+    "codeRef": "localBusiness"
+   },
+   {
+    "id": 20,
+    "key": "jsonLd",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "1 JSON-LD-block hittades på sidan.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 21,
+    "key": "metaTags",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Bade title-tagg och meta-beskrivning finns.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 22,
+    "key": "faqSchema",
+    "status": "bad",
+    "source": "ai",
+    "priority": "critical",
+    "tier": "free",
+    "finding": "Inga FAQ-frågor hittades varken i HTML eller som strukturerad data (FAQPage JSON-LD). Detta innebär att webbplatsen missar en möjlighet att svara på vanliga frågor direkt i sökresultaten och förbättra synligheten.",
+    "fix": "Implementera FAQPage JSON-LD med relevanta frågor och svar för restaurangen. Lägg även till FAQ-innehållet synligt på en sida på webbplatsen, gärna med semantiska HTML-element som <details>/<summary> eller <dl>/<dt>/<dd>.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för faqSchema.",
+    "richSteps": "1. AI-genererat steg för faqSchema.",
+    "richCodeExample": null,
+    "richStatus": "pro"
+   },
+   {
+    "id": 23,
+    "key": "contentDepth",
+    "status": "warning",
+    "source": "ai",
+    "priority": "nice",
+    "tier": "free",
+    "finding": "Webbplatsen har 19 sidor och saknar blogg- eller guideinnehåll. Detta indikerar ett begränsat innehållsdjup som kan påverka organisk synlighet och auktoritet inom restaurangbranschen.",
+    "fix": "Utöka antalet sidor genom att skapa en blogg eller guide-sektion. Publicera regelbundet innehåll relaterat till restaurangen, t.ex. recept, artiklar om lokala råvaror, evenemang, kockpresentationer eller tips för matlagning hemma. Detta kan locka fler besökare och förbättra SEO.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för contentDepth.",
+    "richSteps": "1. AI-genererat steg för contentDepth.",
+    "richCodeExample": null,
+    "richStatus": "pro"
+   },
+   {
+    "id": 24,
+    "key": "serviceSchema",
+    "status": "bad",
+    "source": "ai",
+    "priority": "important",
+    "tier": "premium",
+    "finding": "Inga Service- eller Menu-scheman hittades. Detta innebär att viktig information om restaurangens tjänster och meny inte presenteras i ett strukturerat format som sökmotorer kan förstå och visa i rika sökresultat.",
+    "fix": "Implementera Menu-schema för att presentera restaurangens meny på ett strukturerat sätt. Överväg även att använda Restaurant-schema för att ge detaljerad information om restaurangen som helhet, inklusive öppettider, adress, kök och bokningsmöjligheter.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för serviceSchema.",
+    "richSteps": "1. AI-genererat steg för serviceSchema.",
+    "richCodeExample": null,
+    "richStatus": "pro",
+    "codeRef": "localBusiness"
+   },
+   {
+    "id": 25,
+    "key": "eatSignals",
+    "status": "bad",
+    "source": "ai",
+    "priority": "important",
+    "tier": "free",
+    "finding": "Webbplatsen har en 'Om oss'-sida men saknar kritiska E-A-T-signaler som organisationsnummer, certifieringar och information om namngivna personer, vilket indikerar mycket svag trovärdighet och auktoritet.",
+    "fix": "Lägg till organisationsnummer, relevanta certifieringar (t.ex. livsmedelshygien, miljöcertifieringar), och presentera nyckelpersoner med namn och roller på 'Om oss'-sidan.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för eatSignals.",
+    "richSteps": "1. AI-genererat steg för eatSignals.",
+    "richCodeExample": null,
+    "richStatus": "pro"
+   },
+   {
+    "id": 26,
+    "key": "semanticHtml",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Bra semantisk HTML: 3 semantiska element hittades (main, nav, section).",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 27,
+    "key": "h1",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "H1-rubrik: \"Restaurang Krogen Test - Svensk Mat på centrum i Göteborg\"",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 28,
+    "key": "title",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Title-tagg: \"Restaurang Krogen Test\"",
+    "fix": null,
+    "data": {
+     "title": "Restaurang Krogen Test"
+    },
+    "codeExample": null
+   },
+   {
+    "id": 29,
+    "key": "metaDescription",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Metabeskrivning: \"Restaurang på centrum i Göteborg med svensk mat & personlig service. Även catering, cocktailkurser och dryckesprovningar ...\"",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 30,
+    "key": "contactInfo",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Kontaktinformation hittades på sidan.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 31,
+    "key": "altTexts",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "100% av bilderna har alt-text (3/3).",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 32,
+    "key": "internalLinks",
+    "status": "ok",
+    "source": "scraper",
+    "priority": null,
+    "tier": "free",
+    "finding": "Bra internlänkning: 8 unika sidor länkas från startsidan (53 länkar totalt).",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   },
+   {
+    "id": 33,
+    "key": "aiMentions",
+    "status": "warning",
+    "source": "api",
+    "priority": "nice",
+    "tier": "premium",
+    "finding": "Neutral testtext för aiMentions.",
+    "fix": "Stärk lokala signaler: fler kataloger, lokalt innehåll på sajten, fler recensioner med ortnamnet nämnda.",
+    "data": null,
+    "codeExample": null,
+    "richRelevance": "AI-genererad relevans för aiMentions.",
+    "richSteps": "1. AI-genererat steg för aiMentions.",
+    "richCodeExample": null,
+    "richStatus": "pro",
+    "codeRef": "localBusiness"
+   },
+   {
+    "id": 34,
+    "key": "reviewReplies",
+    "status": "notMeasured",
+    "source": "api",
+    "priority": null,
+    "tier": "premium",
+    "finding": "Google tillhandahåller inte ägarsvar via API:t — kontrollera i Google Business Profile.",
+    "fix": "Logga in på Google Business Profile (business.google.com) och se där hur stor andel av recensionerna som fått svar.",
+    "data": {
+     "total": 5,
+     "sampleNote": "Baserat på ett stickprov av 5 recensioner av totalt 321 (Google Places API-gränsen)."
+    },
+    "codeExample": null
+   },
+   {
+    "id": 35,
+    "key": "gbpData",
+    "status": "ok",
+    "source": "api",
+    "priority": null,
+    "tier": "premium",
+    "finding": "Google Business Profile: Krogen Test -- betyg 4.6/5 (321 recensioner).",
+    "fix": null,
+    "data": {
+     "name": "Krogen Test",
+     "rating": 4.6,
+     "userRatingCount": 321
+    },
+    "codeExample": null
+   },
+   {
+    "id": 36,
+    "key": "competitors",
+    "status": "ok",
+    "source": "api",
+    "priority": null,
+    "tier": "premium",
+    "finding": "Närliggande konkurrenter (Google Places, ≤1,5 km): Konkurrent Alfa (4.3/5, 1210 recensioner, 196 m bort); Konkurrent Beta (4.4/5, 1180 recensioner, 217 m bort); Konkurrent Gamma (4.7/5, 655 recensioner, 306 m bort); Konkurrent Delta (4.1/5, 987 recensioner, 402 m bort); Konkurrent Epsilon (3.9/5, 244 recensioner, 515 m bort).",
+    "fix": null,
+    "data": {
+     "competitors": [
+      {
+       "placeId": "ChIJtest-alfa",
+       "name": "Konkurrent Alfa",
+       "rating": 4.3,
+       "userRatingCount": 1210,
+       "distanceMeters": 196,
+       "primaryType": "scandinavian_restaurant",
+       "websiteUri": "https://www.alfakrog.se/?utm_source=google"
+      },
+      {
+       "placeId": "ChIJtest-beta",
+       "name": "Konkurrent Beta",
+       "rating": 4.4,
+       "userRatingCount": 1180,
+       "distanceMeters": 217,
+       "primaryType": "scandinavian_restaurant",
+       "websiteUri": "https://www.betakrog.se/?utm_source=google"
+      },
+      {
+       "placeId": "ChIJtest-gamma",
+       "name": "Konkurrent Gamma",
+       "rating": 4.7,
+       "userRatingCount": 655,
+       "distanceMeters": 306,
+       "primaryType": "scandinavian_restaurant",
+       "websiteUri": "https://gammavin.se/?utm_source=google"
+      },
+      {
+       "placeId": "ChIJtest-delta",
+       "name": "Konkurrent Delta",
+       "rating": 4.1,
+       "userRatingCount": 987,
+       "distanceMeters": 402,
+       "primaryType": "scandinavian_restaurant",
+       "websiteUri": null
+      },
+      {
+       "placeId": "ChIJtest-epsilon",
+       "name": "Konkurrent Epsilon",
+       "rating": 3.9,
+       "userRatingCount": 244,
+       "distanceMeters": 515,
+       "primaryType": "scandinavian_restaurant",
+       "websiteUri": "https://www.facebook.com/epsilon"
+      }
+     ]
+    },
+    "codeExample": null
+   },
+   {
+    "id": 37,
+    "key": "synthesis",
+    "status": "notApplicable",
+    "source": "computed",
+    "priority": null,
+    "tier": "premium",
+    "finding": "Syntesen ar en separat sektion och poangsatts inte.",
+    "fix": null,
+    "data": null,
+    "codeExample": null
+   }
+  ],
+  "synthesis": {
+   "actionPlan": "### Kritiskt\n\n1. AI-genererad åtgärd.",
+   "competitorNote": "AI-genererad konkurrenttext.",
+   "reviewAnalysis": "AI-genererad recensionsanalys.",
+   "summary": "AI-genererad sammanfattning."
+  },
+  "gbp": {
+   "name": "Krogen Test",
+   "rating": 4.6,
+   "userRatingCount": 321,
+   "address": "Testgatan 12, 411 36 Göteborg, Sverige",
+   "phone": "031-700 12 34",
+   "websiteUri": "http://www.krogentest.se/",
+   "weekdayDescriptions": [
+    "måndag: Stängt",
+    "tisdag: 11:00–22:00",
+    "onsdag: 11:00–22:00",
+    "torsdag: 11:00–23:00",
+    "fredag: 11:00–01:00",
+    "lördag: 11:00–01:00",
+    "söndag: 12:00–21:00"
+   ],
+   "types": [
+    "bar",
+    "restaurant",
+    "food",
+    "point_of_interest",
+    "establishment"
+   ],
+   "_domainMatch": true
+  },
+  "directories": {
+   "foundInSameAs": [],
+   "directories": [],
+   "foundCount": 0,
+   "totalChecked": 0,
+   "napConsistency": {
+    "checked": false,
+    "consistent": null,
+    "phone": {
+     "values": [],
+     "consistent": null
+    },
+    "address": {
+     "values": [],
+     "consistent": null
+    },
+    "finding": "",
+    "fix": ""
+   },
+   "status": "warning",
+   "finding": "",
+   "fix": ""
+  },
+  "aiMentions": null,
+  "reviewReplies": {
+   "total": 5,
+   "status": "notMeasured",
+   "finding": "Google tillhandahåller inte ägarsvar via API:t — kontrollera i Google Business Profile.",
+   "fix": "Logga in på Google Business Profile (business.google.com) och se där hur stor andel av recensionerna som fått svar.",
+   "sampleNote": "Baserat på ett stickprov av 5 recensioner av totalt 321 (Google Places API-gränsen)."
+  },
+  "reviewInsights": {
+   "themes": [
+    {
+     "theme": "Uteservering",
+     "sentiment": "positive",
+     "quote": "Mysig uteservering och härlig stämning en solig dag."
+    },
+    {
+     "theme": "Mat och service",
+     "sentiment": "positive",
+     "quote": "Maten var riktigt god och personalen snabb."
+    },
+    {
+     "theme": "Prisvärdhet",
+     "sentiment": "negative",
+     "quote": "Lite väl högt pris för portionerna."
+    }
+   ],
+   "praise": [
+    "AI-genererat beröm"
+   ],
+   "complaints": [
+    "AI-genererat klagomål"
+   ],
+   "sampleNote": "AI-genererad stickprovsnotering."
+  },
+  "competitorComparison": {
+   "keys": [
+    "https",
+    "robotsTxt",
+    "sitemap",
+    "llmsTxt",
+    "canonical",
+    "ogTags",
+    "phone",
+    "googleMaps",
+    "localBusiness",
+    "faqSchema",
+    "semanticHtml",
+    "h1",
+    "title",
+    "metaDescription"
+   ],
+   "you": {
+    "statuses": {
+     "https": "ok",
+     "robotsTxt": "ok",
+     "sitemap": "ok",
+     "llmsTxt": "ok",
+     "canonical": "ok",
+     "ogTags": "ok",
+     "phone": "ok",
+     "googleMaps": "ok",
+     "localBusiness": "bad",
+     "faqSchema": "bad",
+     "semanticHtml": "ok",
+     "h1": "ok",
+     "title": "ok",
+     "metaDescription": "ok"
+    },
+    "okCount": 12
+   },
+   "competitors": [
+    {
+     "placeId": "ChIJtest-alfa",
+     "name": "Konkurrent Alfa",
+     "website": "https://www.alfakrog.se/",
+     "rating": 4.3,
+     "reviewCount": 1210,
+     "scanned": true,
+     "statuses": {
+      "https": "ok",
+      "robotsTxt": "ok",
+      "sitemap": "bad",
+      "llmsTxt": "bad",
+      "canonical": "ok",
+      "ogTags": "warning",
+      "phone": "ok",
+      "googleMaps": "bad",
+      "localBusiness": "bad",
+      "faqSchema": "bad",
+      "semanticHtml": "ok",
+      "h1": "bad",
+      "title": "ok",
+      "metaDescription": "bad"
+     },
+     "okCount": 6
+    },
+    {
+     "placeId": "ChIJtest-beta",
+     "name": "Konkurrent Beta",
+     "website": "https://www.betakrog.se/",
+     "rating": 4.4,
+     "reviewCount": 1180,
+     "scanned": true,
+     "statuses": {
+      "https": "ok",
+      "robotsTxt": "ok",
+      "sitemap": "bad",
+      "llmsTxt": "ok",
+      "canonical": "ok",
+      "ogTags": "warning",
+      "phone": "bad",
+      "googleMaps": "bad",
+      "localBusiness": "bad",
+      "faqSchema": "bad",
+      "semanticHtml": "ok",
+      "h1": "ok",
+      "title": "ok",
+      "metaDescription": "ok"
+     },
+     "okCount": 8
+    },
+    {
+     "placeId": "ChIJtest-gamma",
+     "name": "Konkurrent Gamma",
+     "website": "https://gammavin.se/",
+     "rating": 4.7,
+     "reviewCount": 655,
+     "scanned": true,
+     "statuses": {
+      "https": "ok",
+      "robotsTxt": "ok",
+      "sitemap": "ok",
+      "llmsTxt": "ok",
+      "canonical": "ok",
+      "ogTags": "warning",
+      "phone": "ok",
+      "googleMaps": "ok",
+      "localBusiness": "bad",
+      "faqSchema": "bad",
+      "semanticHtml": "ok",
+      "h1": "bad",
+      "title": "ok",
+      "metaDescription": "ok"
+     },
+     "okCount": 10
+    }
+   ]
+  },
+  "placesRef": {
+   "placeId": "ChIJtest-krogen",
+   "domainMatch": true,
+   "site": {
+    "title": "Restaurang Krogen Test",
+    "phone": "031-555 66 77",
+    "email": "info@krogentest.se",
+    "schemaTypes": [
+     "BreadcrumbList",
+     "Organization",
+     "WebPage",
+     "WebSite"
+    ],
+    "socialLinks": [
+     "https://www.facebook.com/krogentest"
+    ]
+   }
+  }
+ },
+ "freshPlace": {
+  "id": "ChIJtest-krogen",
+  "displayName": {
+   "text": "Krogen Test",
+   "languageCode": "sv"
+  },
+  "formattedAddress": "Testgatan 12, 411 36 Göteborg, Sverige",
+  "nationalPhoneNumber": "031-700 12 34",
+  "websiteUri": "http://www.krogentest.se/",
+  "rating": 4.6,
+  "userRatingCount": 321,
+  "regularOpeningHours": {
+   "weekdayDescriptions": [
+    "måndag: Stängt",
+    "tisdag: 11:00–22:00",
+    "onsdag: 11:00–22:00",
+    "torsdag: 11:00–23:00",
+    "fredag: 11:00–01:00",
+    "lördag: 11:00–01:00",
+    "söndag: 12:00–21:00"
+   ],
+   "periods": [
+    {
+     "open": {
+      "day": 2,
+      "hour": 11,
+      "minute": 0
+     },
+     "close": {
+      "day": 2,
+      "hour": 22,
+      "minute": 0
+     }
+    },
+    {
+     "open": {
+      "day": 3,
+      "hour": 11,
+      "minute": 0
+     },
+     "close": {
+      "day": 3,
+      "hour": 22,
+      "minute": 0
+     }
+    },
+    {
+     "open": {
+      "day": 4,
+      "hour": 11,
+      "minute": 0
+     },
+     "close": {
+      "day": 4,
+      "hour": 23,
+      "minute": 0
+     }
+    },
+    {
+     "open": {
+      "day": 5,
+      "hour": 11,
+      "minute": 0
+     },
+     "close": {
+      "day": 6,
+      "hour": 1,
+      "minute": 0
+     }
+    },
+    {
+     "open": {
+      "day": 6,
+      "hour": 11,
+      "minute": 0
+     },
+     "close": {
+      "day": 0,
+      "hour": 1,
+      "minute": 0
+     }
+    },
+    {
+     "open": {
+      "day": 0,
+      "hour": 12,
+      "minute": 0
+     },
+     "close": {
+      "day": 0,
+      "hour": 21,
+      "minute": 0
+     }
+    }
+   ]
+  },
+  "types": [
+   "bar",
+   "restaurant",
+   "food",
+   "point_of_interest",
+   "establishment"
+  ],
+  "primaryType": "bar",
+  "location": {
+   "latitude": 57.7001,
+   "longitude": 11.9701
+  },
+  "reviews": [
+   {
+    "rating": 5,
+    "text": {
+     "text": "Vi satt ute hela kvällen. Mysig uteservering och härlig stämning en solig dag. Kommer tillbaka."
+    }
+   },
+   {
+    "rating": 4,
+    "text": {
+     "text": "Maten var riktigt god och personalen snabb."
+    }
+   },
+   {
+    "rating": 3,
+    "text": {
+     "text": "Okej besök. Lite väl högt pris för portionerna."
+    }
+   },
+   {
+    "rating": 5,
+    "text": {
+     "text": "Fint ställe mitt i stan, trevligt bemötande."
+    }
+   },
+   {
+    "rating": 4,
+    "text": {
+     "text": "Bra dryckeslista och lagom ljudnivå."
+    }
+   }
+  ]
+ },
+ "freshCompetitors": [
+  {
+   "placeId": "ChIJtest-alfa",
+   "name": "Konkurrent Alfa",
+   "rating": 4.3,
+   "userRatingCount": 1210,
+   "distanceMeters": 196,
+   "primaryType": "scandinavian_restaurant",
+   "websiteUri": "https://www.alfakrog.se/?utm_source=google"
+  },
+  {
+   "placeId": "ChIJtest-beta",
+   "name": "Konkurrent Beta",
+   "rating": 4.4,
+   "userRatingCount": 1180,
+   "distanceMeters": 217,
+   "primaryType": "scandinavian_restaurant",
+   "websiteUri": "https://www.betakrog.se/?utm_source=google"
+  },
+  {
+   "placeId": "ChIJtest-gamma",
+   "name": "Konkurrent Gamma",
+   "rating": 4.7,
+   "userRatingCount": 655,
+   "distanceMeters": 306,
+   "primaryType": "scandinavian_restaurant",
+   "websiteUri": "https://gammavin.se/?utm_source=google"
+  },
+  {
+   "placeId": "ChIJtest-delta",
+   "name": "Konkurrent Delta",
+   "rating": 4.1,
+   "userRatingCount": 987,
+   "distanceMeters": 402,
+   "primaryType": "scandinavian_restaurant",
+   "websiteUri": null
+  },
+  {
+   "placeId": "ChIJtest-epsilon",
+   "name": "Konkurrent Epsilon",
+   "rating": 3.9,
+   "userRatingCount": 244,
+   "distanceMeters": 515,
+   "primaryType": "scandinavian_restaurant",
+   "websiteUri": "https://www.facebook.com/epsilon"
+  }
+ ]
+}

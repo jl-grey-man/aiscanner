@@ -116,14 +116,24 @@ export function selectCompetitorsToScan(
     const host = normHost(u.hostname)
     if (!host || host === ownHost || isPlatformHost(host) || seenHosts.has(host)) continue
     seenHosts.add(host)
-    // Googles websiteUri har ofta spårningsparametrar (?utm_source=…) — inte en del av sajten.
-    for (const param of [...u.searchParams.keys()]) {
-      if (param.toLowerCase().startsWith('utm_')) u.searchParams.delete(param)
-    }
-    u.hash = ''
-    selected.push({ ...c, websiteUri: u.toString() })
+    selected.push({ ...c, websiteUri: stripTrackingFromWebsite(u) })
   }
   return selected
+}
+
+/**
+ * Googles websiteUri har ofta spårningsparametrar (?utm_source=…) — inte en del av
+ * sajten. Tar bort utm_* och fragment. Används även när en lagrad rapports
+ * konkurrentwebbplats hämtas färskt (placesContent.ts), så adressen blir densamma.
+ */
+export function stripTrackingFromWebsite(website: URL | string): string {
+  let u: URL
+  try { u = new URL(website.toString()) } catch { return website.toString() }
+  for (const param of [...u.searchParams.keys()]) {
+    if (param.toLowerCase().startsWith('utm_')) u.searchParams.delete(param)
+  }
+  u.hash = ''
+  return u.toString()
 }
 
 /** En "textfil" som egentligen är en HTML-sida (soft 404) räknas som saknad. */
@@ -303,6 +313,7 @@ export function buildCompetitorComparison(
     keys: [...COMPARISON_KEYS],
     you: { statuses: youStatuses, okCount: countOk(youStatuses) },
     competitors: outcomes.map(o => ({
+      placeId: o.competitor.placeId,
       name: o.competitor.name,
       website: o.competitor.websiteUri,
       rating: o.competitor.rating,

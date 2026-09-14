@@ -5,6 +5,7 @@ import {
   claimScan, markScanDone, markScanFailed, SCAN_STALE_MS,
 } from '@/app/lib/checkoutDb'
 import type { ScanResult } from '@/app/lib/scanResult'
+import { rehydrateStoredReport } from '@/app/lib/placesContent'
 import { APP_URL } from '@/app/lib/config'
 import { getStripe } from '@/app/lib/stripe'
 
@@ -17,7 +18,8 @@ import { getStripe } from '@/app/lib/stripe'
  *   1. Hämta Stripe Checkout Session via session_id
  *   2. Verifiera payment_status === 'paid'
  *   3. Slå upp checkout i SQLite, hämta url + city
- *   4. Om scan-resultat finns cachat → 200 { scanResult, fromCache: true }
+ *   4. Om scan-resultat finns cachat → 200 { scanResult, fromCache: true } (lagrat utan
+ *      Places-innehåll — byggs om av färsk Places-data via rehydrateStoredReport)
  *   5. Annars (Task 13, asynkront): claimScan → starta paid-scannet i bakgrunden och
  *      svara direkt 202 { status: 'running' }. Klienten pollar GET /api/checkout/status.
  *      Kör redan ett färskt scan för sessionen startas inget nytt (också 202).
@@ -93,7 +95,7 @@ export async function POST(req: NextRequest) {
     if (cached) {
       console.log(`[Finalize] returning cached scan for ${sessionId}`)
       return NextResponse.json(
-        { scanResult: cached, fromCache: true },
+        { scanResult: await rehydrateStoredReport(cached), fromCache: true },
         { headers: corsHeaders },
       )
     }
@@ -105,7 +107,7 @@ export async function POST(req: NextRequest) {
       const justFinished = getScanResult(sessionId)
       if (justFinished) {
         return NextResponse.json(
-          { scanResult: justFinished, fromCache: true },
+          { scanResult: await rehydrateStoredReport(justFinished), fromCache: true },
           { headers: corsHeaders },
         )
       }

@@ -108,6 +108,8 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 - [x] Domain match validation for Places results
 - [x] Review extraction (up to 10 reviews)
 - [x] City hint from free scan passed to Places search
+- [x] Google Places-villkoren (2026-09-14): inget Places-innehåll lagras — scan_cache v2 utan Places-data (färsk Place Details + Nearby vid paid-träff), lagrade premiumrapporter strippas (`stripPlacesContent`) och rehydreras vid läsning, scan_cache-städning, migrering av gamla rader
+- [ ] Places-gråzon: AI-genererad text (richSteps, syntes, AI-test) kan innehålla adress/telefon/betyg från prompten — beslut om den ska strippas/regenereras (Jens)
 - [x] Premium AI analysis via Gemini 2.5 Pro
 - [x] Pro model fallback chain (Pro -> Claude 3.5 Sonnet -> Gemini 2.0 Pro)
 - [x] NAP consistency comparison (website vs Google)

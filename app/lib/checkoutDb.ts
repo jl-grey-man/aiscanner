@@ -11,7 +11,8 @@
  *   url              TEXT NOT NULL      — sajten som ska scannas
  *   city             TEXT               — användarens stad-hint (nullable)
  *   status           TEXT NOT NULL      — 'pending' | 'paid' | 'scanned' | 'failed'
- *   scan_result_json TEXT               — full ScanResult som JSON när scanen är klar
+ *   scan_result_json TEXT               — ScanResult UTAN Places-innehåll (stripPlacesContent i
+ *                                         placesContent.ts, bara place_id) när scanen är klar
  *   created_at       INTEGER NOT NULL   — ms sedan epoch
  *   updated_at       INTEGER NOT NULL
  *   scan_status      TEXT               — Task 13: 'pending' | 'running' | 'done' | 'failed'
@@ -27,8 +28,12 @@
  * normaliserad URL + stad (nyckel från scanCache.ts `scanCacheKey`) så paid-scanen
  * kan återanvända samma mätning i stället för att scanna om:
  *   cache_key   TEXT PRIMARY KEY   — "<normaliserad url>|<stad i gemener>"
- *   result_json TEXT NOT NULL      — serializeFreeScan(): { v, scanResult, context }
- *   created_at  INTEGER NOT NULL   — ms sedan epoch; rader äldre än TTL rensas vid skrivning
+ *   result_json TEXT NOT NULL      — serializeFreeScan(): { v: 2, scanDate, scores, statuses, context }
+ *                                    — context utan Places-innehåll (bara place_id)
+ *   created_at  INTEGER NOT NULL   — ms sedan epoch; rader äldre än TTL rensas vid varje läsning/skrivning
+ *
+ * Google Places-villkoren: inget Places-innehåll utöver place_id lagras i någon av
+ * tabellerna. Äldre rader migreras när databasen öppnas (migratePlacesContent).
  *
  * OBS: SQLite-filen ligger i ./data/checkouts.db. Railway raderar disk vid
  * deploy om ingen volume är monterad — för permanent persistens, montera en
@@ -40,6 +45,9 @@ import Database from 'better-sqlite3'
 import { mkdirSync } from 'fs'
 import { dirname } from 'path'
 import type { ScanResult } from './scanResult'
+import { isStoredReport, stripPlacesContent } from './placesContent'
+import type { StoredReport } from './placesContent'
+import { SCAN_CACHE_VERSION } from './scanCache'
 
 const DB_PATH = process.env.CHECKOUT_DB_PATH || './data/checkouts.db'
 
@@ -100,27 +108,69 @@ function getDb(): Database.Database {
       created_at  INTEGER NOT NULL
     )
   `)
+  db.exec('CREATE INDEX IF NOT EXISTS scan_cache_created_at ON scan_cache (created_at)')
+  migratePlacesContent(db)
   return db
+}
+
+/**
+ * Places-villkoren: rader sparade före placesContent.ts innehåller Places-innehåll.
+ * - checkouts: varje resultat utan `placesStripped` strippas på plats (place_id behålls
+ *   om det finns; äldre rapporter slås upp via Text Search vid läsning).
+ * - scan_cache: rader i ett annat format än SCAN_CACHE_VERSION (v1 = rå Places-data) raderas.
+ * Körs när databasen öppnas. Exporterad för tester.
+ */
+export function migratePlacesContent(conn: Database.Database): { checkouts: number; scanCache: number } {
+  const legacy = conn.prepare(`
+    SELECT session_id, scan_result_json FROM checkouts
+    WHERE scan_result_json IS NOT NULL AND json_valid(scan_result_json) = 1
+      AND json_type(scan_result_json, '$.placesStripped') IS NULL
+  `).all() as { session_id: string; scan_result_json: string }[]
+  const update = conn.prepare('UPDATE checkouts SET scan_result_json = ? WHERE session_id = ?')
+  let checkouts = 0
+  for (const row of legacy) {
+    const parsed = JSON.parse(row.scan_result_json) as unknown
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) continue
+    update.run(JSON.stringify(stripPlacesContent(parsed as ScanResult)), row.session_id)
+    checkouts++
+  }
+  const scanCache = conn.prepare(`
+    DELETE FROM scan_cache
+    WHERE json_valid(result_json) = 0 OR json_extract(result_json, '$.v') IS NOT ?
+  `).run(SCAN_CACHE_VERSION).changes
+  if (checkouts > 0 || scanCache > 0) {
+    console.log(`[PlacesCompliance] Migrering: ${checkouts} lagrade rapporter strippade, ${scanCache} gamla scan_cache-rader raderade`)
+  }
+  return { checkouts, scanCache }
 }
 
 /** Hur länge en cachad free-scan får återanvändas av paid-flödet. */
 export const SCAN_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 /**
- * Sparar (ersätter) en free-scan under cacheKey och rensar rader äldre än maxAgeMs,
+ * Raderar scan_cache-rader äldre än maxAgeMs (standard: TTL) och returnerar antalet.
+ * Anropas vid varje läsning och skrivning av cachen — utgångna rader blir alltså kvar
+ * högst till nästa cacheanvändning, och kan aldrig läsas.
+ */
+export function purgeExpiredScanCache(now: number = Date.now(), maxAgeMs: number = SCAN_CACHE_TTL_MS): number {
+  return getDb().prepare('DELETE FROM scan_cache WHERE created_at < ?').run(now - maxAgeMs).changes
+}
+
+/**
+ * Sparar (ersätter) en free-scan under cacheKey och rensar rader äldre än TTL,
  * så tabellen inte växer obegränsat med publika gratisscans.
  */
-export function saveFreeScan(cacheKey: string, resultJson: string, maxAgeMs: number = SCAN_CACHE_TTL_MS): void {
+export function saveFreeScan(cacheKey: string, resultJson: string): void {
   const now = Date.now()
-  const conn = getDb()
-  conn.prepare('DELETE FROM scan_cache WHERE created_at < ?').run(now - maxAgeMs)
-  conn.prepare(`
+  purgeExpiredScanCache(now)
+  getDb().prepare(`
     INSERT OR REPLACE INTO scan_cache (cache_key, result_json, created_at) VALUES (?, ?, ?)
   `).run(cacheKey, resultJson, now)
 }
 
-/** Cachad free-scan som JSON, eller null om den saknas eller är äldre än maxAgeMs. */
+/** Cachad free-scan som JSON, eller null om den saknas eller är äldre än maxAgeMs. Rensar utgångna rader. */
 export function getFreeScan(cacheKey: string, maxAgeMs: number): string | null {
+  purgeExpiredScanCache()
   const row = getDb().prepare('SELECT result_json, created_at FROM scan_cache WHERE cache_key = ?')
     .get(cacheKey) as { result_json: string; created_at: number } | undefined
   if (!row) return null
@@ -172,10 +222,12 @@ export function claimScan(sessionId: string, now: number = Date.now()): number |
  * en rapport kunden redan kan ha sett. Returnerar true om raden uppdaterades.
  */
 export function markScanDone(sessionId: string, result: ScanResult): boolean {
+  // Places-villkoren: rapporten lagras ALLTID utan Places-innehåll (bara place_id) —
+  // den centrala spärren, oavsett vem som anropar. Läsaren bygger om via rehydrateStoredReport().
   const res = getDb().prepare(`
     UPDATE checkouts SET status = 'scanned', scan_status = 'done', scan_result_json = ?, updated_at = ?
     WHERE session_id = ? AND (scan_result_json IS NULL OR json_valid(scan_result_json) = 0)
-  `).run(JSON.stringify(result), Date.now(), sessionId)
+  `).run(JSON.stringify(stripPlacesContent(result)), Date.now(), sessionId)
   return res.changes === 1
 }
 
@@ -192,18 +244,23 @@ export function markScanFailed(sessionId: string, attempt: number): boolean {
   return res.changes === 1
 }
 
-export function getScanResult(sessionId: string): ScanResult | null {
+/** Lagrad (Places-strippad) rapport — kör rehydrateStoredReport() innan den visas. */
+export function getScanResult(sessionId: string): StoredReport | null {
   const row = getCheckout(sessionId)
   return row ? parseScanResult(row.scan_result_json) : null
 }
 
-function parseScanResult(json: string | null): ScanResult | null {
+function parseScanResult(json: string | null): StoredReport | null {
   if (!json) return null
+  let parsed: unknown
   try {
-    return JSON.parse(json) as ScanResult
+    parsed = JSON.parse(json)
   } catch {
     return null
   }
+  if (typeof parsed !== 'object' || parsed === null) return null
+  // Säkerhetsnät om en rad skrivits utan strip (t.ex. av en äldre process efter migreringen).
+  return isStoredReport(parsed) ? parsed : stripPlacesContent(parsed as ScanResult)
 }
 
 type ScanStatusRow = Pick<Checkout, 'scan_status' | 'scan_started_at' | 'scan_result_json'>
@@ -227,16 +284,19 @@ export function deriveScanStatus(row: ScanStatusRow, now: number = Date.now()): 
 }
 
 export type ScanStatusResponse =
-  | { status: 'done'; scanResult: ScanResult }
+  | { status: 'done'; scanResult: StoredReport }
   | { status: 'running' | 'failed' | 'pending' }
 
-/** Status för GET /api/checkout/status, eller null om sessionen är okänd. */
+/**
+ * Status för GET /api/checkout/status, eller null om sessionen är okänd.
+ * `scanResult` är den lagrade, Places-strippade rapporten — routen rehydrerar den.
+ */
 export function getScanStatus(sessionId: string, now: number = Date.now()): ScanStatusResponse | null {
   const row = getCheckout(sessionId)
   if (!row) return null
   const status = deriveScanStatus(row, now)
   if (status === 'done') {
-    return { status, scanResult: parseScanResult(row.scan_result_json) as ScanResult }
+    return { status, scanResult: parseScanResult(row.scan_result_json) as StoredReport }
   }
   return { status }
 }

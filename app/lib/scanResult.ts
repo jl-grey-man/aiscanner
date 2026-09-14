@@ -262,6 +262,10 @@ const ReviewInsightsSchema = z.object({
 const ComparisonStatusSchema = z.enum(['ok', 'warning', 'bad', 'notMeasured', 'notApplicable'])
 
 const CompetitorComparisonEntrySchema = z.object({
+  // Google place_id — det enda Places-värdet som får lagras permanent. I en lagrad
+  // premiumrapport är name/website/rating/reviewCount strippade och hämtas färskt
+  // via detta id vid läsning (placesContent.ts). Optional: saknas i äldre rapporter.
+  placeId: z.string().nullable().optional(),
   name: z.string(),
   website: z.string(),
   rating: z.number().nullable(),
@@ -278,6 +282,25 @@ export const CompetitorComparisonSchema = z.object({
     okCount: z.number().int(),
   }),
   competitors: z.array(CompetitorComparisonEntrySchema),
+})
+
+// Places-referens — Google Places-villkoren förbjuder lagring av Places-innehåll
+// (namn, adress, telefon, betyg, recensioner, öppettider, types …); bara place_id är
+// undantaget. En lagrad premiumrapport sparas därför med Places-fälten strippade
+// (placesContent.ts) och byggs om vid läsning från färsk Places-data via `placeId`.
+// `site` är sajtens EGNA uppgifter (skrapade, inte Places) som ombyggnaden behöver
+// för företagsnamn-fallback, huvudschema och kodmallar.
+export const PlacesRefSchema = z.object({
+  placeId: z.string().nullable(),
+  // Vår egen kontroll av att Text Search-träffens websiteUri matchar den scannade domänen.
+  domainMatch: z.boolean().nullable(),
+  site: z.object({
+    title: z.string().nullable(),
+    phone: z.string().nullable(),
+    email: z.string().nullable(),
+    schemaTypes: z.array(z.string()),
+    socialLinks: z.array(z.string()),
+  }),
 })
 
 // ---------------------------------------------------------------------------
@@ -298,9 +321,12 @@ export const ScanResultSchema = z.object({
   // Optional/nullable: saknas i äldre sparade scans, null i free-tier och när ingen
   // närliggande konkurrent har en egen webbplats att jämföra mot.
   competitorComparison: CompetitorComparisonSchema.nullable().optional(),
+  // Optional: saknas i scans gjorda före Places-efterlevnaden (se PlacesRefSchema).
+  placesRef: PlacesRefSchema.optional(),
 })
 
 export type ScanResult = z.infer<typeof ScanResultSchema>
+export type PlacesRef = z.infer<typeof PlacesRefSchema>
 export type CompetitorComparisonData = z.infer<typeof CompetitorComparisonSchema>
 export type ScanMeta = z.infer<typeof MetaSchema>
 export type ScanScores = z.infer<typeof ScoresSchema>

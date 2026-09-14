@@ -190,6 +190,51 @@ export function buildOpeningHoursCheck(
   }
 }
 
+/**
+ * Check #35 (gbpData) för en hittad Places-plats. Exporterad så en lagrad
+ * premiumrapport kan bygga om exakt samma finding/data från färsk Places-data
+ * (placesContent.ts) — Places-innehåll får inte lagras.
+ */
+export function buildGbpDataCheck(placeData: Record<string, unknown>): {
+  status: CheckStatus
+  finding: string
+  fix: string | null
+  data: Record<string, unknown>
+} {
+  const rating = placeData.rating as number | undefined
+  const hasRating = typeof rating === 'number'
+  const name = (placeData.displayName as Record<string, unknown> | undefined)?.text as string | undefined
+  const reviewCount = placeData.userRatingCount as number | undefined
+  return {
+    status: hasRating ? 'ok' : 'warning',
+    finding: hasRating
+      ? `Google Business Profile: ${name || 'Företag'} -- betyg ${rating}/5 (${reviewCount ?? 0} recensioner).`
+      : `Google Business Profile hittades (${name || 'okant namn'}) men saknar betyg.`,
+    fix: hasRating ? null : 'Se till att din Google Business Profile har recensioner och aktuell information.',
+    data: {
+      name: name || null,
+      rating: rating ?? null,
+      userRatingCount: reviewCount ?? null,
+    },
+  }
+}
+
+/** Check #36 (competitors): finding-texten för en icke-tom konkurrentlista. Se buildGbpDataCheck. */
+export function formatCompetitorsFinding(
+  competitors: Array<{ name: string; rating: number | null; userRatingCount: number | null; distanceMeters: number }>
+): string {
+  const summary = competitors
+    .map(c => {
+      const rating = c.rating !== null ? `${c.rating.toFixed(1)}/5` : 'utan betyg'
+      const reviews = c.userRatingCount !== null ? `${c.userRatingCount} recensioner` : ''
+      const distance = c.distanceMeters > 0 ? `${c.distanceMeters} m bort` : ''
+      const meta = [rating, reviews, distance].filter(Boolean).join(', ')
+      return `${c.name} (${meta})`
+    })
+    .join('; ')
+  return `Närliggande konkurrenter (Google Places, ≤1,5 km): ${summary}.`
+}
+
 /** Build a single CheckResult from registry entry + computed fields. */
 function makeCheck(
   key: CheckKey,
@@ -999,44 +1044,19 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         'Skapa en Google Business Profile pa business.google.com.',
       ))
     } else {
-      const rating = (placeData as Record<string, unknown>).rating as number | undefined
-      const hasRating = typeof rating === 'number'
-      const name = ((placeData as Record<string, unknown>).displayName as Record<string, unknown>)?.text as string | undefined
-      const reviewCount = (placeData as Record<string, unknown>).userRatingCount as number | undefined
-      checks.push(makeCheck(
-        'gbpData',
-        hasRating ? 'ok' : 'warning',
-        'api',
-        hasRating
-          ? `Google Business Profile: ${name || 'Företag'} -- betyg ${rating}/5 (${reviewCount ?? 0} recensioner).`
-          : `Google Business Profile hittades (${name || 'okant namn'}) men saknar betyg.`,
-        hasRating ? null : 'Se till att din Google Business Profile har recensioner och aktuell information.',
-        {
-          name: name || null,
-          rating: rating ?? null,
-          userRatingCount: reviewCount ?? null,
-        },
-      ))
+      const gbp = buildGbpDataCheck(placeData)
+      checks.push(makeCheck('gbpData', gbp.status, 'api', gbp.finding, gbp.fix, gbp.data))
     }
   }
 
   // #36 competitors (Google Places Nearby Search)
   if (competitorList && competitorList.length >= 1) {
     const top = competitorList.slice(0, 5)
-    const summary = top
-      .map(c => {
-        const rating = c.rating !== null ? `${c.rating.toFixed(1)}/5` : 'utan betyg'
-        const reviews = c.userRatingCount !== null ? `${c.userRatingCount} recensioner` : ''
-        const distance = c.distanceMeters > 0 ? `${c.distanceMeters} m bort` : ''
-        const meta = [rating, reviews, distance].filter(Boolean).join(', ')
-        return `${c.name} (${meta})`
-      })
-      .join('; ')
     checks.push(makeCheck(
       'competitors',
       'ok',
       'api',
-      `Närliggande konkurrenter (Google Places, ≤1,5 km): ${summary}.`,
+      formatCompetitorsFinding(top),
       null,
       { competitors: top },
     ))

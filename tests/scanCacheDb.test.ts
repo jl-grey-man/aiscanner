@@ -55,6 +55,30 @@ describe('scan_cache (saveFreeScan / getFreeScan)', () => {
     expect(db.getFreeScan('https://d.se|', 2000)).toBe('{"d":1}')
   })
 
+  it('purgeExpiredScanCache raderar bara rader äldre än TTL och räknar dem', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const t0 = new Date('2026-09-11T12:00:00Z').getTime()
+    vi.setSystemTime(t0)
+    db.saveFreeScan('https://utgangen.se|', '{"v":2}')
+    vi.setSystemTime(t0 + db.SCAN_CACHE_TTL_MS - 1000)
+    db.saveFreeScan('https://farsk.se|', '{"v":2}')
+    const removed = db.purgeExpiredScanCache(t0 + db.SCAN_CACHE_TTL_MS + 1)
+    expect(removed).toBe(1)
+    expect(db.getFreeScan('https://farsk.se|', Number.POSITIVE_INFINITY)).toBe('{"v":2}')
+  })
+
+  it('en läsning rensar utgångna rader även för andra nycklar', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const t0 = new Date('2026-09-12T12:00:00Z').getTime()
+    vi.setSystemTime(t0)
+    db.saveFreeScan('https://las-gammal.se|', '{"v":2}')
+    vi.setSystemTime(t0 + db.SCAN_CACHE_TTL_MS + 1)
+    expect(db.getFreeScan('https://annan-nyckel.se|', db.SCAN_CACHE_TTL_MS)).toBeNull()
+    vi.useRealTimers()
+    expect(db.purgeExpiredScanCache(Date.now(), Number.POSITIVE_INFINITY)).toBe(0)
+    expect(db.getFreeScan('https://las-gammal.se|', Number.POSITIVE_INFINITY)).toBeNull()
+  })
+
   it('rensar rader äldre än TTL när en ny free-scan sparas', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     const t0 = new Date('2026-09-10T12:00:00Z').getTime()

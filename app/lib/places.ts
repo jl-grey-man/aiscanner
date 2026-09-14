@@ -156,30 +156,75 @@ export async function findNearbyCompetitors(
     const seenNames = new Set<string>()
     for (const p of places) {
       if (!p.id || p.id === excludePlaceId) continue
-      const name: string = p.displayName?.text ?? 'Okänt företag'
+      const competitor = toNearbyCompetitor(p, { latitude: lat, longitude: lng })
       // Dedupe on normalized name (Google often lists the same business with multiple Place IDs)
-      const normName = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ´`'']/g, '').trim()
+      const normName = competitor.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ´`'']/g, '').trim()
       if (seenNames.has(normName)) continue
       seenNames.add(normName)
-      const plat = p.location?.latitude
-      const plng = p.location?.longitude
-      const distance = typeof plat === 'number' && typeof plng === 'number'
-        ? haversineMeters(lat, lng, plat, plng)
-        : 0
-      competitors.push({
-        placeId: p.id,
-        name,
-        rating: typeof p.rating === 'number' ? p.rating : null,
-        userRatingCount: typeof p.userRatingCount === 'number' ? p.userRatingCount : null,
-        distanceMeters: Math.round(distance),
-        primaryType: p.primaryType ?? null,
-        websiteUri: typeof p.websiteUri === 'string' && p.websiteUri ? p.websiteUri : null,
-      })
+      competitors.push(competitor)
     }
     return competitors.slice(0, 5)
   } catch (err: any) {
     console.warn(`[Places Nearby] failed: ${err.message}`)
     return []
+  }
+}
+
+/**
+ * Rå Places-plats (Nearby Search eller Place Details) → NearbyCompetitor. Avståndet
+ * räknas från `origin` (det scannade företagets position); saknas någon position blir det 0.
+ */
+export function toNearbyCompetitor(
+  p: any,
+  origin: { latitude?: number; longitude?: number } | null | undefined,
+): NearbyCompetitor {
+  const plat = p.location?.latitude
+  const plng = p.location?.longitude
+  const olat = origin?.latitude
+  const olng = origin?.longitude
+  const distance = typeof plat === 'number' && typeof plng === 'number' && typeof olat === 'number' && typeof olng === 'number'
+    ? haversineMeters(olat, olng, plat, plng)
+    : 0
+  return {
+    placeId: p.id,
+    name: p.displayName?.text ?? 'Okänt företag',
+    rating: typeof p.rating === 'number' ? p.rating : null,
+    userRatingCount: typeof p.userRatingCount === 'number' ? p.userRatingCount : null,
+    distanceMeters: Math.round(distance),
+    primaryType: p.primaryType ?? null,
+    websiteUri: typeof p.websiteUri === 'string' && p.websiteUri ? p.websiteUri : null,
+  }
+}
+
+/**
+ * Färsk konkurrentdata för ett sparat place_id (Place Details, samma fält som Nearby
+ * Search). Används när en lagrad premiumrapport öppnas: Places-villkoren tillåter att
+ * place_id lagras men inte namn/betyg/webbplats, så de hämtas om vid läsning.
+ * Returnerar null vid saknad API-nyckel, HTTP-fel eller nätverksfel — kastar aldrig.
+ */
+export async function getCompetitorDetails(
+  placeId: string,
+  origin: { latitude?: number; longitude?: number } | null | undefined,
+): Promise<NearbyCompetitor | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY
+  if (!apiKey || !placeId) return null
+  try {
+    const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=sv`, {
+      headers: {
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'id,displayName,rating,userRatingCount,primaryType,location,websiteUri',
+      },
+    })
+    if (!res.ok) {
+      console.warn(`[Places Details] konkurrent ${placeId}: HTTP ${res.status}`)
+      return null
+    }
+    const data = await res.json()
+    if (!data?.id) return null
+    return toNearbyCompetitor(data, origin)
+  } catch (err: any) {
+    console.warn(`[Places Details] konkurrent ${placeId} misslyckades: ${err?.message}`)
+    return null
   }
 }
 

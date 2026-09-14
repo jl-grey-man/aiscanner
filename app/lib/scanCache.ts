@@ -7,10 +7,12 @@
  * då landa annorlunda och `scores.free` skilde sig mellan gratis- och premiumrapporten,
  * och betalflödet tog 15–20 s längre.
  *
- * Vad som cachas: inte bara ScanResult utan hela insamlingsfasens rådata
- * (`ScanContext`) — paid-berikningen (Report Writer, Pro-syntes, reviewInsights,
- * konkurrentjämförelse, faktaförankring, huvudschema) behöver skrapad data, Places-
- * detaljer med recensionstexter och Flash-rådata som inte finns i ScanResult.
+ * Vad som cachas (v2, Places-villkoren — se placesContent.ts): bara insamlingsfasens
+ * ICKE-Places-data (`CachedScanContext`: skrapad data, Flash-bedömningar, katalogdata
+ * från Tavily, AI-test, PSI) + place_id. Places-innehåll (namn, adress, telefon, betyg,
+ * recensioner, öppettider, types, konkurrentlistan) lagras aldrig: vid paid-träff hämtas
+ * Place Details + Nearby Search färskt och `restoreScanContext()` bygger om det
+ * Places-beroende deterministiskt; route.ts kör sedan buildCheckResults() på nytt.
  *
  * Nyckel: normaliserad URL + den stad scannet LANDADE i (`meta.city`). Gratisrapporten
  * skickar `meta.url` + `meta.city` till checkout, som skickar dem vidare till paid-scan —
@@ -19,57 +21,68 @@
  * Lagring: tabellen `scan_cache` i checkoutDb.ts (SQLite).
  */
 
-import { ScanResultSchema } from './scanResult'
-import type { ScanResult } from './scanResult'
+import type { CheckResult, ScanResult } from './scanResult'
 import type { EnhancedData } from './enhancedScraper'
 import type { ScrapedData } from './scraper'
 import type { NearbyCompetitor } from './places'
 import type { AIMentionResult } from './aiMentionChecker'
+import { derivePlacesParts } from './placesContent'
+import type { PlaceData, ReviewReplyAnalysis } from './placesContent'
 
-/** Bumpa när ScanContext ändras inkompatibelt — gamla rader blir då cachemissar. */
-export const SCAN_CACHE_VERSION = 1
+export type { ReviewReplyAnalysis } from './placesContent'
 
-/** Resultatet av analyzeReviewReplies() i route.ts (Audit #3: alltid notMeasured). */
-export interface ReviewReplyAnalysis {
-  total: number
-  status: 'notMeasured'
-  finding: string
-  fix: string
-  sampleNote: string
-}
+/** Bumpa när det cachade formatet ändras inkompatibelt — gamla rader blir då cachemissar (och raderas). */
+export const SCAN_CACHE_VERSION = 2
 
 /**
- * Allt insamlingsfasen producerar och som paid-berikningen behöver. Måste vara
- * JSON-säkert (inga Map/Set/Date) — det serialiseras till SQLite.
+ * Den del av insamlingsfasen som FÅR lagras: inget Places-innehåll, bara place_id och
+ * vår egen domänverifiering. Måste vara JSON-säkert (inga Map/Set/Date).
  */
-export interface ScanContext {
+export interface CachedScanContext {
   /** URL-strängen som scannades (används nedströms i stället för paid-anropets URL). */
   url: string
   /** Stad som scannet landade i (input → Places → skrapad), '' om okänd. */
   city: string
-  companyName: string
-  bransch: string
   isHttps: boolean
   enhancedData: EnhancedData
   scrapedData: ScrapedData
-  /** Places-detaljer (eller Text Search-träffen) — `any` precis som i route.ts. */
-  placeForAnalysis: any
-  /** Recensionstexter från Place Details (max 5). */
-  reviews: any[]
-  reviewReplyResult: ReviewReplyAnalysis
   technicalResult: any
   faqResult: any
   eatResult: any
   directoryResult: any
   aiMentionResult: AIMentionResult | null
   cwvMetrics: any
+  /** Google place_id (undantaget i Places-villkoren), null = ingen profil hittades. */
+  placeId: string | null
+  /** Matchade Text Search-träffens websiteUri den scannade domänen? (vår egen kontroll) */
+  domainMatch: boolean | null
+  /** Vår varningstext när domänen inte kunde verifieras. */
+  placeWarning: string | null
+}
+
+/**
+ * Hela insamlingsfasen i minnet = cachebar del + Places-delar. Places-delarna hämtas
+ * färskt vid varje scan och varje cacheträff och får aldrig serialiseras.
+ */
+export interface ScanContext extends CachedScanContext {
+  companyName: string
+  bransch: string
+  /** Places-detaljer (eller Text Search-träffen) — `any` precis som i route.ts. */
+  placeForAnalysis: any
+  /** Recensionstexter från Place Details (max 5). */
+  reviews: any[]
+  reviewReplyResult: ReviewReplyAnalysis
   competitorList: NearbyCompetitor[]
 }
 
 export interface CachedFreeScan {
   v: typeof SCAN_CACHE_VERSION
-  scanResult: ScanResult
-  context: ScanContext
+  /** När gratisscanen gjordes — premiumrapporten visar "Data hämtad <scanDate>". */
+  scanDate: string
+  /** Gratisscanens poäng och statusar, för att logga om färsk Places-data ändrar dem. */
+  scores: { free: number; full: number }
+  statuses: Record<string, CheckResult['status']>
+  context: CachedScanContext
 }
 
 /**
@@ -112,8 +125,37 @@ export function cacheSkipReason(input: {
   return null
 }
 
+/**
+ * Plockar ut EXAKT de cachebara fälten (vitlista — ett nytt Places-fält i ScanContext
+ * kan aldrig av misstag följa med till databasen).
+ */
+export function toCachedContext(context: ScanContext): CachedScanContext {
+  return {
+    url: context.url,
+    city: context.city,
+    isHttps: context.isHttps,
+    enhancedData: context.enhancedData,
+    scrapedData: context.scrapedData,
+    technicalResult: context.technicalResult,
+    faqResult: context.faqResult,
+    eatResult: context.eatResult,
+    directoryResult: context.directoryResult,
+    aiMentionResult: context.aiMentionResult,
+    cwvMetrics: context.cwvMetrics,
+    placeId: context.placeId,
+    domainMatch: context.domainMatch,
+    placeWarning: context.placeWarning,
+  }
+}
+
 export function serializeFreeScan(scanResult: ScanResult, context: ScanContext): string {
-  const entry: CachedFreeScan = { v: SCAN_CACHE_VERSION, scanResult, context }
+  const entry: CachedFreeScan = {
+    v: SCAN_CACHE_VERSION,
+    scanDate: scanResult.meta.scanDate,
+    scores: { free: scanResult.scores.free, full: scanResult.scores.full },
+    statuses: Object.fromEntries(scanResult.checks.map(c => [c.key, c.status])),
+    context: toCachedContext(context),
+  }
   return JSON.stringify(entry)
 }
 
@@ -122,9 +164,8 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Tolkar en cachad rad. Returnerar null (= cachemiss) vid trasig JSON, fel version,
- * ogiltigt ScanResult eller ofullständig ScanContext — aldrig ett halvt objekt.
- * Returnerar originalobjektet (inte Zod-utdata) så inga fält strippas.
+ * Tolkar en cachad rad. Returnerar null (= cachemiss) vid trasig JSON, fel version
+ * eller ofullständig kontext — aldrig ett halvt objekt.
  */
 export function parseCachedFreeScan(json: string): CachedFreeScan | null {
   let raw: unknown
@@ -134,19 +175,47 @@ export function parseCachedFreeScan(json: string): CachedFreeScan | null {
     return null
   }
   if (!isObject(raw) || raw.v !== SCAN_CACHE_VERSION) return null
-  if (!ScanResultSchema.safeParse(raw.scanResult).success) return null
+  if (typeof raw.scanDate !== 'string' || !isObject(raw.statuses)) return null
+  if (!isObject(raw.scores) || typeof raw.scores.free !== 'number' || typeof raw.scores.full !== 'number') return null
 
   const ctx = raw.context
   if (!isObject(ctx)) return null
   if (typeof ctx.url !== 'string' || typeof ctx.city !== 'string') return null
-  if (typeof ctx.companyName !== 'string' || typeof ctx.bransch !== 'string') return null
   if (typeof ctx.isHttps !== 'boolean') return null
   if (!isObject(ctx.enhancedData)) return null
   if (!isObject(ctx.scrapedData) || !Array.isArray(ctx.scrapedData.pages)) return null
-  if (!Array.isArray(ctx.reviews) || !Array.isArray(ctx.competitorList)) return null
-  if (!isObject(ctx.reviewReplyResult)) return null
   if (!isObject(ctx.technicalResult) || !isObject(ctx.faqResult) || !isObject(ctx.eatResult)) return null
   if (!isObject(ctx.directoryResult)) return null
+  if (ctx.placeId !== null && typeof ctx.placeId !== 'string') return null
 
   return raw as unknown as CachedFreeScan
+}
+
+/**
+ * Bygger den fullständiga ScanContext av den cachade (Places-fria) delen + FÄRSK
+ * Places-data, med samma härledning som insamlingsfasen (derivePlacesParts).
+ */
+export function restoreScanContext(
+  cached: CachedScanContext,
+  fresh: { place: PlaceData | null; competitorList: NearbyCompetitor[] },
+): ScanContext {
+  const title = cached.scrapedData.pages[0]?.title ?? null
+  const parts = derivePlacesParts({ place: fresh.place, details: fresh.place, title })
+  return {
+    ...cached,
+    ...parts,
+    reviews: parts.reviews as any[],
+    placeForAnalysis: fresh.place,
+    competitorList: fresh.competitorList,
+  }
+}
+
+/** "openingHours: ok → notMeasured" för varje check vars status skiljer sig från gratisscanen. */
+export function diffCachedStatuses(
+  cachedStatuses: Record<string, CheckResult['status']>,
+  checks: Pick<CheckResult, 'key' | 'status'>[],
+): string[] {
+  return checks
+    .filter(c => cachedStatuses[c.key] !== undefined && cachedStatuses[c.key] !== c.status)
+    .map(c => `${c.key}: ${cachedStatuses[c.key]} → ${c.status}`)
 }

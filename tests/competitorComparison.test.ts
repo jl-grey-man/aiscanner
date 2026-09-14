@@ -10,6 +10,7 @@ import {
   buildCompetitorComparison,
   scanCompetitorSites,
   formatComparisonForPrompt,
+  stripTrackingFromWebsite,
 } from '@/app/lib/competitorComparison'
 import type { CompetitorWithWebsite, CompetitorSiteData, CompetitorScanOutcome } from '@/app/lib/competitorComparison'
 import { CompetitorComparisonSchema } from '@/app/lib/scanResult'
@@ -224,6 +225,24 @@ describe('buildCompetitorComparison', () => {
     expect(result.competitors[0]).toMatchObject({ name: 'Kometen', website: 'https://www.kometen.se/', rating: 4.3, reviewCount: 100, scanned: true, okCount: COMPARISON_KEYS.length - 1 })
     expect(result.competitors[1]).toMatchObject({ name: 'Seg Sajt', scanned: false, statuses: {}, okCount: null })
     expect(CompetitorComparisonSchema.safeParse(result).success).toBe(true)
+  })
+  it('bär med konkurrentens place_id (lagras i stället för namn/betyg, Places-villkoren)', () => {
+    const o = outcome('Kometen', allStatuses('ok'))
+    const result = buildCompetitorComparison(allStatuses('ok'), [o])!
+    expect(result.competitors[0].placeId).toBe(o.competitor.placeId)
+    expect(CompetitorComparisonSchema.safeParse(result).success).toBe(true)
+  })
+})
+
+describe('stripTrackingFromWebsite', () => {
+  it('tar bort utm_*-parametrar och fragment men behåller övriga parametrar', () => {
+    expect(stripTrackingFromWebsite('https://www.kometen.se/?utm_source=google&UTM_medium=x#top')).toBe('https://www.kometen.se/')
+    expect(stripTrackingFromWebsite('https://a.se/meny?lang=sv&utm_campaign=y')).toBe('https://a.se/meny?lang=sv')
+    expect(stripTrackingFromWebsite(new URL('https://a.se/'))).toBe('https://a.se/')
+  })
+
+  it('ogiltig adress lämnas orörd', () => {
+    expect(stripTrackingFromWebsite('inte en url')).toBe('inte en url')
   })
 })
 

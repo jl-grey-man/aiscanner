@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import Database from 'better-sqlite3'
 import type { ScanResult } from '@/app/lib/scanResult'
+import { stripPlacesContent } from '@/app/lib/placesContent'
+import { buildPaidReport, FIXTURE_PLACES_VALUES } from './fixtures/placesFixture'
 
 // checkoutDb läser CHECKOUT_DB_PATH vid import. Databasen skapas först med
 // schemat från före Task 13 (utan scan_status/scan_started_at) så migreringen testas.
@@ -28,6 +30,15 @@ beforeAll(async () => {
   legacy.prepare(`INSERT INTO checkouts VALUES ('cs_legacy_done', 'https://a.se', NULL, 'scanned', ?, 1, 1)`)
     .run(JSON.stringify(fakeResult))
   legacy.prepare(`INSERT INTO checkouts VALUES ('cs_legacy_failed', 'https://a.se', NULL, 'failed', NULL, 1, 1)`).run()
+  // Rapport sparad före Places-efterlevnaden: rått Places-innehåll och inget placesRef.
+  const legacyPlacesReport = buildPaidReport()
+  delete legacyPlacesReport.placesRef
+  legacy.prepare(`INSERT INTO checkouts VALUES ('cs_legacy_places', 'https://www.krogentest.se', 'Göteborg', 'scanned', ?, 1, 1)`)
+    .run(JSON.stringify(legacyPlacesReport))
+  // scan_cache v1 innehöll rå Places-data (placeForAnalysis, recensioner, konkurrentlista).
+  legacy.exec('CREATE TABLE scan_cache (cache_key TEXT PRIMARY KEY, result_json TEXT NOT NULL, created_at INTEGER NOT NULL)')
+  legacy.prepare('INSERT INTO scan_cache VALUES (?, ?, ?)')
+    .run('https://www.krogentest.se|göteborg', JSON.stringify({ v: 1, context: { placeForAnalysis: { formattedAddress: 'Testgatan 12' } } }), Date.now())
   legacy.close()
   process.env.CHECKOUT_DB_PATH = dbPath
   db = await import('@/app/lib/checkoutDb')
@@ -44,7 +55,18 @@ describe('migrering av databas från före Task 13', () => {
     expect(legacyDone?.scan_status).toBe('pending')
     expect(legacyDone?.scan_started_at).toBeNull()
     // Gammalt sparat resultat går att öppna igen
-    expect(db.getScanStatus('cs_legacy_done')).toEqual({ status: 'done', scanResult: fakeResult })
+    expect(db.getScanStatus('cs_legacy_done')).toEqual({ status: 'done', scanResult: stripPlacesContent(fakeResult) })
+  })
+
+  it('Places-villkoren: gammal rapport med Places-innehåll strippas och v1-cacherader raderas när databasen öppnas', () => {
+    db.getCheckout('cs_legacy_places') // öppnar databasen → migreringen körs
+    const raw = new Database(dbPath)
+    const row = raw.prepare(`SELECT scan_result_json FROM checkouts WHERE session_id = 'cs_legacy_places'`).get() as { scan_result_json: string }
+    for (const value of FIXTURE_PLACES_VALUES) expect(row.scan_result_json, value).not.toContain(value)
+    expect(JSON.parse(row.scan_result_json).placesStripped).toMatchObject({ v: 1, lookupByUrl: true })
+    expect(raw.prepare('SELECT COUNT(*) AS n FROM scan_cache').get()).toEqual({ n: 0 })
+    raw.close()
+    expect(db.getScanStatus('cs_legacy_places')?.status).toBe('done')
   })
 
   it('gammal misslyckad rad utan scan_status kan startas', () => {
@@ -97,11 +119,23 @@ describe('claimScan / markScanDone / markScanFailed', () => {
     expect(db.claimScan('cs_flow', T0 + 60_000)).toBeNull()
 
     expect(db.markScanDone('cs_flow', fakeResult)).toBe(true)
-    expect(db.getScanStatus('cs_flow', T0 + 2000)).toEqual({ status: 'done', scanResult: fakeResult })
-    expect(db.getScanResult('cs_flow')).toEqual(fakeResult)
+    expect(db.getScanStatus('cs_flow', T0 + 2000)).toEqual({ status: 'done', scanResult: stripPlacesContent(fakeResult) })
+    expect(db.getScanResult('cs_flow')).toEqual(stripPlacesContent(fakeResult))
     expect(db.getCheckout('cs_flow')?.status).toBe('scanned')
     // Klart resultat startas aldrig om, inte ens långt senare
     expect(db.claimScan('cs_flow', T0 + 10 * db.SCAN_STALE_MS)).toBeNull()
+  })
+
+  it('Places-villkoren: markScanDone lagrar rapporten utan Places-innehåll men med place_id', () => {
+    db.createCheckout('cs_places_store', 'https://www.krogentest.se', 'Göteborg')
+    db.claimScan('cs_places_store', T0)
+    expect(db.markScanDone('cs_places_store', buildPaidReport())).toBe(true)
+    const raw = new Database(dbPath)
+    const row = raw.prepare(`SELECT scan_result_json FROM checkouts WHERE session_id = 'cs_places_store'`).get() as { scan_result_json: string }
+    raw.close()
+    for (const value of FIXTURE_PLACES_VALUES) expect(row.scan_result_json, value).not.toContain(value)
+    expect(row.scan_result_json).toContain('ChIJtest-krogen')
+    expect(db.getScanResult('cs_places_store')).toEqual(stripPlacesContent(buildPaidReport()))
   })
 
   it('failed → nytt anspråk startar om scannet', () => {
@@ -133,7 +167,7 @@ describe('claimScan / markScanDone / markScanFailed', () => {
     // Ett andra resultat (t.ex. från det gamla försöket) skriver inte över
     const other = { ...fakeResult, scores: { free: 1, full: 1 } } as unknown as ScanResult
     expect(db.markScanDone('cs_stale', other)).toBe(false)
-    expect(db.getScanResult('cs_stale')).toEqual(fakeResult)
+    expect(db.getScanResult('cs_stale')).toEqual(stripPlacesContent(fakeResult))
   })
 
   it('done-rad med trasig JSON kan startas om', () => {

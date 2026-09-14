@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeWebsite } from '@/app/lib/scraper'
 import { scrapeEnhanced } from '@/app/lib/enhancedScraper'
-import { findBusinessByUrl, getPlaceDetails, findNearbyCompetitors } from '@/app/lib/places'
+import { findBusinessByUrl, getPlaceDetails } from '@/app/lib/places'
 import type { NearbyCompetitor } from '@/app/lib/places'
 import { checkSwedishDirectories } from '@/app/lib/directoryChecker'
 import { checkAIMentions } from '@/app/lib/aiMentionChecker'
@@ -13,15 +13,19 @@ import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
 import { enrichChecksWithReportWriter, applyRichData, ASSESSMENT_TEMPERATURE } from '@/app/lib/reportWriter'
 import { fillTemplate } from '@/app/lib/templateFill'
 import { getFreeScan, saveFreeScan, SCAN_CACHE_TTL_MS } from '@/app/lib/checkoutDb'
-import { scanCacheKey, cacheSkipReason, serializeFreeScan, parseCachedFreeScan } from '@/app/lib/scanCache'
-import type { ScanContext, CachedFreeScan, ReviewReplyAnalysis } from '@/app/lib/scanCache'
+import {
+  scanCacheKey, cacheSkipReason, serializeFreeScan, parseCachedFreeScan, restoreScanContext, diffCachedStatuses,
+} from '@/app/lib/scanCache'
+import type { ScanContext, CachedFreeScan } from '@/app/lib/scanCache'
+import {
+  derivePlacesParts, placeFacts, buildGbpData, competitorsForPlace, fetchPlacesForCachedScan,
+} from '@/app/lib/placesContent'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
 import { withRetry } from '@/app/lib/retry'
 import { buildVerifiedFacts, formatFactsForPrompt, GROUNDING_RULES, groundReport } from '@/app/lib/factGuard'
 import type { VerifiedFacts } from '@/app/lib/factGuard'
-import { deriveBransch } from '@/app/lib/bransch'
 import { analyzeReviewInsights } from '@/app/lib/reviewInsights'
 import type { ReviewInsightsData, CompetitorComparisonData } from '@/app/lib/scanResult'
 import {
@@ -362,44 +366,6 @@ REGLER:
 - Alla texter på svenska`
 }
 
-/**
- * Audit #3: Google Places API (New) Review-objektet har INGET fält för ägarsvar
- * (verifierat mot officiell dokumentation:
- * https://developers.google.com/maps/documentation/places/web-service/reference/rest/v1/places#Review
- * — Review har name/text/originalText/rating/authorAttribution/publishTime/
- * flagContentUri/googleMapsUri/visitDate/relativePublishTimeDescription, inget
- * "reviewReply"/"ownerResponse"). En svarsfrekvens går därför ALDRIG att mäta via
- * detta API — checken blir alltid notMeasured, aldrig ett påstått 0 %.
- */
-function analyzeReviewReplies(reviews: any[], totalReviewCount?: number): ReviewReplyAnalysis {
-  // Sanity-check: if knownTotal < reviews.length the reported total is unreliable — never
-  // emit "X av totalt Y" where Y < X, as that is self-contradictory.
-  const knownTotal = (totalReviewCount != null && totalReviewCount >= reviews.length)
-    ? totalReviewCount
-    : null
-  const sampleNote = reviews.length > 0 && knownTotal !== null && knownTotal > reviews.length
-    ? `Baserat på ett stickprov av ${reviews.length} recensioner av totalt ${knownTotal} (Google Places API-gränsen).`
-    : ''
-
-  if (!reviews || reviews.length === 0) {
-    return {
-      total: 0,
-      status: 'notMeasured',
-      finding: 'Inga recensioner tillgängliga för analys.',
-      fix: 'Be kunder lämna recensioner på Google.',
-      sampleNote,
-    }
-  }
-
-  return {
-    total: reviews.length,
-    status: 'notMeasured',
-    finding: 'Google tillhandahåller inte ägarsvar via API:t — kontrollera i Google Business Profile.',
-    fix: 'Logga in på Google Business Profile (business.google.com) och se där hur stor andel av recensionerna som fått svar.',
-    sampleNote,
-  }
-}
-
 function buildSynthesisPrompt(
   technicalResult: any,
   faqResult: any,
@@ -642,17 +608,14 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
   }
   const placeForAnalysis = placeDetails || place
 
-  // Extract company name first — deriveBransch needs it to guard against ever
-  // landing on the same value (Audit #10).
-  const companyName = placeForAnalysis?.displayName?.text || mainPage?.title?.split(/\s*[\|–\-]\s*/)[0]?.trim() || ''
-
-  const placeTypes: string[] = placeForAnalysis?.types || []
-  const bransch = deriveBransch({
-    primaryType: placeForAnalysis?.primaryType ?? null,
-    types: placeTypes,
+  // Places-härledda delar (företagsnamn → bransch, Audit #10; recensioner → check #34).
+  // Samma funktion bygger om dem av färsk Places-data vid paid-cacheträff (placesContent.ts).
+  const { companyName, bransch, reviews, reviewReplyResult } = derivePlacesParts({
+    place: placeForAnalysis,
+    details: placeDetails,
     title: mainPage?.title ?? null,
-    companyName,
   })
+  const placeTypes: string[] = placeForAnalysis?.types || []
 
   // City priority: 1) user input, 2) Places address, 3) scraped — never use 'Sverige'
   const cityFromPlace = placeForAnalysis?.formattedAddress
@@ -668,24 +631,11 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
   // Task 1.5: HTTPS check — derived early from URL before any other analysis
   const isHttps = url.startsWith('https://')
 
-  // Review reply analysis (from place details) — pass total count for disclaimer
-  const reviews = placeDetails?.reviews || []
-  const reviewReplyResult = analyzeReviewReplies(reviews, placeDetails?.userRatingCount)
-
   // Run 3 Flash calls + directory check + AI mention check in parallel
   const flashSystem = 'Du är en svensk AI-sökningsanalytiker. Svara ENDAST i giltig JSON. Ingen markdown, ingen text utanför JSON.'
   const failedAssessments: string[] = []
 
-  const competitorListPromise = (async (): Promise<NearbyCompetitor[]> => {
-    const lat = placeForAnalysis?.location?.latitude
-    const lng = placeForAnalysis?.location?.longitude
-    const ptype = placeForAnalysis?.primaryType
-    if (typeof lat !== 'number' || typeof lng !== 'number' || !ptype || !placeForAnalysis?.id) return []
-    return findNearbyCompetitors(lat, lng, ptype, placeForAnalysis.id).catch((err) => {
-      console.error('[Enhanced Scan] Nearby competitors failed:', err.message)
-      return []
-    })
-  })()
+  const competitorListPromise: Promise<NearbyCompetitor[]> = competitorsForPlace(placeForAnalysis)
 
   // Audit #9 (konkurrentdelen), paid-only: topp 3 konkurrenter med egen webbplats
   // scannas deterministiskt (inga LLM-anrop) direkt när Nearby-listan finns — i samma
@@ -833,9 +783,46 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
       aiMentionResult,
       cwvMetrics,
       competitorList,
+      placeId: typeof placeForAnalysis?.id === 'string' ? placeForAnalysis.id : null,
+      domainMatch: typeof placeForAnalysis?._domainMatch === 'boolean' ? placeForAnalysis._domainMatch : null,
+      placeWarning: typeof placeForAnalysis?._warning === 'string' ? placeForAnalysis._warning : null,
     },
     failedAssessments,
     competitorScansPromise,
+  }
+}
+
+/** buildCheckResults() på en ScanContext — samma anrop vid fullt flöde och vid paid-cacheträff. */
+function buildChecksFromContext(context: ScanContext): CheckResult[] {
+  return buildCheckResults({
+    scraperData: context.scrapedData,
+    enhancedData: context.enhancedData,
+    technicalResult: context.technicalResult,
+    faqResult: context.faqResult,
+    eatResult: context.eatResult,
+    directoryResult: context.directoryResult,
+    aiMentionResult: context.aiMentionResult,
+    reviewReplyResult: context.reviewReplyResult,
+    placeData: context.placeForAnalysis,
+    url: context.url,
+    isHttps: context.isHttps,
+    cwvMetrics: context.cwvMetrics,
+    competitorList: context.competitorList,
+  })
+}
+
+/**
+ * Places-villkoren: cachen har ingen Places-data, så paid-träffen bygger om Places-
+ * beroende checks av FÄRSK data. Ändrade det gratisscanens statusar eller poäng
+ * (t.ex. öppettider tillagda i profilen) är det acceptabelt — men det loggas.
+ */
+function logFreshPlacesConsistency(key: string, cached: CachedFreeScan, checks: CheckResult[]): void {
+  const scores = calculateScores(checks)
+  const changed = diffCachedStatuses(cached.statuses, checks)
+  if (scores.free !== cached.scores.free || scores.full !== cached.scores.full || changed.length > 0) {
+    console.warn(`[ScanCache] Färsk Places-data ändrade resultatet för ${key}: scores.free ${cached.scores.free} → ${scores.free}, scores.full ${cached.scores.full} → ${scores.full}; ${changed.length > 0 ? `checks: ${changed.join(', ')}` : 'inga statusändringar'}`)
+  } else {
+    console.log(`[ScanCache] Färsk Places-data gav samma statusar och poäng som gratisscanen för ${key} (free ${scores.free}, full ${scores.full})`)
   }
 }
 
@@ -858,7 +845,7 @@ function loadCachedFreeScan(url: string, city: string | undefined): CachedFreeSc
       console.warn(`[ScanCache] Ogiltig cachad rad för ${key} — kör fullt flöde`)
       return null
     }
-    console.log(`[ScanCache] Träff för ${key} (scannad ${entry.scanResult.meta.scanDate}) — hoppar över scraping/Flash/Places/Tavily/PSI/AI-test`)
+    console.log(`[ScanCache] Träff för ${key} (scannad ${entry.scanDate}) — hoppar över scraping/Flash/Tavily/PSI/AI-test; Places hämtas färskt`)
     return entry
   } catch (err: any) {
     console.error(`[ScanCache] Kunde inte läsa cachen för ${key}:`, err?.message)
@@ -943,8 +930,10 @@ export async function POST(req: NextRequest) {
     console.log(`[Enhanced Scan] Startar för ${url}${cityInput ? ` (stad: ${cityInput})` : ''} [tier=${tier}]`)
 
     // Task 12: paid återanvänder den cachade free-scanen (samma mätning som kunden såg och
-    // betalade för → exakt samma scores.free). Träff → ingen scraping/Flash/Places/Tavily/
-    // PSI/AI-test; bara paid-berikningen nedan körs på cachens checks. Miss → fullt flöde.
+    // betalade för → samma scores.free). Träff → ingen scraping/Flash/Tavily/PSI/AI-test.
+    // Places-villkoren: cachen saknar Places-innehåll → Place Details + Nearby Search hämtas
+    // färskt och alla checks byggs om deterministiskt av cachens data + färsk Places-data.
+    // Miss → fullt flöde.
     const cached = tier === 'paid' ? loadCachedFreeScan(url, cityInput) : null
 
     let context: ScanContext
@@ -953,8 +942,10 @@ export async function POST(req: NextRequest) {
     let competitorScansPromise: Promise<CompetitorScanOutcome[]>
 
     if (cached) {
-      context = cached.context
-      checks = cached.scanResult.checks
+      const fresh = await fetchPlacesForCachedScan(cached.context)
+      context = restoreScanContext(cached.context, fresh)
+      checks = buildChecksFromContext(context)
+      logFreshPlacesConsistency(scanCacheKey(context.url, context.city) ?? context.url, cached, checks)
       competitorScansPromise = scanTopCompetitors(context.competitorList, context.url)
     } else {
       const collected = await collectScanData(url, cityInput, tier)
@@ -965,21 +956,7 @@ export async function POST(req: NextRequest) {
       console.log(`[Enhanced Scan] Alla anrop klara. Bygger checks...`)
 
       // ---- Build checks BEFORE synthesis so Report Writer can run in parallel ----
-      checks = buildCheckResults({
-        scraperData: context.scrapedData,
-        enhancedData: context.enhancedData,
-        technicalResult: context.technicalResult,
-        faqResult: context.faqResult,
-        eatResult: context.eatResult,
-        directoryResult: context.directoryResult,
-        aiMentionResult: context.aiMentionResult,
-        reviewReplyResult: context.reviewReplyResult,
-        placeData: context.placeForAnalysis,
-        url: context.url,
-        isHttps: context.isHttps,
-        cwvMetrics: context.cwvMetrics,
-        competitorList: context.competitorList,
-      })
+      checks = buildChecksFromContext(context)
     }
 
     // Allt nedströms använder den scannade URL:en/staden ur context (vid cacheträff =
@@ -1025,12 +1002,9 @@ export async function POST(req: NextRequest) {
       summary: z.string().min(1),
     })
 
-    // Extrahera postnummer och gatuadress ur Places formattedAddress (svenskt format)
-    // "Gatuadress 12, 411 36 Göteborg" → streetAddress="Gatuadress 12", postalCode="411 36"
-    const formattedAddress: string | undefined = placeForAnalysis?.formattedAddress
-    const addrMatch = formattedAddress?.match(/^(.+?),\s*(\d{3}\s?\d{2})\s+/)
-    const streetAddress = addrMatch?.[1]?.trim() || null
-    const postalCode = addrMatch?.[2]?.trim() || null
+    // Places-fakta (gatuadress/postnummer ur formattedAddress, position, öppettider …) —
+    // samma härledning som när en lagrad rapport byggs om vid läsning (placesContent.ts).
+    const facts = placeFacts(placeForAnalysis)
 
     // Försök hitta e-post i scrapad bodyText
     const emailMatch = mainPage?.bodyText?.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
@@ -1042,21 +1016,10 @@ export async function POST(req: NextRequest) {
       city: city || null,
       url: scanUrl,
       domain,
-      phone: placeForAnalysis?.nationalPhoneNumber || mainPage?.phones?.[0] || undefined,
       // Utökad data så Pro kan generera komplett kod utan ANPASSA-kommentarer
-      streetAddress,
-      postalCode,
-      formattedAddress: formattedAddress || null,
+      ...facts,
+      phone: facts.phone || mainPage?.phones?.[0] || undefined,
       email,
-      latitude: placeForAnalysis?.location?.latitude ?? null,
-      longitude: placeForAnalysis?.location?.longitude ?? null,
-      placeId: placeForAnalysis?.id ?? null,
-      primaryType: placeForAnalysis?.primaryType ?? null,
-      googleRating: placeForAnalysis?.rating ?? null,
-      reviewCount: placeForAnalysis?.userRatingCount ?? null,
-      weekdayHours: placeForAnalysis?.regularOpeningHours?.weekdayDescriptions ?? null,
-      // Strukturerade perioder → deterministisk openingHoursSpecification i huvudschemat
-      openingPeriods: placeForAnalysis?.regularOpeningHours?.periods ?? null,
       schemaTypes: mainPage?.schemaTypes ?? [],
       socialLinks: enhancedData.sameAsLinks ?? [],
       title: mainPage?.title ?? null,
@@ -1225,7 +1188,7 @@ export async function POST(req: NextRequest) {
         bransch,
         companyName,
         // Vid cacheträff hämtades datan vid free-scanen — rapporten visar "Data hämtad <scanDate>".
-        scanDate: cached ? cached.scanResult.meta.scanDate : new Date().toISOString(),
+        scanDate: cached ? cached.scanDate : new Date().toISOString(),
         scanId,
       },
       scores: {
@@ -1236,17 +1199,7 @@ export async function POST(req: NextRequest) {
       },
       checks,
       synthesis,
-      gbp: placeForAnalysis ? {
-        name: placeForAnalysis.displayName?.text,
-        rating: placeForAnalysis.rating ?? null,
-        userRatingCount: placeForAnalysis.userRatingCount ?? null,
-        address: placeForAnalysis.formattedAddress ?? null,
-        phone: placeForAnalysis.nationalPhoneNumber ?? null,
-        websiteUri: placeForAnalysis.websiteUri ?? null,
-        weekdayDescriptions: placeForAnalysis.regularOpeningHours?.weekdayDescriptions,
-        types: placeForAnalysis.types,
-        _domainMatch: placeForAnalysis._domainMatch,
-      } : null,
+      gbp: buildGbpData(placeForAnalysis),
       directories: directoryResult,
       aiMentions: aiMentionResult,
       reviewReplies: {
@@ -1258,6 +1211,19 @@ export async function POST(req: NextRequest) {
       },
       reviewInsights,
       competitorComparison,
+      // Places-villkoren: place_id + sajtens egna uppgifter, så en lagrad premiumrapport
+      // (Places-fälten strippade, checkoutDb.ts) kan byggas om av färsk data vid läsning.
+      placesRef: {
+        placeId: context.placeId,
+        domainMatch: context.domainMatch,
+        site: {
+          title: mainPage?.title ?? null,
+          phone: mainPage?.phones?.[0] ?? null,
+          email,
+          schemaTypes: mainPage?.schemaTypes ?? [],
+          socialLinks: enhancedData.sameAsLinks ?? [],
+        },
+      },
     }
 
     // Validate with Zod — log and continue even if validation fails

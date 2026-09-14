@@ -4,6 +4,9 @@ import {
   cacheSkipReason,
   serializeFreeScan,
   parseCachedFreeScan,
+  toCachedContext,
+  restoreScanContext,
+  diffCachedStatuses,
   SCAN_CACHE_VERSION,
 } from '@/app/lib/scanCache'
 import type { ScanContext } from '@/app/lib/scanCache'
@@ -11,6 +14,7 @@ import { CHECK_REGISTRY, calculateScores } from '@/app/lib/scanResult'
 import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
 import type { AIMentionResult } from '@/app/lib/aiMentionChecker'
 import type { EnhancedData } from '@/app/lib/enhancedScraper'
+import type { PageSummary } from '@/app/lib/scraper'
 
 function makeChecks(): CheckResult[] {
   return CHECK_REGISTRY.map((e): CheckResult => ({
@@ -89,23 +93,33 @@ function makeAiMention(overrides: Partial<AIMentionResult> = {}): AIMentionResul
   }
 }
 
+// Places-värden i kontexten — får ALDRIG hamna i den serialiserade cacheraden.
+const PLACES_VALUES = ['Testgatan 12', '031-700 12 34', 'Mycket god mat och trevlig personal.', 'Konkurrent Alfa', 'tisdag: 11:00–22:00']
+
 function makeContext(): ScanContext {
   return {
-    url: 'https://www.tvakanten.se',
+    url: 'https://www.krogentest.se',
     city: 'Göteborg',
-    companyName: 'Tvåkanten',
+    companyName: 'Krogen Test',
     bransch: 'restaurang',
     isHttps: true,
     enhancedData: { robotsTxt: '', faqQuestions: ['Tar ni bokningar?'], openingHoursFromSchema: null } as unknown as EnhancedData,
     scrapedData: {
-      url: 'https://www.tvakanten.se',
+      url: 'https://www.krogentest.se',
       robotsTxt: null,
-      sitemapXml: '<urlset><url><loc>https://www.tvakanten.se/meny</loc></url></urlset>',
+      sitemapXml: '<urlset><url><loc>https://www.krogentest.se/meny</loc></url></urlset>',
       llmsTxt: null,
       sitemapUrlCount: 1,
-      pages: [],
+      pages: [{ title: 'Restaurang Krogen Test' } as PageSummary],
     },
-    placeForAnalysis: { id: 'place-1', displayName: { text: 'Tvåkanten' }, rating: 4.4 },
+    placeForAnalysis: {
+      id: 'ChIJtest-krogen',
+      displayName: { text: 'Krogen Test' },
+      rating: 4.4,
+      formattedAddress: 'Testgatan 12, 411 36 Göteborg, Sverige',
+      nationalPhoneNumber: '031-700 12 34',
+      regularOpeningHours: { weekdayDescriptions: ['tisdag: 11:00–22:00'] },
+    },
     reviews: [{ text: { text: 'Mycket god mat och trevlig personal.' }, rating: 5 }],
     reviewReplyResult: { total: 1, status: 'notMeasured', finding: 'f', fix: 'x', sampleNote: '' },
     technicalResult: { https: { status: 'ok' } },
@@ -114,7 +128,10 @@ function makeContext(): ScanContext {
     directoryResult: { status: 'warning', directories: [] },
     aiMentionResult: makeAiMention(),
     cwvMetrics: null,
-    competitorList: [],
+    competitorList: [{ placeId: 'ChIJtest-alfa', name: 'Konkurrent Alfa', rating: 4.3, userRatingCount: 10, distanceMeters: 100, primaryType: 'bar', websiteUri: null }],
+    placeId: 'ChIJtest-krogen',
+    domainMatch: true,
+    placeWarning: null,
   }
 }
 
@@ -175,45 +192,48 @@ describe('cacheSkipReason', () => {
   })
 })
 
-describe('serializeFreeScan / parseCachedFreeScan', () => {
-  it('rundtur ger samma checks, samma poäng och samma kontext', () => {
+describe('serializeFreeScan / parseCachedFreeScan (v2 — inget Places-innehåll)', () => {
+  it('serialiserad cacherad innehåller place_id men inga Places-värden', () => {
+    const json = serializeFreeScan(makeScanResult(), makeContext())
+    for (const value of PLACES_VALUES) expect(json).not.toContain(value)
+    expect(json).toContain('ChIJtest-krogen')
+    const raw = JSON.parse(json)
+    for (const key of ['placeForAnalysis', 'reviews', 'reviewReplyResult', 'competitorList', 'companyName', 'bransch']) {
+      expect(raw.context).not.toHaveProperty(key)
+    }
+    expect(raw).not.toHaveProperty('scanResult')
+  })
+
+  it('toCachedContext är en vitlista — okända fält följer inte med', () => {
+    const ctx = { ...makeContext(), extraPlacesField: 'Testgatan 12' } as ScanContext
+    expect(JSON.stringify(toCachedContext(ctx))).not.toContain('Testgatan 12')
+  })
+
+  it('rundtur ger samma kontext (utan Places-delar), scanDate, poäng och statusar', () => {
     const scanResult = makeScanResult()
     const context = makeContext()
     const parsed = parseCachedFreeScan(serializeFreeScan(scanResult, context))
 
     expect(parsed).not.toBeNull()
     expect(parsed!.v).toBe(SCAN_CACHE_VERSION)
-    expect(parsed!.scanResult).toEqual(scanResult)
-    expect(parsed!.context).toEqual(context)
-    // Poängkonsistensen som Task 12 handlar om: checks ur cachen ger exakt samma scores.
-    // calculateScores() returnerar även mät-täckningen (measured/total) — här gäller poängen.
-    const recalculated = calculateScores(parsed!.scanResult.checks)
-    expect({ free: recalculated.free, full: recalculated.full }).toEqual({ free: scanResult.scores.free, full: scanResult.scores.full })
-  })
-
-  it('behåller valfria fält på checks (strippas inte av valideringen)', () => {
-    const parsed = parseCachedFreeScan(serializeFreeScan(makeScanResult(), makeContext()))
-    const withSteps = parsed!.scanResult.checks.find(c => c.id === 3)
-    expect(withSteps?.genericSteps).toBe('1. Gör så här')
+    expect(parsed!.context).toEqual(toCachedContext(context))
+    expect(parsed!.scanDate).toBe(scanResult.meta.scanDate)
+    expect(parsed!.scores).toEqual({ free: scanResult.scores.free, full: scanResult.scores.full })
+    expect(parsed!.statuses.https).toBe(scanResult.checks[0].status)
+    expect(Object.keys(parsed!.statuses)).toHaveLength(37)
   })
 
   it('trasig JSON ger null', () => {
     expect(parseCachedFreeScan('{inte json')).toBeNull()
   })
 
-  it('fel version ger null', () => {
+  it('fel version (t.ex. v1 med rå Places-data) ger null', () => {
     const entry = JSON.parse(serializeFreeScan(makeScanResult(), makeContext()))
-    entry.v = SCAN_CACHE_VERSION + 1
+    entry.v = 1
     expect(parseCachedFreeScan(JSON.stringify(entry))).toBeNull()
   })
 
-  it('ogiltigt ScanResult (fel antal checks) ger null', () => {
-    const scanResult = makeScanResult()
-    scanResult.checks = scanResult.checks.slice(0, 36)
-    expect(parseCachedFreeScan(serializeFreeScan(scanResult, makeContext()))).toBeNull()
-  })
-
-  it('ofullständig kontext ger null', () => {
+  it('ofullständig rad ger null', () => {
     const entry = JSON.parse(serializeFreeScan(makeScanResult(), makeContext()))
     delete entry.context.scrapedData.pages
     expect(parseCachedFreeScan(JSON.stringify(entry))).toBeNull()
@@ -225,5 +245,56 @@ describe('serializeFreeScan / parseCachedFreeScan', () => {
     const noFlash = JSON.parse(serializeFreeScan(makeScanResult(), makeContext()))
     delete noFlash.context.technicalResult
     expect(parseCachedFreeScan(JSON.stringify(noFlash))).toBeNull()
+
+    const noScores = JSON.parse(serializeFreeScan(makeScanResult(), makeContext()))
+    delete noScores.scores
+    expect(parseCachedFreeScan(JSON.stringify(noScores))).toBeNull()
+  })
+})
+
+describe('restoreScanContext', () => {
+  const freshPlace = {
+    id: 'ChIJtest-krogen',
+    displayName: { text: 'Krogen Test' },
+    primaryType: 'bar',
+    types: ['bar'],
+    userRatingCount: 321,
+    reviews: [{ text: { text: 'A' } }, { text: { text: 'B' } }],
+    _domainMatch: true,
+  }
+
+  it('bygger Places-delarna av färsk data med samma härledning som insamlingsfasen', () => {
+    const cached = parseCachedFreeScan(serializeFreeScan(makeScanResult(), makeContext()))!.context
+    const competitorList = makeContext().competitorList
+    const ctx = restoreScanContext(cached, { place: freshPlace, competitorList })
+    expect(ctx.companyName).toBe('Krogen Test')
+    expect(ctx.bransch).toBe('bar')
+    expect(ctx.placeForAnalysis).toBe(freshPlace)
+    expect(ctx.reviews).toHaveLength(2)
+    expect(ctx.reviewReplyResult.total).toBe(2)
+    expect(ctx.reviewReplyResult.sampleNote).toContain('totalt 321')
+    expect(ctx.competitorList).toBe(competitorList)
+    expect(ctx.url).toBe(cached.url)
+    expect(ctx.technicalResult).toEqual(cached.technicalResult)
+  })
+
+  it('utan färsk plats: företagsnamn från sajtens title, inga recensioner', () => {
+    const cached = toCachedContext(makeContext())
+    const ctx = restoreScanContext(cached, { place: null, competitorList: [] })
+    expect(ctx.companyName).toBe('Restaurang Krogen Test')
+    expect(ctx.placeForAnalysis).toBeNull()
+    expect(ctx.reviews).toEqual([])
+    expect(ctx.reviewReplyResult.total).toBe(0)
+  })
+})
+
+describe('diffCachedStatuses', () => {
+  it('listar bara checks vars status ändrats', () => {
+    const checks = [
+      { key: 'openingHours', status: 'notMeasured' },
+      { key: 'https', status: 'ok' },
+    ] as Pick<CheckResult, 'key' | 'status'>[]
+    expect(diffCachedStatuses({ openingHours: 'ok', https: 'ok' }, checks)).toEqual(['openingHours: ok → notMeasured'])
+    expect(diffCachedStatuses({ openingHours: 'notMeasured', https: 'ok' }, checks)).toEqual([])
   })
 })
