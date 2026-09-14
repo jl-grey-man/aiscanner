@@ -10,7 +10,7 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], weight: ['400'], vari
 
 export const metadata: Metadata = {
   title: 'AI Search Scanner — Syns du för AI-sökmotorer?',
-  description: 'Analysera din hemsida och få reda på exakt vad som behöver fixas för att ChatGPT, Perplexity och Google AI ska hitta och citera dig.',
+  description: 'Se hur väl er webbplats är förberedd för AI-sök som ChatGPT, Perplexity och Googles AI-översikter — vi frågar en AI-modell vad den vet om er och visar exakt vad som behöver fixas.',
 }
 
 export default function RootLayout({
