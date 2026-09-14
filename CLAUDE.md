@@ -108,8 +108,8 @@ Request body: `{ url, city?, tier?: 'free' | 'paid' }` — default `tier='free'`
 6. `buildCheckResults()` — assembles all raw data into 37 typed `CheckResult` objects, then attaches `genericSteps` + `genericCodeTemplate` from `genericFixes.ts` to every bad/warning check
 7. **Tier branch:**
    - `tier='free'` — **skip Pro entirely**. Build synthesis deterministically from check findings via `buildFreeSynthesis()`. ~10–20s scan, ~$0.10 cost.
-   - `tier='paid'` — Pro synthesis + Report Writer in parallel. ~60–90s scan, ~$0.35 cost. Synthesis uses **parallel-race fallback** (Pro 120s primary + Flash 45s backup always ready).
-8. Merge rich data (richRelevance, richSteps, richCodeExample) back into checks (paid only)
+   - `tier='paid'` — Pro synthesis + Report Writer in parallel. ~130–170s scan (Report Writer is bounded by a 170 s budget), ~$0.35 cost. Synthesis uses **parallel-race fallback** (Pro 120s primary + Flash 45s backup always ready).
+8. `applyRichData()` merges rich data (richRelevance, richSteps, richCodeExample, richStatus) back into checks (paid only) — every bad/warning check gets `richStatus`, missing ones are logged
 9. `calculateScores()` — weighted scoring → `scores.free` (29 checks) + `scores.full` (36 checks)
 10. Zod-validate → return `ScanResult`
 
@@ -124,21 +124,28 @@ The same scan runs in two modes, differing only in the synthesis/Pro stage:
 | `genericSteps` + `genericCodeTemplate` (hardcoded templates with `<PLACEHOLDERS>`) | ✅ shown in UI | ✅ used as fallback |
 | `richRelevance` + `richSteps` + `richCodeExample` (Pro-generated with company data) | ❌ skipped | ✅ shown in UI |
 | `synthesis.actionPlan` | Deterministic markdown from `finding`s | Pro-generated with competitor analysis |
-| Latency | ~15s | ~70s |
+| Latency | ~15s | ~130–170s |
 | Cost | ~$0.10 (Places + Tavily) | ~$0.35 (+ Pro tokens) |
 
 The UI renders generic templates with `<PLACEHOLDERS>` only when there is no rich content. In free reports, the "Kod att kopiera"-block is hidden entirely (data is still present in scanResult, just not displayed) — the user only sees "Så här fixar ni det" with generic steps. **Paid reports show real code with the company's actual address/phone/openingHours filled in.**
 
 ### Report Writer (`reportWriter.ts`) — paid only
 
-Runs in parallel with Pro synthesis (zero extra latency) when `tier='paid'`. Enriches bad/warning checks with:
+Runs in parallel with Pro synthesis when `tier='paid'` — it is usually the longest stage of the paid scan (bounded by its 170 s budget). Enriches bad/warning checks with:
 - `richRelevance`: Company-specific explanation of why the check matters
 - `richSteps`: Numbered step-by-step fix instructions
 - `richCodeExample`: Copy-paste-ready code with actual company data
 
 Receives a rich `BusinessMeta` (companyName, bransch, city, streetAddress, postalCode, formattedAddress, email, lat/lng, primaryType, googleRating, weekdayHours, schemaTypes, socialLinks, title, h1, …) so Pro can fill in real values. Prompt explicitly forbids `<!-- ANPASSA -->`, `<PLACEHOLDER>`, `<DITT FÖRETAGSNAMN>` etc. — those belong in free templates only. As a safety net, `sanitizeCodeExample()` strips any placeholder lines that Pro still produces (e.g. when data genuinely isn't available — the fix is to **omit the field**, not leave a placeholder).
 
-Batches checks by category (technical, local, ai-readiness, content+other) and calls Gemini 2.5 Pro for each batch. Falls back silently if any batch fails — checks keep their original finding/fix.
+**Reliability model — no silent gaps (Audit #1):**
+- `planBatches()` sorts bad/warning checks by category (technical → local → ai-readiness → content → ai-test → gbp, then registry id) and splits them into batches of **max 3 checks**, so one broken/truncated generation never takes a whole category down.
+- `runWithConcurrency()` runs batches in parallel, **max 4 at a time**.
+- Each call goes through `withRetry` (`app/lib/retry.ts`): **Gemini 2.5 Pro** first (2 attempts), then **Gemini 2.5 Flash** (2 attempts) for the checks Pro could not deliver completely. A check is complete when both `richRelevance` and `richSteps` are non-empty; `richCodeExample` may legitimately be null. Permanent 4xx errors are not retried.
+- `callLimitsFor()` scales timeout/max_tokens with batch size (Pro: 30 s + 25 s/check, 4000 + 2500 tokens/check; Flash: 20 s + 10 s/check, 2000 + 2000 tokens/check).
+- Total time budget `budgetMs` = 170 s. Pro calls reserve time for the Flash fallback of the same batch; no call starts with < 15 s left.
+- route.ts passes `callOpenRouterOnce` (NOT `callOpenRouter`, which has its own withRetry — nested retries would multiply latency).
+- Every bad/warning check gets `richStatus`: `'pro'` | `'flash'` | `'missing'`. `'missing'` is logged with its reason (`[ReportWriter] Rikt innehåll SAKNAS för <key>: ...`); partial content is kept. `applyRichData()` merges into checks and also marks checks absent from the result as missing. Every failed attempt is logged too (`[ReportWriter] Pro-försök misslyckades ...`).
 
 ### Synthesis Flash-fallback (paid)
 
@@ -148,7 +155,7 @@ The paid synthesis call uses a **parallel race**: Pro (120s timeout) AND Flash (
 
 The `ScanResult` Zod schema defines:
 - `meta` — domain, companyName, city, scanDate, tier
-- `checks` — array of exactly 37 `CheckResult` objects (each with key, status, tier, category, finding, fix, priority, weight, + optional richRelevance/richSteps/richCodeExample)
+- `checks` — array of exactly 37 `CheckResult` objects (each with key, status, tier, category, finding, fix, priority, weight, + optional richRelevance/richSteps/richCodeExample/richStatus)
 - `scores` — `{ free: 0-100, full: 0-100 }`
 - `synthesis` — structured synthesis (actionPlan, competitorNote, reviewAnalysis)
 - `reviewReplies` — review reply analysis
@@ -325,7 +332,7 @@ Every frontend change MUST pass the following gate before being presented to the
 - **Canonical:** Extracted BEFORE cheerio removes `<head>` elements (step 2 in extractSummary).
 - **Google Maps:** Detected BEFORE iframes are removed (step 3 in extractSummary). Order matters.
 - **Port 8010 collision:** If another service starts on 8010, the scanner silently fails. Check registry before deploying.
-- **Enhanced scan timeout:** Free ~15s, paid ~70s. Production on Railway (`robotbyran.com`) has no per-request HTTP timeout. If paid Pro synthesis times out at 120s, the parallel Flash-fallback takes over automatically (see synthesis fallback above).
+- **Enhanced scan timeout:** Free ~15s, paid ~130–170s (measured 2026-09-14: sprej.nu 165 s, tvakanten.se 133 s). Production on Railway (`robotbyran.com`) has no per-request HTTP timeout. If paid Pro synthesis times out at 120s, the parallel Flash-fallback takes over automatically (see synthesis fallback above).
 - **Dev toggle + auto-paid:** `AppShell.tsx` binds `IS_DEV = process.env.NODE_ENV === 'development'`. In dev: paid scan auto-triggers in background after free completes, so toggle is instant. **In production: paid scan only runs if explicitly invoked.** This avoids burning ~$0.35 per public scan. When a payment flow is added it should call `analyzePaid(url, city)` from `useAnalysis` after the purchase confirms. To preview the paid layout without paying, use the `/preview` route (mock data).
 - **cityMentioned (#12) search surface:** The scraper strips `<header>`/`<nav>`/`<footer>` before extracting `bodyText`. Cities therefore search a wider haystack: `[title, metaDescription, h1, h2s, bodyText]`. Important so cities written only in title or header/logo area (common pattern) still match. Stad-listan i `SWEDISH_CITIES` är ~50 ord — uppdatera vid behov.
 - **PageSpeed Insights (CWV check #10):** Uses `GOOGLE_PLACES_API_KEY` (same key as Places API — PSI must be enabled on the Google Cloud project AND added to the key's API restrictions list). Falls back to `notMeasured` with a 403/timeout finding if the API call fails — never blocks the scan. Prefers CrUX field data over Lighthouse lab data.

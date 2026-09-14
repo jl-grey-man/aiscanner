@@ -10,7 +10,7 @@ import { getCwvMetrics } from '@/app/lib/pageSpeed'
 import { buildCheckResults } from '@/app/lib/checkBuilder'
 import { calculateScores, ScanResultSchema, CHECK_REGISTRY } from '@/app/lib/scanResult'
 import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
-import { enrichChecksWithReportWriter } from '@/app/lib/reportWriter'
+import { enrichChecksWithReportWriter, applyRichData } from '@/app/lib/reportWriter'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
@@ -933,20 +933,19 @@ export async function POST(req: NextRequest) {
               summary: 'Syntesen misslyckades — se individuella kontroller.',
             }
           }),
-        enrichChecksWithReportWriter(checks, reportWriterMeta, callOpenRouter).catch((err) => {
+        // Report Writer sköter retry + Flash-reserv själv → ge den ENKELANROPET
+        // (callOpenRouter har egen withRetry; det skulle ge nästlade retries).
+        enrichChecksWithReportWriter(checks, reportWriterMeta, callOpenRouterOnce).catch((err) => {
           console.error('[Enhanced Scan] Report Writer failed:', err.message)
-          return {} as Record<string, any>
+          return {}
         }),
       ])
 
-      // Merge rich data back into checks
-      for (const check of checks) {
-        const rich = richData[check.key]
-        if (rich) {
-          check.richRelevance = rich.richRelevance
-          check.richSteps = rich.richSteps
-          check.richCodeExample = rich.richCodeExample
-        }
+      // Merge rich data back into checks. Varje bad/warning-check får richStatus;
+      // checks utan komplett rikt innehåll markeras 'missing' och loggas.
+      const richMissing = applyRichData(checks, richData)
+      if (richMissing.length > 0) {
+        console.error(`[Enhanced Scan] ${richMissing.length} checks saknar rikt innehåll: ${richMissing.join(', ')}`)
       }
 
       // Validate synthesis with Zod, fallback gracefully

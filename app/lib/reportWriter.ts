@@ -1,28 +1,46 @@
 /**
  * reportWriter.ts — Enriches bad/warning checks with tailored Pro-generated content
  *
- * Runs 3-4 parallel Gemini 2.5 Pro calls (batched by category) to produce:
+ * For EVERY bad/warning check (paid tier) it produces:
  *   - richRelevance: "Varför spelar det roll för [Företag]?"
  *   - richSteps: "Steg för steg" (numbered markdown)
  *   - richCodeExample: Company-specific, copy-paste-ready code
  *
- * Designed to run in parallel with Pro synthesis — adds zero extra latency.
+ * Reliability model (no silent gaps):
+ *   - Checks are split into small batches (max 3 checks, sorted by category) so a
+ *     single broken/truncated generation never takes a whole category down.
+ *   - Batches run in parallel behind a concurrency limit.
+ *   - Each call goes through withRetry (app/lib/retry.ts): Gemini 2.5 Pro first,
+ *     Gemini 2.5 Flash as fallback for the checks Pro could not deliver.
+ *   - timeout/max_tokens scale with batch size, and a total time budget keeps
+ *     the paid scan bounded (Pro reserves time for its Flash fallback).
+ *   - Every enrichable check gets `richStatus` ('pro' | 'flash' | 'missing').
+ *     'missing' is always logged with its reason — never silent.
+ *
+ * Runs in parallel with Pro synthesis.
  */
 
-import type { CheckResult, CheckKey } from './scanResult'
+import type { CheckResult } from './scanResult'
 import { CHECK_REGISTRY } from './scanResult'
+import { withRetry } from './retry'
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
+/** Vilken modell som levererade det rika innehållet, eller 'missing' om inget komplett innehåll kunde tas fram. */
+export type RichStatus = 'pro' | 'flash' | 'missing'
+
 export interface RichCheckData {
   richRelevance: string | null
   richSteps: string | null
   richCodeExample: string | null
+  richStatus: RichStatus
 }
 
-interface BusinessMeta {
+type RichContent = Omit<RichCheckData, 'richStatus'>
+
+export interface BusinessMeta {
   companyName: string
   bransch: string
   city: string | null
@@ -48,27 +66,57 @@ interface BusinessMeta {
   h1?: string | null
 }
 
-type CallOpenRouterFn = (
+/**
+ * Ett ENKELT LLM-anrop (utan egen retry — Report Writer sköter retry själv via withRetry).
+ * Ska kasta vid fel; ett fel med `permanent: true` retryas inte.
+ */
+export type CallOpenRouterFn = (
   model: string,
   systemPrompt: string,
   userPrompt: string,
   timeoutMs: number,
-  expectMarkdown?: boolean,
+  expectMarkdown: boolean,
   maxTokensOverride?: number,
 ) => Promise<any>
 
+export interface ReportWriterOptions {
+  /** Max antal checks per LLM-anrop. */
+  batchSize?: number
+  /** Max antal samtidiga batchar. */
+  concurrency?: number
+  /** Antal försök (inkl. första) mot Pro per batch. */
+  proAttempts?: number
+  /** Antal försök (inkl. första) mot Flash-reserven per batch. */
+  flashAttempts?: number
+  /** Bas-fördröjning för withRetry:s exponentiella backoff. */
+  retryBaseDelayMs?: number
+  /** Total tidsbudget för hela Report Writer-körningen. */
+  budgetMs?: number
+  /** Klocka (injiceras i tester). */
+  now?: () => number
+}
+
+export const REPORT_WRITER_DEFAULTS: Required<Omit<ReportWriterOptions, 'now'>> = {
+  batchSize: 3,
+  concurrency: 4,
+  proAttempts: 2,
+  flashAttempts: 2,
+  retryBaseDelayMs: 1000,
+  budgetMs: 170_000,
+}
+
 // ---------------------------------------------------------------------------
-// Category batching config
+// Config
 // ---------------------------------------------------------------------------
 
-const BATCH_CATEGORIES: string[][] = [
-  ['technical'],
-  ['local'],
-  ['ai-readiness'],
-  ['content', 'ai-test', 'gbp'],
-]
+/** Kategoriordning för batch-planeringen — närliggande checks hamnar i samma anrop. */
+const CATEGORY_ORDER: string[] = ['technical', 'local', 'ai-readiness', 'content', 'ai-test', 'gbp']
 
 const PRO_MODEL = 'google/gemini-2.5-pro'
+const FLASH_MODEL = 'google/gemini-2.5-flash'
+
+/** Ett anrop startas inte (och retryas inte) om mindre tid än så här återstår av budgeten. */
+const MIN_CALL_MS = 15_000
 
 /**
  * Tar bort JSON-nycklarna `aggregateRating` och `review` rekursivt ur en
@@ -182,6 +230,69 @@ export function sanitizeCodeExample(code: string | null): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Planning helpers
+// ---------------------------------------------------------------------------
+
+/** Bara bad/warning-checks (ej syntes) får rikt innehåll. */
+export function isEnrichable(check: CheckResult): boolean {
+  return (check.status === 'bad' || check.status === 'warning') && check.key !== 'synthesis'
+}
+
+/**
+ * Sorterar checks kategorivis (CATEGORY_ORDER, sedan registry-id) och delar upp
+ * dem i batchar om högst `batchSize` checks.
+ */
+export function planBatches(checks: CheckResult[], batchSize: number = REPORT_WRITER_DEFAULTS.batchSize): CheckResult[][] {
+  if (!Number.isInteger(batchSize) || batchSize < 1) {
+    throw new Error(`batchSize måste vara ett heltal ≥ 1 (fick ${batchSize})`)
+  }
+  const entryByKey = new Map(CHECK_REGISTRY.map(e => [e.key as string, e]))
+  const categoryRank = (c: CheckResult) => {
+    const idx = CATEGORY_ORDER.indexOf(entryByKey.get(c.key)?.category ?? '')
+    return idx === -1 ? CATEGORY_ORDER.length : idx
+  }
+  const idOf = (c: CheckResult) => entryByKey.get(c.key)?.id ?? Number.MAX_SAFE_INTEGER
+  const sorted = [...checks].sort((a, b) => categoryRank(a) - categoryRank(b) || idOf(a) - idOf(b))
+
+  const batches: CheckResult[][] = []
+  for (let i = 0; i < sorted.length; i += batchSize) {
+    batches.push(sorted.slice(i, i + batchSize))
+  }
+  return batches
+}
+
+/**
+ * Timeout och max_tokens per anrop, skalat efter antal checks i batchen.
+ * Pro "tänker" innan den svarar (reasoning-tokens räknas mot max_tokens) och är
+ * långsammare än Flash — därför får Pro mer av båda.
+ */
+export function callLimitsFor(model: 'pro' | 'flash', batchSize: number): { timeoutMs: number; maxTokens: number } {
+  const n = Math.max(1, batchSize)
+  return model === 'pro'
+    ? { timeoutMs: 30_000 + 25_000 * n, maxTokens: 4_000 + 2_500 * n }
+    : { timeoutMs: 20_000 + 10_000 * n, maxTokens: 2_000 + 2_000 * n }
+}
+
+/** Kör `worker` över `items` med högst `limit` samtidiga anrop. Resultatordningen följer `items`. */
+export async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let next = 0
+  const laneCount = Math.min(Math.max(1, limit), items.length)
+  const lanes = Array.from({ length: laneCount }, async () => {
+    while (next < items.length) {
+      const i = next++
+      results[i] = await worker(items[i], i)
+    }
+  })
+  await Promise.all(lanes)
+  return results
+}
+
+// ---------------------------------------------------------------------------
 // Main export
 // ---------------------------------------------------------------------------
 
@@ -189,56 +300,218 @@ export async function enrichChecksWithReportWriter(
   checks: CheckResult[],
   meta: BusinessMeta,
   callOpenRouter: CallOpenRouterFn,
+  options: ReportWriterOptions = {},
 ): Promise<Record<string, RichCheckData>> {
-  // Only enrich bad/warning checks (not ok, notMeasured, notApplicable, synthesis)
-  const enrichable = checks.filter(
-    c => (c.status === 'bad' || c.status === 'warning') && c.key !== 'synthesis'
-  )
+  const { now = Date.now, ...overrides } = options
+  const opts = { ...REPORT_WRITER_DEFAULTS, ...overrides }
 
+  const enrichable = checks.filter(isEnrichable)
   if (enrichable.length === 0) return {}
 
-  // Build category lookup
-  const categoryByKey = new Map<string, string>()
-  for (const entry of CHECK_REGISTRY) {
-    categoryByKey.set(entry.key, entry.category)
-  }
+  const startedAt = now()
+  const deadline = startedAt + opts.budgetMs
+  const batches = planBatches(enrichable, opts.batchSize)
 
-  // Group checks into batches
-  const batches: { categories: string[]; checks: CheckResult[] }[] = []
-  for (const cats of BATCH_CATEGORIES) {
-    const catSet = new Set(cats)
-    const batchChecks = enrichable.filter(c => catSet.has(categoryByKey.get(c.key) ?? ''))
-    if (batchChecks.length > 0) {
-      batches.push({ categories: cats, checks: batchChecks })
-    }
-  }
-
-  // Run all batches in parallel
-  const batchResults = await Promise.all(
-    batches.map(batch => runBatch(batch.checks, meta, callOpenRouter))
+  const batchResults = await runWithConcurrency(batches, opts.concurrency, batch =>
+    enrichBatch(batch, meta, callOpenRouter, opts, deadline, now)
   )
 
-  // Merge all results into a single map
   const result: Record<string, RichCheckData> = {}
-  for (const batchResult of batchResults) {
-    for (const [key, data] of Object.entries(batchResult)) {
-      result[key] = data
-    }
-  }
+  for (const batchResult of batchResults) Object.assign(result, batchResult)
+
+  const counts: Record<RichStatus, number> = { pro: 0, flash: 0, missing: 0 }
+  for (const data of Object.values(result)) counts[data.richStatus]++
+  const summary = `[ReportWriter] ${enrichable.length} checks i ${batches.length} batchar: pro=${counts.pro} flash=${counts.flash} missing=${counts.missing} (${Math.round((now() - startedAt) / 1000)} s)`
+  if (counts.missing > 0) console.error(summary)
+  else console.log(summary)
 
   return result
+}
+
+/**
+ * Skriver in rikt innehåll på checkarna (muterar dem). Varje berikningsbar check
+ * får `richStatus`; en check som helt saknas i `rich` (t.ex. om Report Writer
+ * kraschade) markeras 'missing' och loggas. Returnerar nycklarna som saknar
+ * komplett rikt innehåll.
+ */
+export function applyRichData(checks: CheckResult[], rich: Record<string, RichCheckData>): string[] {
+  const missing: string[] = []
+  for (const check of checks) {
+    if (!isEnrichable(check)) continue
+    const data = rich[check.key]
+    if (data) {
+      check.richRelevance = data.richRelevance
+      check.richSteps = data.richSteps
+      check.richCodeExample = data.richCodeExample
+      check.richStatus = data.richStatus
+    } else {
+      check.richStatus = 'missing'
+      console.error(`[ReportWriter] Rikt innehåll SAKNAS för ${check.key}: inget resultat från Report Writer`)
+    }
+    if (check.richStatus === 'missing') missing.push(check.key)
+  }
+  return missing
 }
 
 // ---------------------------------------------------------------------------
 // Per-batch logic
 // ---------------------------------------------------------------------------
 
-async function runBatch(
+type Stage = { kind: 'pro' | 'flash'; label: string; model: string; attempts: number }
+
+async function enrichBatch(
+  batch: CheckResult[],
+  meta: BusinessMeta,
+  callOpenRouter: CallOpenRouterFn,
+  opts: Required<Omit<ReportWriterOptions, 'now'>>,
+  deadline: number,
+  now: () => number,
+): Promise<Record<string, RichCheckData>> {
+  const out: Record<string, RichCheckData> = {}
+  const partial = new Map<string, RichContent>()
+  const reasons = new Map<string, string[]>()
+  const addReason = (key: string, reason: string) => reasons.set(key, [...(reasons.get(key) ?? []), reason])
+
+  const stages: Stage[] = [
+    { kind: 'pro', label: 'Pro', model: PRO_MODEL, attempts: opts.proAttempts },
+    { kind: 'flash', label: 'Flash', model: FLASH_MODEL, attempts: opts.flashAttempts },
+  ]
+
+  let pending = batch
+  for (let s = 0; s < stages.length && pending.length > 0; s++) {
+    const stage = stages[s]
+    if (stage.attempts < 1) continue
+    const keys = pending.map(c => c.key)
+    const hasFallback = stages.slice(s + 1).some(st => st.attempts > 0)
+    // Pro lämnar tid kvar åt Flash-reserven för samma batch.
+    const reserveMs = hasFallback ? callLimitsFor('flash', pending.length).timeoutMs : 0
+
+    try {
+      const parsed = await callStage(stage, pending, meta, callOpenRouter, opts, deadline, reserveMs, now)
+      const stillPending: CheckResult[] = []
+      for (const check of pending) {
+        const data = parsed[check.key]
+        if (data && data.richRelevance && data.richSteps) {
+          out[check.key] = { ...data, richStatus: stage.kind }
+        } else {
+          if (data) mergePartial(partial, check.key, data)
+          addReason(check.key, `${stage.label}: ofullständigt svar (saknar ${data ? missingFields(data) : 'nyckeln'})`)
+          stillPending.push(check)
+        }
+      }
+      if (stillPending.length > 0) {
+        console.warn(`[ReportWriter] ${stage.label} gav ofullständigt innehåll för [${stillPending.map(c => c.key).join(', ')}]${hasFallback ? ' — provar Flash' : ''}`)
+      }
+      pending = stillPending
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      for (const key of keys) addReason(key, `${stage.label}: ${msg}`)
+      console.warn(`[ReportWriter] ${stage.label} misslyckades för [${keys.join(', ')}]: ${msg}${hasFallback ? ' — provar Flash' : ''}`)
+    }
+  }
+
+  for (const check of pending) {
+    const best = partial.get(check.key)
+    out[check.key] = {
+      richRelevance: best?.richRelevance ?? null,
+      richSteps: best?.richSteps ?? null,
+      richCodeExample: best?.richCodeExample ?? null,
+      richStatus: 'missing',
+    }
+    console.error(`[ReportWriter] Rikt innehåll SAKNAS för ${check.key}: ${(reasons.get(check.key) ?? ['okänd orsak']).join(' | ')}`)
+  }
+  return out
+}
+
+async function callStage(
+  stage: Stage,
   checks: CheckResult[],
   meta: BusinessMeta,
   callOpenRouter: CallOpenRouterFn,
-): Promise<Record<string, RichCheckData>> {
-  const systemPrompt = `Du är en senior svensk AI-sökningskonsult som skriver kundrapporter. Du skriver alltid på svenska. Dina texter är professionella, konkreta och handlingsbara.`
+  opts: Required<Omit<ReportWriterOptions, 'now'>>,
+  deadline: number,
+  reserveMs: number,
+  now: () => number,
+): Promise<Record<string, RichContent>> {
+  const { systemPrompt, userPrompt } = buildBatchPrompt(checks, meta)
+  const limits = callLimitsFor(stage.kind, checks.length)
+
+  return withRetry(
+    async () => {
+      const available = deadline - now() - reserveMs
+      if (available < MIN_CALL_MS) {
+        const err = new Error(`tidsbudgeten räcker inte för ett ${stage.label}-anrop (${Math.max(0, Math.round(available / 1000))} s kvar)`)
+        ;(err as any).budgetExhausted = true
+        throw err
+      }
+      const keyList = checks.map(c => c.key).join(', ')
+      const timeoutMs = Math.min(limits.timeoutMs, available)
+      const t0 = now()
+      try {
+        const raw = await callOpenRouter(
+          stage.model,
+          systemPrompt,
+          userPrompt,
+          timeoutMs,
+          false, // JSON mode
+          limits.maxTokens,
+        )
+        const parsed = parseBatchResponse(raw, checks)
+        if (Object.keys(parsed).length === 0) {
+          throw new Error('AI-svaret innehöll ingen av check-nycklarna')
+        }
+        console.log(`[ReportWriter] ${stage.label} svarade för [${keyList}] på ${Math.round((now() - t0) / 1000)} s`)
+        return parsed
+      } catch (err) {
+        // Varje misslyckat försök loggas — withRetry sväljer annars mellanliggande fel.
+        const msg = err instanceof Error ? err.message : String(err)
+        console.warn(`[ReportWriter] ${stage.label}-försök misslyckades för [${keyList}] efter ${Math.round((now() - t0) / 1000)} s (timeout ${Math.round(timeoutMs / 1000)} s): ${msg.slice(0, 200)}`)
+        throw err
+      }
+    },
+    {
+      attempts: stage.attempts,
+      baseDelayMs: opts.retryBaseDelayMs,
+      isRetryable: (err) => !(err as any)?.permanent && !(err as any)?.budgetExhausted,
+    },
+  )
+}
+
+function nonEmptyString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null
+}
+
+function parseBatchResponse(raw: unknown, checks: CheckResult[]): Record<string, RichContent> {
+  const parsed: Record<string, RichContent> = {}
+  if (!raw || typeof raw !== 'object') return parsed
+  for (const check of checks) {
+    const data = (raw as Record<string, unknown>)[check.key]
+    if (!data || typeof data !== 'object') continue
+    const d = data as Record<string, unknown>
+    parsed[check.key] = {
+      richRelevance: nonEmptyString(d.richRelevance),
+      richSteps: nonEmptyString(d.richSteps),
+      richCodeExample: sanitizeCodeExample(nonEmptyString(d.richCodeExample)),
+    }
+  }
+  return parsed
+}
+
+function mergePartial(partial: Map<string, RichContent>, key: string, data: RichContent) {
+  const prev = partial.get(key)
+  partial.set(key, {
+    richRelevance: prev?.richRelevance ?? data.richRelevance,
+    richSteps: prev?.richSteps ?? data.richSteps,
+    richCodeExample: prev?.richCodeExample ?? data.richCodeExample,
+  })
+}
+
+function missingFields(data: RichContent): string {
+  return [!data.richRelevance && 'richRelevance', !data.richSteps && 'richSteps'].filter(Boolean).join(', ')
+}
+
+function buildBatchPrompt(checks: CheckResult[], meta: BusinessMeta): { systemPrompt: string; userPrompt: string } {
+  const systemPrompt = `Du är en senior svensk AI-sökningskonsult som skriver kundrapporter. Du skriver alltid på svenska. Dina texter är professionella, konkreta och handlingsbara. Du svarar ENBART med giltig JSON.`
 
   const checkDescriptions = checks.map(c => {
     const reg = CHECK_REGISTRY.find(e => e.key === c.key)
@@ -282,6 +555,8 @@ async function runBatch(
   if (meta.title) knownFacts.push(`- Sidans <title>: "${meta.title}"`)
   if (meta.h1) knownFacts.push(`- Sidans <h1>: "${meta.h1}"`)
 
+  const keyList = checks.map(c => `"${c.key}"`).join(', ')
+
   const userPrompt = `Företagsinformation (allt nedan är verifierad data — använd EXAKT dessa värden, hitta inte på):
 ${knownFacts.join('\n')}
 
@@ -289,7 +564,7 @@ Dessa kontroller har problem. Skriv FÖR VARJE en rapport-text med tre delar:
 
 ${JSON.stringify(checkDescriptions, null, 2)}
 
-Returnera JSON med varje check-key som nyckel:
+Returnera JSON med varje check-key som nyckel — exakt dessa nycklar: ${keyList}
 {
   "[check-key]": {
     "richRelevance": "1-3 meningar, nämn företagsnamnet (${meta.companyName}), förklara varför just DETTA företag påverkas.",
@@ -299,6 +574,7 @@ Returnera JSON med varje check-key som nyckel:
 }
 
 REGLER:
+- Varje nyckel (${keyList}) MÅSTE finnas med och ha både richRelevance och richSteps ifyllda.
 - Om en check har ett "data"-fält, ANVÄND den råa datan i din analys. Nämn specifika värden (t.ex. "Eniro har adressen Stampgatan 8 medan Hitta har Syster Estrids Gata 13").
 - richRelevance: Kort, personligt, nämn ALLTID "${meta.companyName}" i texten
 - richSteps: Numrerade 1-6 steg, varje steg en konkret handling. Skriv i imperativ form ("Lägg till...", "Skapa...", "Kontrollera...")
@@ -310,31 +586,5 @@ REGLER:
 - Svara ENBART med giltig JSON — inga kodblock-markeringar, ingen text utanför JSON
 - Alla texter på svenska`
 
-  try {
-    const result = await callOpenRouter(
-      PRO_MODEL,
-      systemPrompt,
-      userPrompt,
-      60000,
-      false, // JSON mode
-      8000,
-    )
-
-    // Parse and validate the result
-    const parsed: Record<string, RichCheckData> = {}
-    for (const check of checks) {
-      const data = result?.[check.key]
-      if (data && typeof data === 'object') {
-        parsed[check.key] = {
-          richRelevance: typeof data.richRelevance === 'string' ? data.richRelevance : null,
-          richSteps: typeof data.richSteps === 'string' ? data.richSteps : null,
-          richCodeExample: sanitizeCodeExample(typeof data.richCodeExample === 'string' ? data.richCodeExample : null),
-        }
-      }
-    }
-    return parsed
-  } catch (err: any) {
-    console.error(`[ReportWriter] Batch failed:`, err.message)
-    return {}
-  }
+  return { systemPrompt, userPrompt }
 }

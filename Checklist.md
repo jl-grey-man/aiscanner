@@ -94,10 +94,11 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 - [x] AI mention checker — GPT-4o-mini two-step (entity + category query)
 - [x] Tavily directory checker (Eniro, Hitta) + NAP consistency
 - [x] Review reply analysis with sample note
-- [x] Report Writer — 3-4 parallel Pro batches enriching bad/warning checks with rich content
+- [x] Report Writer — batches of max 3 checks, concurrency 4, withRetry, Pro → Flash fallback, time budget (Audit #1)
 - [x] checkExplanations.ts — hardcoded "Vad är detta?" texts for all check keys
 - [x] richRelevance/richSteps/richCodeExample fields in CheckResult schema
-- [x] Report Writer runs parallel with Pro synthesis (zero extra latency)
+- [x] richStatus ('pro' | 'flash' | 'missing') per bad/warning check — missing is always logged, never silent
+- [x] Report Writer runs parallel with Pro synthesis
 
 ### Premium / Full Scan
 - [x] Google Places API integration (Text Search + Place Details)
