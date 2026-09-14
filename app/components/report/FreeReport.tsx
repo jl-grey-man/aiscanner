@@ -395,29 +395,29 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
           error={checkoutError}
         >
           <p className="text-gray-500 text-sm mb-4">
-            Vi jämför er AI-synlighet med era tre största konkurrenter baserat på samma kontroller.
-            Se vem som leder, var ni ligger efter, och exakt vad som krävs för att gå om.
+            Vi hämtar era närmaste konkurrenter via Google (verifierade namn, betyg och antal
+            recensioner — aldrig påhittade) och ger en skriven analys av hur ni står er mot dem.
           </p>
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
               <div className="text-gray-400 text-sm w-6 text-center font-bold">1</div>
               <div className="flex-1">
                 <p className="text-gray-900 text-sm font-medium">Konkurrent A</p>
-                <div className="w-full bg-gray-100 rounded-full h-2 mt-1.5">
-                  <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '82%' }} />
-                </div>
+                <p className="text-gray-400 text-xs mt-0.5">300 m bort</p>
               </div>
-              <span className="text-emerald-700 font-bold">82</span>
+              <span className="text-amber-700 text-sm font-semibold">
+                ★ 4.6 <span className="text-gray-400 font-normal">(128)</span>
+              </span>
             </div>
             <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
               <div className="text-gray-400 text-sm w-6 text-center font-bold">2</div>
               <div className="flex-1">
                 <p className="text-gray-900 text-sm font-medium">Konkurrent B</p>
-                <div className="w-full bg-gray-100 rounded-full h-2 mt-1.5">
-                  <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '71%' }} />
-                </div>
+                <p className="text-gray-400 text-xs mt-0.5">450 m bort</p>
               </div>
-              <span className="text-emerald-700 font-bold">71</span>
+              <span className="text-amber-700 text-sm font-semibold">
+                ★ 4.2 <span className="text-gray-400 font-normal">(64)</span>
+              </span>
             </div>
           </div>
         </LockedSection>
@@ -432,14 +432,15 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
         >
           <p className="text-gray-500 text-sm mb-3">
             AI-sökmotorer som ChatGPT läser era Google-recensioner för att bedöma er tjänstekvalitet.
-            Den fullständiga rapporten analyserar era recensioner, identifierar nyckelord och ger konkreta
-            rekommendationer för att stärka er profil.
+            Den fullständiga rapporten visar hur väl ni svarar på recensioner och ger en skriven
+            bedömning av ert betyg och er recensionsvolym, plus konkreta rekommendationer för att
+            stärka er profil.
           </p>
           <div className="bg-white rounded-lg p-4">
             <p className="text-gray-600 text-sm font-medium mb-2">Vad ingår</p>
             <ul className="text-gray-500 text-sm space-y-1 list-disc list-inside">
               <li>Analys av recensionssvar och svarsfrekvens</li>
-              <li>Nyckelord som AI extraherar från recensionerna</li>
+              <li>Skriven bedömning av ert betyg och er recensionsvolym</li>
               <li>Konkreta tips för att öka antal recensioner</li>
             </ul>
           </div>

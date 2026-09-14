@@ -7,6 +7,12 @@ import { UrlInput } from '@/app/components/UrlInput'
 import { Progress } from '@/app/components/Progress'
 import { EnhancedReport } from '@/app/components/EnhancedReport'
 import { PremiumCTA } from './PremiumCTA'
+import { CHECK_REGISTRY } from '@/app/lib/scanResult'
+
+// Härlett ur CHECK_REGISTRY — samma filter som calculateScores() använder för
+// free-tier. Aldrig hårdkoda antalet: det ändras varje gång en check flyttas
+// mellan free/premium i registret.
+const FREE_CHECK_COUNT = CHECK_REGISTRY.filter((c) => c.tier === 'free').length
 
 interface ToolSectionProps {
   /** When provided, the scan is handled by the parent (AppShell). */
@@ -53,7 +59,7 @@ export function ToolSection({ onAnalyze }: ToolSectionProps = {}) {
         </h2>
 
         <p className="cta-body">
-          23 kontroller. 30 sekunder. Gratis.
+          {FREE_CHECK_COUNT} kontroller. 30 sekunder. Gratis.
         </p>
 
         {/* URL Input — always visible for re-scanning */}

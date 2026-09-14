@@ -67,7 +67,8 @@ export function PremiumCTA({ show }: Props) {
           marginBottom: '20px',
         }}
       >
-        Vi går igenom din sajt manuellt och skickar en komplett rapport med kodsnuttar och handlingsplan.
+        Vår AI analyserar hela sajten automatiskt och ni får en komplett rapport med kodsnuttar och
+        handlingsplan direkt på skärmen — inga mänskliga granskare, inget väntande på mejl.
       </p>
 
       <div

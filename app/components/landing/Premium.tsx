@@ -1,6 +1,12 @@
 'use client'
 
 import { R } from './utils'
+import { CHECK_REGISTRY } from '@/app/lib/scanResult'
+
+// Härlett ur CHECK_REGISTRY — samma filter som calculateScores() använder för
+// free-tier. Aldrig hårdkoda antalet: det ändras varje gång en check flyttas
+// mellan free/premium i registret.
+const FREE_CHECK_COUNT = CHECK_REGISTRY.filter((c) => c.tier === 'free').length
 
 export function Premium() {
   return (
@@ -26,7 +32,7 @@ export function Premium() {
                 <span className="premium-price">0 kr</span>
               </div>
               <ul className="premium-list">
-                {['23 kontroller i 4 kategorier', 'Totalpoäng och kategoripoäng', 'Generella förbättringsförslag', 'Resultat direkt, ingen registrering'].map((t, i) => (
+                {[`${FREE_CHECK_COUNT} kontroller i 4 kategorier`, 'Totalpoäng och kategoripoäng', 'Generella förbättringsförslag', 'Resultat direkt, ingen registrering'].map((t, i) => (
                   <li key={i}><span className="premium-check">✓</span>{t}</li>
                 ))}
               </ul>
