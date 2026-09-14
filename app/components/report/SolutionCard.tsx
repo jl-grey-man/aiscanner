@@ -4,11 +4,17 @@ import { useState } from 'react'
 import type { CheckResult } from '@/app/lib/scanResult'
 import { CHECK_REGISTRY } from '@/app/lib/scanResult'
 import { CHECK_EXPLANATIONS } from '@/app/lib/checkExplanations'
+import { pickSolutionCode } from '@/app/lib/reportDisplay'
 import CheckBadge from './CheckBadge'
 import { renderMarkdown } from './RichMarkdown'
 
 interface SolutionCardProps {
   check: CheckResult
+  /**
+   * true = kortet visas i ett upplåst (betalt) läge — premiumrapporten.
+   * Default false = gratisrapportens beteende (mall-kod döljs helt), oförändrat.
+   */
+  unlocked?: boolean
 }
 
 type Priority = NonNullable<CheckResult['priority']>
@@ -52,7 +58,7 @@ const PRIORITY_STYLE: Record<
   },
 }
 
-export default function SolutionCard({ check }: SolutionCardProps) {
+export default function SolutionCard({ check, unlocked = false }: SolutionCardProps) {
   const [copied, setCopied] = useState(false)
   const priority = check.priority ?? 'nice'
   const style = PRIORITY_STYLE[priority]
@@ -61,28 +67,20 @@ export default function SolutionCard({ check }: SolutionCardProps) {
 
   const explanation = CHECK_EXPLANATIONS[check.key]
 
-  // Hänvisning (paid): ett annat kort har redan kodblocket som täcker den här checken
-  // (huvudschemat eller en dubblett). Då visas bara hänvisningen + ev. delta-kod —
-  // aldrig mall- eller Flash-koden, som skulle upprepa samma block igen.
-  const codeRefLabel = check.codeRef
-    ? CHECK_REGISTRY.find((e) => e.key === check.codeRef)?.label ?? check.codeRef
-    : null
+  // Kod-källa + synlighet: rich > codeRef-hänvisning (+ ev. delta) > mall (bara upplåst) > flash.
+  // Ett kort med codeRef visar aldrig mall- eller Flash-kod — se pickSolutionCode().
+  const {
+    code: codeToShow,
+    isTemplate: codeIsTemplate,
+    showCode,
+    codeRef,
+  } = pickSolutionCode(check, unlocked)
 
-  // Välj kod-källa i prioritetsordning: rich (paid, riktig data) > generic (mall) > flash (varierar).
-  // codeIsTemplate = true betyder att koden har <PLACEHOLDERS> som användaren själv måste fylla i.
-  let codeToShow: string | null = null
-  let codeIsTemplate = false
-  if (check.richCodeExample && check.richCodeExample.trim().length > 0) {
-    codeToShow = check.richCodeExample
-    codeIsTemplate = false
-  } else if (!check.codeRef && check.genericCodeTemplate && check.genericCodeTemplate.trim().length > 0) {
-    codeToShow = check.genericCodeTemplate
-    codeIsTemplate = true
-  } else if (!check.codeRef && check.codeExample && check.codeExample.trim().length > 0) {
-    codeToShow = check.codeExample
-    codeIsTemplate = false
-  }
-  const showCode = !!codeToShow && !codeIsTemplate
+  // Hänvisning (paid): ett annat kort har redan kodblocket som täcker den här checken
+  // (huvudschemat eller en dubblett).
+  const codeRefLabel = codeRef
+    ? CHECK_REGISTRY.find((e) => e.key === codeRef)?.label ?? codeRef
+    : null
 
   const handleCopy = () => {
     if (codeToShow) {
@@ -168,14 +166,28 @@ export default function SolutionCard({ check }: SolutionCardProps) {
           </div>
         )}
 
-        {/* Block 4: Kod att kopiera — döljs i gratisrapporten (codeIsTemplate=true).
-            Datan finns kvar i scanResult, vi visar bara inte den för free-tier. */}
+        {/* Block 4: Kod att kopiera. Källa och synlighet avgörs av pickSolutionCode()
+            (reportDisplay.ts), i prioritetsordning:
+            1. richCodeExample (paid, riktig data) — med codeRef är det bara delta-koden.
+            2. codeRef-hänvisning till kortet som redan har kodblocket (huvudschemat) —
+               ett kort med codeRef visar ALDRIG mall- eller Flash-kod.
+            3. genericCodeTemplate — free (unlocked=false): döljs helt, datan finns kvar
+               i scanResult. Premium (unlocked=true): redan ifylld med kända fakta på
+               servern (templateFill.ts) och visas med "Mall"-badge i stället för att
+               gömmas (Task 17 / Audit #2 — betalande kunder fick tomma kort). */}
         {(showCode || codeRefLabel) && (
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Kod att kopiera
-              </p>
+            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Kod att kopiera
+                </p>
+                {showCode && codeIsTemplate && (
+                  <span className="inline-flex items-center text-[11px] font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                    Mall — ersätt värden inom hakparenteser
+                  </span>
+                )}
+              </div>
               {showCode && (
                 <button
                   onClick={handleCopy}

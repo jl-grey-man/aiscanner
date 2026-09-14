@@ -331,7 +331,7 @@ export async function checkSwedishDirectories(
   } else {
     status = 'bad'
     finding = `Hittades inte på någon av katalogerna (${directories.map(d => d.name).join(', ')}).`
-    fix = `Registrera på Eniro, Hitta och Gulasidorna — gratis och stärker AI-synligheten avsevärt.`
+    fix = `Registrera på Eniro och Hitta — gratis och stärker AI-synligheten avsevärt.`
   }
 
   return {

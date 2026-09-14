@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import type { ScanResult, CheckResult, CheckRegistryEntry } from '@/app/lib/scanResult'
-import { CHECK_REGISTRY } from '@/app/lib/scanResult'
+import { CHECK_REGISTRY, calculateScores } from '@/app/lib/scanResult'
 import { ScoreCircle, PriorityCard, SolutionCard, LockedSection, CheckTable, Glossary } from '@/app/components/report'
 import { APP_DOMAIN } from '@/app/lib/config'
 
@@ -28,7 +28,8 @@ const PRIORITY_GROUPS: {
 }[] = [
   { priority: 'critical',  title: 'Kritiskt',   subtitle: 'fixa först',              dotClass: 'bg-red-500',   titleColor: 'text-red-700' },
   { priority: 'important', title: 'Viktigt',     subtitle: 'stärker er ytterligare', dotClass: 'bg-amber-500', titleColor: 'text-amber-700' },
-  { priority: 'nice',      title: 'Bra att ha',  subtitle: 'finslipar',               dotClass: 'bg-blue-500',  titleColor: 'text-blue-700' },
+  // 'nice' utelämnad avsiktligt — backend sätter aldrig priority:'nice' (se
+  // scanResult.ts), gruppen renderade alltid tom. Typen behålls i schemat.
 ]
 
 // ---------------------------------------------------------------------------
@@ -120,6 +121,7 @@ function renderStars(rating: number): string {
 
 export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JSX.Element {
   const { meta, scores, checks, synthesis } = scanResult
+  const { measured: checksMeasured, total: checksTotal } = calculateScores(checks)
   const freeChecks = getFreeChecks(checks)
   const topBad = getTopBadChecks(freeChecks, 3)
   const allSolutions = getAllFreeSolutionChecks(checks)
@@ -226,6 +228,12 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
               </div>
             )}
           </div>
+
+          {checksMeasured < checksTotal && (
+            <p className="text-xs text-gray-400 text-center -mt-2 mb-5">
+              Baserat på {checksMeasured} av {checksTotal} kontroller
+            </p>
+          )}
 
           {/* ==================== 3. SAMMANFATTNING ==================== */}
           {topBad.length > 0 && (
@@ -395,29 +403,29 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
           error={checkoutError}
         >
           <p className="text-gray-500 text-sm mb-4">
-            Vi jämför er AI-synlighet med era tre största konkurrenter baserat på samma kontroller.
-            Se vem som leder, var ni ligger efter, och exakt vad som krävs för att gå om.
+            Vi hämtar era närmaste konkurrenter via Google (verifierade namn, betyg och antal
+            recensioner — aldrig påhittade) och ger en skriven analys av hur ni står er mot dem.
           </p>
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
               <div className="text-gray-400 text-sm w-6 text-center font-bold">1</div>
               <div className="flex-1">
                 <p className="text-gray-900 text-sm font-medium">Konkurrent A</p>
-                <div className="w-full bg-gray-100 rounded-full h-2 mt-1.5">
-                  <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '82%' }} />
-                </div>
+                <p className="text-gray-400 text-xs mt-0.5">300 m bort</p>
               </div>
-              <span className="text-emerald-700 font-bold">82</span>
+              <span className="text-amber-700 text-sm font-semibold">
+                ★ 4.6 <span className="text-gray-400 font-normal">(128)</span>
+              </span>
             </div>
             <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
               <div className="text-gray-400 text-sm w-6 text-center font-bold">2</div>
               <div className="flex-1">
                 <p className="text-gray-900 text-sm font-medium">Konkurrent B</p>
-                <div className="w-full bg-gray-100 rounded-full h-2 mt-1.5">
-                  <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '71%' }} />
-                </div>
+                <p className="text-gray-400 text-xs mt-0.5">450 m bort</p>
               </div>
-              <span className="text-emerald-700 font-bold">71</span>
+              <span className="text-amber-700 text-sm font-semibold">
+                ★ 4.2 <span className="text-gray-400 font-normal">(64)</span>
+              </span>
             </div>
           </div>
         </LockedSection>
@@ -432,14 +440,15 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
         >
           <p className="text-gray-500 text-sm mb-3">
             AI-sökmotorer som ChatGPT läser era Google-recensioner för att bedöma er tjänstekvalitet.
-            Den fullständiga rapporten analyserar era recensioner, identifierar nyckelord och ger konkreta
+            Den fullständiga rapporten sammanfattar vad kunderna faktiskt skriver i era recensioner
+            och ger en skriven bedömning av ert betyg och er recensionsvolym, plus konkreta
             rekommendationer för att stärka er profil.
           </p>
           <div className="bg-white rounded-lg p-4">
             <p className="text-gray-600 text-sm font-medium mb-2">Vad ingår</p>
             <ul className="text-gray-500 text-sm space-y-1 list-disc list-inside">
-              <li>Analys av recensionssvar och svarsfrekvens</li>
-              <li>Nyckelord som AI extraherar från recensionerna</li>
+              <li>Teman, beröm och klagomål ur era recensioner — med ordagranna citat</li>
+              <li>Skriven bedömning av ert betyg och er recensionsvolym</li>
               <li>Konkreta tips för att öka antal recensioner</li>
             </ul>
           </div>

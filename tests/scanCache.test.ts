@@ -186,7 +186,9 @@ describe('serializeFreeScan / parseCachedFreeScan', () => {
     expect(parsed!.scanResult).toEqual(scanResult)
     expect(parsed!.context).toEqual(context)
     // Poängkonsistensen som Task 12 handlar om: checks ur cachen ger exakt samma scores.
-    expect(calculateScores(parsed!.scanResult.checks)).toEqual({ free: scanResult.scores.free, full: scanResult.scores.full })
+    // calculateScores() returnerar även mät-täckningen (measured/total) — här gäller poängen.
+    const recalculated = calculateScores(parsed!.scanResult.checks)
+    expect({ free: recalculated.free, full: recalculated.full }).toEqual({ free: scanResult.scores.free, full: scanResult.scores.full })
   })
 
   it('behåller valfria fält på checks (strippas inte av valideringen)', () => {
