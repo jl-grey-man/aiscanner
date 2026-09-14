@@ -392,6 +392,16 @@ railway deployment redeploy     # trigger redeploy
 - Railway auto-deploys on push to GitHub master
 - `HOSTNAME=0.0.0.0` required in Railway env for Next.js standalone to bind correctly
 
+## Drift (ops) — systemd + uptime-vakt (Task 20)
+
+**systemd restart-loop-skydd:** `ai-scanner-api.service` (`[Unit]`, både `/etc/systemd/system/ai-scanner-api.service` och den speglade `deploy/ai-scanner-api.service`) har `StartLimitIntervalSec=300` + `StartLimitBurst=10` — max 10 omstarter (`Restart=on-failure`, `RestartSec=5`) inom 5 minuter innan systemd ger upp och sätter enheten i `failed` i stället för att loopa oändligt. `sudo systemctl daemon-reload` efter varje ändring av live-filen. Verifiera: `systemctl show ai-scanner-api.service -p StartLimitBurst` → `StartLimitBurst=10`.
+
+**Uptime-vakt (`deploy/uptime-check.sh`, cron var 5:e minut för `jens`):** kollar `https://robotbyran.com/` (riktig prod) och `https://analyze.pipod.net/` (Cloudflare-tunnel-spegel av samma app på pi:n) — förväntar HTTP 200, 15 s timeout. Kräver **2 misslyckade kontroller i rad** (`FAIL_THRESHOLD`) innan ett mål räknas som "nere" (undviker falsklarm vid en enstaka timeout). Larmar via Telegram (claudebot, chat_id `8296186575`, se `/mnt/storage/CLAUDE.md` "Kontakta Jens via Telegram") **EN gång** när läget växlar till nere och **EN gång** när det växlar tillbaka till uppe — aldrig upprepat medan läget är oförändrat.
+- **State:** `data/uptime-state` (gitignorerad, en rad per mål: `label fails down`). **Logg:** `data/uptime.log` (gitignorerad) — en rad per misslyckad kontroll + en rad per skickat larm; en normal körning där allt är uppe skriver INGET till loggen.
+- **Telegram-token:** läses i körtid från `BOT_TOKEN` i `/mnt/storage/secrets.env` (fil utanför repot — claudebot, `@Claudius_Codius_bot`), med fallback till `data/.telegram` (gitignorerad, `chmod 600`) om den nyckeln någon gång försvinner ur `secrets.env`. Token skrivs ALDRIG till loggen eller stdout.
+- **Cron:** `*/5 * * * * /mnt/storage/aiscanner/deploy/uptime-check.sh` i `crontab -u jens`. Verifiera: `crontab -l | grep -c uptime-check` → `1`.
+- **Test:** `bash tests/uptime-check.test.sh` (körs manuellt — matchar inte vitest include-mönstret `tests/**/*.test.ts`, plockas alltså aldrig upp av `npm test`) kör tillståndsbytes-scenariot isolerat mot en temp-state/logg: `UPTIME_TARGETS`/`STATE_FILE`/`LOG_FILE`/`DRY_RUN` är miljövariabel-overrides skriptet stödjer just för detta — `DRY_RUN=1` skriver larmtexten till loggen i stället för att posta till Telegram. Asserterar exakt 1 nere-larm efter 2 misslyckade kontroller mot en blockerad lokal adress (`http://127.0.0.1:1/`, inget lyssnar där → snabb `connection refused`) och exakt 1 uppe-larm vid nästa lyckade kontroll, ingen dubblett vid en tredje lyckad kontroll.
+
 ## Overseer-regler för implementationsplaner
 
 När du agerar som overseer och exekverar en implementationsplan (t.ex. IMPLEMENTATION-PLAN.md):
