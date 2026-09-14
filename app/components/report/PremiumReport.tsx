@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { ScanResult } from '@/app/lib/scanResult'
-import { CHECK_REGISTRY } from '@/app/lib/scanResult'
+import { CHECK_REGISTRY, maxAchievableScore } from '@/app/lib/scanResult'
 import ScoreCircle from './ScoreCircle'
 import PriorityCard from './PriorityCard'
 import SolutionCard from './SolutionCard'
@@ -27,7 +27,7 @@ const CATEGORY_CONFIG: { category: string; label: string }[] = [
   { category: 'technical', label: 'Teknisk grund' },
   { category: 'local', label: 'Lokal synlighet' },
   { category: 'ai-readiness', label: 'AI-beredskap' },
-  { category: 'content', label: 'Innehall' },
+  { category: 'content', label: 'Innehåll' },
   { category: 'ai-test', label: 'AI-synlighetstest' },
   { category: 'gbp', label: 'Google Business Profile' },
 ]
@@ -36,7 +36,7 @@ const SOLUTION_CATEGORY_CONFIG: { category: string; label: string }[] = [
   { category: 'technical', label: 'Teknisk grund' },
   { category: 'local', label: 'Lokal synlighet' },
   { category: 'ai-readiness', label: 'AI-beredskap' },
-  { category: 'content', label: 'Innehall' },
+  { category: 'content', label: 'Innehåll' },
   { category: 'ai-test', label: 'AI-synlighetstest' },
   { category: 'gbp', label: 'Google Business Profile' },
 ]
@@ -49,8 +49,8 @@ const PRIORITY_GROUP_CONFIG: {
   dotClass: string
   labelColor: string
 }[] = [
-  { key: 'critical', label: 'Kritiskt', sublabel: 'fixa forst', dotClass: 'bg-red-500', labelColor: 'text-red-700' },
-  { key: 'important', label: 'Viktigt', sublabel: 'starker er ytterligare', dotClass: 'bg-amber-500', labelColor: 'text-amber-700' },
+  { key: 'critical', label: 'Kritiskt', sublabel: 'fixa först', dotClass: 'bg-red-500', labelColor: 'text-red-700' },
+  { key: 'important', label: 'Viktigt', sublabel: 'stärker er ytterligare', dotClass: 'bg-amber-500', labelColor: 'text-amber-700' },
   { key: 'nice', label: 'Bra att ha', sublabel: 'finslipar', dotClass: 'bg-blue-500', labelColor: 'text-blue-700' },
 ]
 
@@ -63,6 +63,10 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
 
   // Build a registry lookup for weights
   const registryByKey = new Map(CHECK_REGISTRY.map(e => [e.key, e]))
+
+  // Deterministisk förbättringsprognos — samma viktlogik som calculateScores,
+  // räknar om fullpoängen som om alla bad/warning-checks åtgärdats till ok.
+  const achievableScore = maxAchievableScore(checks)
 
   // ---- Section 3: Top 3 critical findings ----
   const badChecks = checks
@@ -131,7 +135,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
             </p>
           </div>
           <div className="bg-gradient-to-r from-amber-100 to-amber-200 border border-amber-600 text-amber-800 rounded-lg px-4 py-2 text-sm font-semibold shrink-0">
-            Fullstandig rapport
+            Fullständig rapport
           </div>
         </div>
 
@@ -147,7 +151,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
 
             {/* Full score — highlighted with amber border */}
             <div className="bg-white rounded-lg p-5 text-center border border-amber-800/40">
-              <ScoreCircle score={scores.full} label="Fullstandig poang" highlight />
+              <ScoreCircle score={scores.full} label="Fullständig poäng" highlight />
             </div>
 
             {/* Google rating */}
@@ -194,26 +198,25 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
             </div>
           </div>
 
-          {/* Estimerad forbattring */}
-          <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-lg p-4">
-            <p className="text-emerald-700 font-medium text-sm mb-1">
-              Estimerad forbattring efter atgarder
-            </p>
-            <p className="text-gray-500 text-sm">
-              Om alla kritiska och viktiga atgarder genomfors kan er poang ga fran{' '}
-              <strong className="text-gray-900">
-                {scores.full} till uppskattningsvis {Math.min(100, scores.full + 17)}&ndash;{Math.min(100, scores.full + 22)}
-              </strong>
-              . Det ar den forbattring som de prioriterade atgarderna kan ge.
-            </p>
-          </div>
+          {/* Förbättringsprognos */}
+          {achievableScore > scores.full && (
+            <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-lg p-4">
+              <p className="text-emerald-700 font-medium text-sm mb-1">
+                Förbättringsprognos
+              </p>
+              <p className="text-gray-500 text-sm">
+                Om alla åtgärder genomförs kan er poäng nå upp till{' '}
+                <strong className="text-gray-900">{achievableScore}</strong>.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ==================== 4. ATGARDSPLAN ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8" id="atgardsplan">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Atgardsplan</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Åtgärdsplan</h2>
           <p className="text-gray-400 text-sm mb-5">
-            Sorterad efter prioritet. Borja uppifran &mdash; de forsta tre ger storst effekt.
+            Sorterad efter prioritet. Börja uppifrån &mdash; de första tre ger störst effekt.
           </p>
 
           {priorityGroups.map((group) => (
@@ -279,7 +282,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
               dangerouslySetInnerHTML={{ __html: renderMarkdown(synthesis.competitorNote) }}
             />
           ) : (
-            <p className="text-gray-400 text-sm">Ingen konkurrentanalys tillganglig.</p>
+            <p className="text-gray-400 text-sm">Ingen konkurrentanalys tillgänglig.</p>
           )}
         </div>
 
@@ -311,7 +314,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">
-                    {Math.round(reviewReplies.replyRate * 100)}%
+                    {Math.round(reviewReplies.replyRate)}%
                   </div>
                   <p className="text-gray-400 text-xs">Svarsfrekvens</p>
                 </div>
@@ -319,11 +322,11 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
               <div className="w-full bg-gray-100 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full ${
-                    reviewReplies.replyRate >= 0.7 ? 'bg-emerald-500' :
-                    reviewReplies.replyRate >= 0.4 ? 'bg-amber-500' :
+                    reviewReplies.replyRate >= 70 ? 'bg-emerald-500' :
+                    reviewReplies.replyRate >= 40 ? 'bg-amber-500' :
                     'bg-red-500'
                   }`}
-                  style={{ width: `${Math.round(reviewReplies.replyRate * 100)}%` }}
+                  style={{ width: `${Math.round(reviewReplies.replyRate)}%` }}
                 />
               </div>
               {reviewReplies.sampleNote && (
@@ -343,7 +346,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
               dangerouslySetInnerHTML={{ __html: renderMarkdown(synthesis.reviewAnalysis) }}
             />
           ) : (
-            <p className="text-gray-400 text-sm">Ingen recensionsanalys tillganglig.</p>
+            <p className="text-gray-400 text-sm">Ingen recensionsanalys tillgänglig.</p>
           )}
         </div>
 
@@ -368,7 +371,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
 
         {/* ==================== 10. FOOTER ==================== */}
         <p className="text-center text-gray-400 text-xs pb-8">
-          Genererad av {APP_DOMAIN} &middot; Rapport-ID: {meta.scanId} &middot; Data hamtad {meta.scanDate}
+          Genererad av {APP_DOMAIN} &middot; Rapport-ID: {meta.scanId} &middot; Data hämtad {meta.scanDate}
         </p>
       </div>
     </div>

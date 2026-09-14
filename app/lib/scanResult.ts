@@ -351,3 +351,19 @@ export function calculateScores(checks: CheckResult[]): { free: number; full: nu
 
   return { free, full }
 }
+
+/**
+ * maxAchievableScore — deterministisk prognos för hur högt fullpoängen
+ * (scores.full) skulle kunna nå om varje "bad"/"warning"-check åtgärdas
+ * till "ok". Räknar om via exakt samma viktlogik som calculateScores —
+ * notMeasured/notApplicable påverkas inte (fortsatt exkluderade från
+ * både täljare och nämnare).
+ *
+ * Ersätter den tidigare hårdkodade "+17–22"-prognosen i premiumrapporten.
+ */
+export function maxAchievableScore(checks: CheckResult[]): number {
+  const hypothetical = checks.map((c) =>
+    c.status === 'bad' || c.status === 'warning' ? { ...c, status: 'ok' as const } : c
+  )
+  return calculateScores(hypothetical).full
+}

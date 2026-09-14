@@ -108,7 +108,6 @@ const STEP_DETAILS: Record<number, SubStep> = {
 
 export function Progress({ progressPct, stepIndex = 0 }: Props) {
   const detail = STEP_DETAILS[stepIndex] || STEP_DETAILS[7]
-  const pagesScanned = stepIndex >= 3 ? (stepIndex >= 4 ? '5 sidor' : 'Hämtar...') : '1 sida'
   const toolsCount = detail.tools.length
 
   return (
@@ -126,7 +125,6 @@ export function Progress({ progressPct, stepIndex = 0 }: Props) {
           </div>
           <div className="ml-auto text-right">
             <div className="text-2xl font-extrabold tabular-nums">{progressPct}%</div>
-            <div className="text-xs text-gray-400">{pagesScanned} skannade</div>
           </div>
         </div>
 
