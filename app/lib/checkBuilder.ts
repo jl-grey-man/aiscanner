@@ -91,11 +91,103 @@ function safeFlashCheck(
   }
 }
 
-/** Determine priority from status. */
-function priorityFromStatus(status: CheckStatus): CheckResult['priority'] {
-  if (status === 'bad') return 'critical'
-  if (status === 'warning') return 'important'
-  return null
+/**
+ * Audit #12: priority must never be set purely from status ('bad' => everyone gets
+ * "Kritiskt" -- Sprej ended up with 13 of them). Priority is assigned in a separate
+ * pass (see `computeWeightedPriorities`) once every check is known, so `makeCheck`
+ * only fills in a placeholder here.
+ */
+
+/** Max number of checks a single report may mark 'critical' (Audit #12). */
+export const MAX_CRITICAL_CHECKS = 3
+
+/** How much a status counts against a check's weight when ranking impact. */
+function statusSeverity(status: CheckStatus): number {
+  if (status === 'bad') return 1
+  if (status === 'warning') return 0.5
+  return 0 // ok / notMeasured / notApplicable are not problems to prioritise
+}
+
+/**
+ * Assign priority to every 'bad'/'warning' check by ranking CHECK_REGISTRY
+ * weight (the `full` column -- the scale that spans all 37 checks, including
+ * the premium-only ones) times status severity, highest impact first. Only the
+ * top `MAX_CRITICAL_CHECKS` become 'critical'; the rest keep a status-based
+ * priority ('bad' -> 'important', 'warning' -> 'nice'). Everything else
+ * (ok/notMeasured/notApplicable) gets no priority.
+ *
+ * Deterministic: ties in impact score are broken by ascending CHECK_REGISTRY id,
+ * so the same input always produces the same output.
+ */
+export function computeWeightedPriorities(
+  entries: Array<{ key: CheckKey; status: CheckStatus }>
+): Map<CheckKey, CheckResult['priority']> {
+  const registryByKey = new Map(CHECK_REGISTRY.map((r) => [r.key, r]))
+
+  const candidates = entries
+    .filter((e) => e.status === 'bad' || e.status === 'warning')
+    .map((e) => {
+      const reg = registryByKey.get(e.key)
+      const id = reg?.id ?? Number.MAX_SAFE_INTEGER
+      const impact = (reg?.weight.full ?? 0) * statusSeverity(e.status)
+      return { key: e.key, status: e.status, id, impact }
+    })
+    .sort((a, b) => b.impact - a.impact || a.id - b.id)
+
+  const criticalKeys = new Set(candidates.slice(0, MAX_CRITICAL_CHECKS).map((c) => c.key))
+
+  const result = new Map<CheckKey, CheckResult['priority']>()
+  for (const c of candidates) {
+    result.set(c.key, criticalKeys.has(c.key) ? 'critical' : c.status === 'bad' ? 'important' : 'nice')
+  }
+  return result
+}
+
+/**
+ * Task 18 Steg 2: check #17 (öppettider). Google Business Profile is the
+ * primary source; when Places has no `regularOpeningHours` (no GBP match, or a
+ * profile without hours) but the site's own JSON-LD schema markup has opening
+ * hours, use that instead of falling straight to 'notMeasured'.
+ */
+export function buildOpeningHoursCheck(
+  weekdayDescriptions: string[] | undefined,
+  schemaHours: EnhancedData['openingHoursFromSchema']
+): {
+  status: CheckStatus
+  source: CheckResult['source']
+  finding: string
+  fix: string | null
+  data: Record<string, unknown> | null
+} {
+  const hasGbpHours = Array.isArray(weekdayDescriptions) && weekdayDescriptions.length > 0
+  if (hasGbpHours) {
+    return {
+      status: 'ok',
+      source: 'api',
+      finding: `Öppettider från Google Business Profile: ${weekdayDescriptions.slice(0, 2).join(', ')}...`,
+      fix: null,
+      data: { weekdayDescriptions },
+    }
+  }
+
+  const hasSchemaHours = Array.isArray(schemaHours) && schemaHours.length > 0
+  if (hasSchemaHours) {
+    return {
+      status: 'ok',
+      source: 'scraper',
+      finding: 'Öppettider hittades i webbplatsens schema-markup.',
+      fix: null,
+      data: { openingHoursFromSchema: schemaHours },
+    }
+  }
+
+  return {
+    status: 'notMeasured',
+    source: 'api',
+    finding: 'Inga öppettider tillgängliga (kräver Google Business Profile).',
+    fix: 'Lägg till öppettider i din Google Business Profile.',
+    data: null,
+  }
 }
 
 /** Build a single CheckResult from registry entry + computed fields. */
@@ -121,7 +213,7 @@ function makeCheck(
     fix,
     data,
     codeExample,
-    priority: priorityFromStatus(status),
+    priority: null, // set below in buildCheckResults, once all 37 checks are known
     tier: reg.tier,
   }
 }
@@ -428,22 +520,13 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     ))
   }
 
-  // #17 openingHours (API)
+  // #17 openingHours (API, med schema-fallback -- Task 18 Steg 2)
   {
     const weekdays = (placeData as Record<string, unknown> | null)
       ?.regularOpeningHours as Record<string, unknown> | undefined
     const descriptions = weekdays?.weekdayDescriptions as string[] | undefined
-    const hasHours = Array.isArray(descriptions) && descriptions.length > 0
-    checks.push(makeCheck(
-      'openingHours',
-      hasHours ? 'ok' : 'notMeasured',
-      'api',
-      hasHours
-        ? `Öppettider från Google Business Profile: ${descriptions!.slice(0, 2).join(', ')}...`
-        : 'Inga öppettider tillgängliga (kräver Google Business Profile).',
-      hasHours ? null : 'Lägg till öppettider i din Google Business Profile.',
-      hasHours ? { weekdayDescriptions: descriptions } : null,
-    ))
+    const oh = buildOpeningHoursCheck(descriptions, enhancedData.openingHoursFromSchema)
+    checks.push(makeCheck('openingHours', oh.status, oh.source, oh.finding, oh.fix, oh.data))
   }
 
   // #18 schemaAny (scraper)
@@ -991,6 +1074,16 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         `Check at index ${i} has id=${checks[i].id} key=${checks[i].key}, ` +
         `expected id=${CHECK_REGISTRY[i].id} key=${CHECK_REGISTRY[i].key}`
       )
+    }
+  }
+
+  // Audit #12: weighted priority pass -- now that all 37 checks are known, rank
+  // bad/warning checks by CHECK_REGISTRY weight x status severity and cap 'critical'
+  // at MAX_CRITICAL_CHECKS (see computeWeightedPriorities above).
+  {
+    const priorities = computeWeightedPriorities(checks.map((c) => ({ key: c.key, status: c.status })))
+    for (const c of checks) {
+      c.priority = priorities.get(c.key) ?? null
     }
   }
 
