@@ -293,9 +293,9 @@ describe('groundMarkdown — prosa i richSteps', () => {
     expect(out).toContain('2. Kontrollera `/llms.txt` och https://search.google.com/test/rich-results.')
     expect(c.log.every(l => l.kind === 'url')).toBe(true)
   })
-  it('numrerar om stegen när ett steg tas bort (riktig richSteps 2026-09-14), andra listor orörda', () => {
+  it('numrerar om stegen när ett steg tas bort (påstående om en okänd sida, inget skapa-förslag), andra listor orörda', () => {
     const c = ctx()
-    const steps = '1. Identifiera de vanligaste frågorna.\n2. Skapa en ny undersida, exempelvis `/vanliga-fragor`.\n3. Publicera frågorna.\n4. Testa sidan.\n\n### Nästa\n\n5. Följ upp.'
+    const steps = '1. Identifiera de vanligaste frågorna.\n2. Läs mer om detta på `/vanliga-fragor`.\n3. Publicera frågorna.\n4. Testa sidan.\n\n### Nästa\n\n5. Följ upp.'
     expect(groundMarkdown(steps, tvakanten(), c)).toBe('1. Identifiera de vanligaste frågorna.\n2. Publicera frågorna.\n3. Testa sidan.\n\n### Nästa\n\n5. Följ upp.')
     expect(c.log).toEqual([expect.objectContaining({ kind: 'url', action: 'borttagen' })])
   })
@@ -310,6 +310,43 @@ describe('groundMarkdown — prosa i richSteps', () => {
     const c = ctx()
     expect(groundMarkdown(text, tvakanten(), c)).toBe(text)
     expect(c.log).toEqual([])
+  })
+})
+
+// Fix sep 2026: factGuard tog bort HELA meningen när ett steg uttryckligen föreslog att
+// SKAPA en ny sida med sökvägen bara som exempel (t.ex. "Skapa en ny undersida, exempelvis
+// /vanliga-fragor") — unknownInternalRefs() kunde inte skilja ett sådant förslag från ett
+// påstående om att sidan redan finns. GROUNDING_RULES kräver uttryckligen att nya sidor
+// föreslås "med ord" — det förslaget ska alltså få stå kvar; ett påstående om en okänd
+// sida, eller en riktig länk till en, ska fortfarande tas bort.
+describe('groundMarkdown — förslag om att SKAPA en ny sida', () => {
+  it('ett uttryckligt "skapa en ny sida"-förslag med sökvägen bara som exempel får stå kvar', () => {
+    const steps = '1. Identifiera de vanligaste frågorna.\n2. Skapa en ny undersida, exempelvis /vanliga-fragor.\n3. Publicera frågorna.'
+    const c = ctx()
+    expect(groundMarkdown(steps, tvakanten(), c)).toBe(steps)
+    expect(c.log).toEqual([])
+  })
+
+  it('samma sökväg som ett påstående (inget skapa-förslag) tas fortfarande bort', () => {
+    const c = ctx()
+    const out = groundMarkdown('1. Identifiera de vanligaste frågorna.\n2. Läs mer om detta på /vanliga-fragor.\n3. Publicera frågorna.', tvakanten(), c)!
+    expect(out).not.toContain('/vanliga-fragor')
+    expect(c.log).toEqual([expect.objectContaining({ kind: 'url', action: 'borttagen' })])
+  })
+
+  it('en riktig länk till en okänd sida tas bort även när meningen föreslår att skapa en ny sida', () => {
+    const c = ctx()
+    const out = groundMarkdown('Skapa en ny sida med era priser, se [Priser](/priser) för inspiration.', tvakanten(), c)!
+    expect(out).toBe('Skapa en ny sida med era priser, se Priser för inspiration.')
+    expect(c.log).toEqual([expect.objectContaining({ kind: 'url', action: 'borttagen' })])
+  })
+
+  it('"skapa" utan ordet sida/undersida i närheten flaggar fortfarande sökvägen', () => {
+    const c = ctx()
+    // Hela meningen är den enda sökvägsreferensen och tas bort helt (blir null).
+    const out = groundMarkdown('Skapa ett konto och besök /vanliga-fragor för mer information.', tvakanten(), c)
+    expect(out).toBeNull()
+    expect(c.log).toEqual([expect.objectContaining({ kind: 'url', action: 'borttagen' })])
   })
 })
 

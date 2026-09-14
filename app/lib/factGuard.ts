@@ -99,6 +99,19 @@ const ALLOWED_PATHS = /^\/(robots\.txt|sitemap(_index)?\.xml|llms(-full)?\.txt|f
 
 const SERVICE_PATH_RE = /men[uy]|tj[aä]nst|behandling|pris|service|utbud|dryck|lunch|a-la-carte/i
 
+/**
+ * Signalerar att en sökväg i texten bara är ett EXEMPEL på en sida kunden ska
+ * skapa — inte ett påstående om att sidan redan finns. GROUNDING_RULES säger
+ * uttryckligen att sådana förslag ska formuleras med ord ("Skapa en ny
+ * undersida, exempelvis /vanliga-fragor") — de ska få stå kvar. Kräver både ett
+ * skapa-verb OCH ordet sida/undersida i SAMMA textbit (en mening eller kodrad).
+ * Gäller bara bar text: en riktig <a href>/markdown-länk isoleras redan till
+ * bara själva href-värdet innan unknownInternalRefs() anropas (se groundProse/
+ * groundCodeLines), så en sådan länk matchar aldrig den här signalen och tas
+ * fortfarande bort om sidan är okänd.
+ */
+const PAGE_CREATION_SIGNAL_RE = /\b(?:skapa|lägg\s+till|bygg|föreslå)\w*\b[\s\S]*?\b(?:ny\w*\s+)?(?:under)?sid\w*\b/iu
+
 const MAX_KNOWN_PATHS = 2000
 const PROMPT_MAX_URLS = 40
 
@@ -475,6 +488,10 @@ function pathIsKnown(path: string, facts: VerifiedFacts): boolean {
 /** Interna URL:er (absoluta mot sajtens värd) och sökvägar i en textbit som inte finns på sajten. */
 function unknownInternalRefs(text: string, facts: VerifiedFacts): string[] {
   const out: string[] = []
+  // Ett uttryckligt "skapa en ny sida"-förslag gör hela textbiten till ett exempel,
+  // inte ett påstående — bar-text-sökvägar i den flaggas då inte som okända.
+  if (PAGE_CREATION_SIGNAL_RE.test(text)) return out
+
   const hostRe = new RegExp(`(?<![\\w.-])(?:https?:\\/\\/)?(?:www\\.)?${escapeRe(facts.host)}(\\/[^\\s"'<>)\\]\`]*)?`, 'gi')
   for (const m of text.matchAll(hostRe)) {
     const path = (m[1] ?? '/').replace(/[.,;:!?]+$/, '')
