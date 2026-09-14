@@ -84,6 +84,7 @@ app/
     checkExplanations.ts      # Hardcoded "Vad är detta?" texts per check key (used by SolutionCard header)
     genericFixes.ts           # Hardcoded generic fix templates for all 29 free-tier checks (steps + codeTemplate with <PLACEHOLDERS>) — used in free reports, no LLM call needed
     reportWriter.ts           # enrichChecksWithReportWriter() — parallel Pro calls for rich report content; sanitizeCodeExample() strips ANPASSA/PLACEHOLDER lines defensively
+    synthesisBudget.ts        # Z3: callWithDeadline() — withRetry bunden av en delad deadline (shrinks/gives-up per attempt), håller Pro+Flash-syntesracet i route.ts inom SYNTHESIS_BUDGET_MS (150s) i stället för att kunna göra 3×120s obundet
     masterSchema.ts           # Audit #7: buildMasterSchema() — ONE deterministic LocalBusiness JSON-LD from verified data; codeRef/delta for other schema checks; dedupeCodeExamples() similarity safety net
     factGuard.ts              # Audit #6: buildVerifiedFacts() + prompt-fakta/GROUNDING_RULES; groundReport() efterkontroll rättar/tar bort påhittade öppettider, telefon, interna URL:er, menyrätter/priser (loggar [FactCheck])
     bransch.ts                # Audit #10: deriveBransch()/mapPlacesType() — svensk bransch från Places primaryType/types (suffix _restaurant/_store), aldrig identisk med companyName
@@ -226,9 +227,11 @@ Skild från "inget Places-innehåll lagras" ovan — det här är Places-**brand
 - **`/report`-sidan:** finalize `202` → `pollScanStatus()` pollar var 5:e s i max 10 min (nätverksfel/5xx/429/trasig JSON/`pending` = fortsätt). `done` → `PremiumReport`; `failed`/`timeout`/`notFound` → felvyn, vars "Försök igen" laddar om sidan → finalize startar om eller återupptar väntan.
 - **Railway utan volym:** DB:n raderas vid deploy → pågående scan och sparat resultat försvinner; nästa finalize återskapar raden från Stripe-metadata och scannar om.
 
-### Synthesis Flash-fallback (paid)
+### Synthesis Flash-fallback (paid) + time budget (Z3, `synthesisBudget.ts`)
 
 The paid synthesis call uses a **parallel race**: Pro (120s timeout) AND Flash (45s timeout) fire against the same prompt at the same time. Pro is primary; if Pro succeeds within timeout we use Pro. If Pro errors or times out, we use the Flash result which is already complete (~10–15s old). Only if both fail do we return a stub. Cost: ~$0.0015 extra per paid scan; guarantees real synthesis content even when Pro is slow or rate-limited.
+
+**Bounded by a shared time budget:** before Z3, `proPromise`/`flashFallbackPromise` used the generic `callOpenRouter` (`withRetry`, `attempts: 3`, no total-time cap) — on transient errors (429/5xx) Pro alone could retry 3× at its own 120s timeout, up to 360s+ before the Flash fallback was even consulted, pushing a paid scan toward 6 minutes (observed by X2). `route.ts` now calls `callWithDeadline()` (`app/lib/synthesisBudget.ts`) instead of `callOpenRouter` for both promises, passing them the SAME `synthesisDeadline = Date.now() + SYNTHESIS_BUDGET_MS` (150s). Same retry semantics as `callOpenRouter` (permanent 4xx never retried), but every attempt shrinks its timeout to `Math.min(requestedTimeoutMs, deadline - now())`, and a new attempt is refused (throws `budgetExhausted: true`, never retried) once less than `MIN_SYNTHESIS_CALL_MS` (15s) remains. Flash still wins whenever Pro fails — the fallback logic in route.ts is unchanged — it's just bounded by the same deadline, so the whole race settles within ~150s. Report Writer runs in parallel with its own independent 170s budget, so total paid-scan time stays within the documented ~100–170s range (worst case ~170s + collection phase, well under 5 min) instead of being able to balloon past it.
 
 ### ScanResult contract (`scanResult.ts`)
 

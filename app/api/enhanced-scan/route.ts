@@ -22,6 +22,7 @@ import {
 } from '@/app/lib/placesContent'
 import { APP_URL } from '@/app/lib/config'
 import { OPENROUTER_API_URL, buildOpenRouterRequestBody } from '@/app/lib/openrouter'
+import { callWithDeadline } from '@/app/lib/synthesisBudget'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
 import { withRetry } from '@/app/lib/retry'
@@ -44,6 +45,16 @@ const FLASH_MODEL = 'google/gemini-2.5-flash'
 const PRO_MODEL = 'google/gemini-2.5-pro'
 /** Textgenerering (syntes, Report Writer, recensionsinsikter). Bedömningar: ASSESSMENT_TEMPERATURE. */
 const DEFAULT_TEMPERATURE = 0.2
+/**
+ * Z3: total tidsbudget för syntes-racet (Pro primär + Flash-reserv, se
+ * synthesisBudget.ts). Utan denna kunde Pro:s egna 3 retry-försök × 120 s
+ * timeout dra ut mot 360 s+ innan Flash-reserven användes (X2:s observation) —
+ * ett betalt scan kunde närma sig 6 minuter. Pro och Flash delar samma deadline
+ * (start + denna budget), så hela racet är bundet till ~150 s och paid-scan
+ * (syntes + Report Writer, som redan har sin egen 170 s-budget, körs parallellt)
+ * håller sig inom ~5 min totalt.
+ */
+const SYNTHESIS_BUDGET_MS = 150_000
 
 function rateLimitResponse(retryAfterSec: number, headers: Record<string, string>) {
   return NextResponse.json(
@@ -1075,21 +1086,30 @@ export async function POST(req: NextRequest) {
       // Synthesis uses parallel race: Pro is primary, Flash is always-ready backup.
       // If Pro succeeds → use Pro. If Pro times out/fails → use Flash (already ~10s old).
       // Both running in parallel adds ~$0.0015 per scan but guarantees real synthesis.
+      // Z3: Pro and Flash share ONE deadline (SYNTHESIS_BUDGET_MS from now) via
+      // callWithDeadline — each retry shrinks/gives up once the shared budget runs
+      // out, so the race can never balloon past ~150s regardless of transient
+      // 429/5xx retries. Flash still wins whenever Pro fails — it's just bounded too.
       const synthesisSystemPrompt = 'Du är en senior svensk AI-sökningsstrateg. Returnera ENBART giltig JSON med nycklarna: actionPlan, competitorNote, reviewAnalysis, summary. Ingen text utanför JSON.'
+      const synthesisDeadline = Date.now() + SYNTHESIS_BUDGET_MS
 
-      const proPromise = callOpenRouter(
+      const proPromise = callWithDeadline(
+        callOpenRouterOnce,
         PRO_MODEL,
         synthesisSystemPrompt,
         synthesisPrompt,
         120000, // bumped from 90s → 120s
+        synthesisDeadline,
         false,
         12000
       )
-      const flashFallbackPromise = callOpenRouter(
+      const flashFallbackPromise = callWithDeadline(
+        callOpenRouterOnce,
         FLASH_MODEL,
         synthesisSystemPrompt,
         synthesisPrompt,
         45000,
+        synthesisDeadline,
         false,
         8000
       ).catch((err) => {
