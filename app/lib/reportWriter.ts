@@ -71,20 +71,99 @@ const BATCH_CATEGORIES: string[][] = [
 const PRO_MODEL = 'google/gemini-2.5-pro'
 
 /**
+ * Tar bort JSON-nycklarna `aggregateRating` och `review` rekursivt ur en
+ * JSON- eller JSON-LD-sträng. Googles riktlinjer förbjuder self-serving
+ * review-markup (ett företag som betygsätter sig själv i sitt eget schema),
+ * och siffran blir snabbt inaktuell. Detta är ett säkerhetsnät utöver
+ * promptregeln nedan — Pro följer inte alltid instruktionen.
+ *
+ * Försöker hitta JSON-LD-innehållet (inuti <script>-taggar om sådana finns,
+ * annars hela strängen) och `JSON.parse` det för en korrekt rekursiv
+ * borttagning. Om parsningen misslyckas (trasig/ofullständig JSON från
+ * modellen) faller vi tillbaka på en regex som tar bort nyckeln + dess
+ * objekt/array-värde på bästa möjliga sätt (balanserade klamrar på
+ * godtyckligt djup går inte att uttrycka med regex).
+ */
+function stripAggregateRatingAndReview(code: string): string {
+  const KEYS = ['aggregateRating', 'review']
+
+  const stripKeysRecursive = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(stripKeysRecursive)
+    if (value && typeof value === 'object') {
+      const out: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        if (KEYS.includes(k)) continue
+        out[k] = stripKeysRecursive(v)
+      }
+      return out
+    }
+    return value
+  }
+
+  const tryParseAndStrip = (jsonText: string): string | null => {
+    try {
+      const parsed = JSON.parse(jsonText)
+      return JSON.stringify(stripKeysRecursive(parsed), null, 2)
+    } catch {
+      return null
+    }
+  }
+
+  const regexFallback = (text: string): string => {
+    let out = text
+    for (const key of KEYS) {
+      // Objekt-värde, upp till en nivås nästlade klamrar
+      out = out.replace(new RegExp(`"${key}"\\s*:\\s*\\{[^{}]*(\\{[^{}]*\\}[^{}]*)*\\},?\\s*`, 'g'), '')
+      // Array-värde av objekt (t.ex. "review": [ {...}, {...} ]), samma nästlingsdjup
+      out = out.replace(new RegExp(`"${key}"\\s*:\\s*\\[[^\\[\\]]*(\\{[^{}]*\\}[^\\[\\]]*)*\\],?\\s*`, 'g'), '')
+    }
+    return out
+  }
+
+  if (/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i.test(code)) {
+    return code.replace(
+      /(<script[^>]*type=["']application\/ld\+json["'][^>]*>)([\s\S]*?)(<\/script>)/gi,
+      (_match, open, inner, close) => {
+        const stripped = tryParseAndStrip(inner.trim())
+        const body = stripped !== null ? stripped : regexFallback(inner)
+        return `${open}\n${body}\n${close}`
+      }
+    )
+  }
+
+  const trimmed = code.trim()
+  const stripped = tryParseAndStrip(trimmed)
+  if (stripped !== null) return stripped
+  return regexFallback(code)
+}
+
+/**
  * Defensiv tvätt av Pro-genererad richCodeExample. Pro envisas ibland med att
  * skriva `<!-- ANPASSA: ... -->`-platshållare i kod trots att vi instruerat
  * den att utelämna fält där data saknas. Vi rensar bort sådana rader så
- * paid-koden inte innehåller dem.
+ * paid-koden inte innehåller dem. Vi tar också bort dubbla markdown-fences
+ * (Pro skriver ibland ```json ... ``` runt koden trots att UI:t redan
+ * renderar den i ett kodblock) och aggregateRating/review (se
+ * `stripAggregateRatingAndReview` ovan).
  *
+ * - Strippar ledande/avslutande markdown-fence-rader.
+ * - Tar bort aggregateRating/review rekursivt.
  * - Tar bort hela rader som innehåller platshållare-mönster.
  * - Städar trailing commas som blir kvar.
  * - Returnerar null om det knappt finns något substantiellt kvar.
  */
-function sanitizeCodeExample(code: string | null): string | null {
+export function sanitizeCodeExample(code: string | null): string | null {
   if (!code) return null
+
+  let working = code
+    .replace(/^```[a-z]*\s*\n/i, '')
+    .replace(/\n```\s*$/, '')
+
+  working = stripAggregateRatingAndReview(working)
+
   const placeholderRegex = /<!--\s*(ANPASSA|TODO|FYLL)[\s\S]*?-->|<(DITT|DIN|ANGE|LÄGG|PLACEHOLDER|FÖRETAGSNAMN|TJÄNST|STAD|GATUADRESS|POSTNUMMER|TELEFONNUMMER|DOMÄN|FACEBOOKSIDA|INSTAGRAMKONTO|LATITUD|LONGITUD|EPOST|ORGNUMMER|PERSONNAMN|VERKSAMHETSTYP|BESKRIVNING|TITEL|NY[ -]?FRÅGA|NY[ -]?SVAR|SVAR \d|FRÅGA \d|KORT|ERBJUDANDE|SPECIALITET|ANTAL|EXAMPLE|YOUR_)[^>]*>/i
 
-  const lines = code.split('\n')
+  const lines = working.split('\n')
   const kept: string[] = []
   for (const line of lines) {
     if (placeholderRegex.test(line)) continue
@@ -192,7 +271,7 @@ async function runBatch(
   if (typeof meta.latitude === 'number' && typeof meta.longitude === 'number') {
     knownFacts.push(`- Koordinater: lat=${meta.latitude}, lng=${meta.longitude}`)
   }
-  if (meta.placeId) knownFacts.push(`- Google Place ID: ${meta.placeId}`)
+  if (meta.placeId) knownFacts.push(`- Google Maps-länk (använd EXAKT denna som sameAs — konstruera ALDRIG en egen cid-URL av Place ID:t): https://www.google.com/maps/place/?q=place_id:${meta.placeId}`)
   if (meta.primaryType) knownFacts.push(`- Google primaryType: ${meta.primaryType}`)
   if (typeof meta.googleRating === 'number') knownFacts.push(`- Google-betyg: ${meta.googleRating}/5 (${meta.reviewCount ?? 0} recensioner)`)
   if (meta.weekdayHours && meta.weekdayHours.length > 0) {
@@ -224,6 +303,8 @@ REGLER:
 - richRelevance: Kort, personligt, nämn ALLTID "${meta.companyName}" i texten
 - richSteps: Numrerade 1-6 steg, varje steg en konkret handling. Skriv i imperativ form ("Lägg till...", "Skapa...", "Kontrollera...")
 - richCodeExample: KRITISKT — använd ENDAST data som finns i "Företagsinformation" ovan. Om gatuadress, postnummer, e-post, image-URL, cuisine-typ eller annat värde INTE finns där: TA BORT FÄLTET HELT ur JSON/HTML/kod. SKRIV ALDRIG \`<!-- ANPASSA: ... -->\`, \`<!-- TODO -->\`, \`<DITT FÖRETAGSNAMN>\`, \`<PLACEHOLDER>\`, \`<ange ...>\`, \`<lägg till ...>\` eller liknande platshållare i paid-rapporten — de hör hemma i gratis-mallar, inte här.
+- Inkludera ALDRIG aggregateRating eller review i kodexempel — Googles riktlinjer förbjuder self-serving review-markup.
+- Om en Google Maps-länk finns i Företagsinformation ovan: använd den EXAKT som sameAs-värde. Konstruera ALDRIG en egen Google Maps-URL av Place ID:t (t.ex. \`?cid=<Place ID>\`) — Place ID är inte samma sak som ett cid, och en sådan länk blir trasig.
 - KONKRET EXEMPEL: om openingHours saknas i META → utelämna hela "openingHoursSpecification"-arrayen, inkludera den INTE med ANPASSA-värden. Om "image" saknas → utelämna "image"-fältet helt. Om "servesCuisine" saknas → utelämna det.
 - Bättre att lämna ett kort men 100% korrekt schema än ett långt med fyllnadstexter.
 - Svara ENBART med giltig JSON — inga kodblock-markeringar, ingen text utanför JSON
