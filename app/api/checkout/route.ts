@@ -3,10 +3,18 @@ import { createCheckout } from '@/app/lib/checkoutDb'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
 import { getStripe } from '@/app/lib/stripe'
+import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
 
 // Pris för premiumrapport (öre, SEK)
 const PRICE_AMOUNT_ORE = 49900
 const CURRENCY = 'sek'
+
+function rateLimitResponse(retryAfterSec: number, headers: Record<string, string>) {
+  return NextResponse.json(
+    { error: 'För många förfrågningar — försök igen om en stund.' },
+    { status: 429, headers: { ...headers, 'Retry-After': String(retryAfterSec) } },
+  )
+}
 
 export async function POST(req: NextRequest) {
   const corsHeaders = {
@@ -17,6 +25,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const { url, city } = await req.json()
+
+    const ip = getClientIp(req)
+    const limit = checkLimit(`checkout:ip10m:${ip}`, 10, 10 * 60 * 1000)
+    if (!limit.ok) return rateLimitResponse(limit.retryAfterSec, corsHeaders)
+
     if (!url || typeof url !== 'string' || !url.startsWith('http')) {
       return NextResponse.json(
         { error: 'Ogiltig URL' },

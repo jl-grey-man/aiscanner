@@ -13,11 +13,19 @@ import type { ScanResult, CheckResult } from '@/app/lib/scanResult'
 import { enrichChecksWithReportWriter } from '@/app/lib/reportWriter'
 import { APP_URL } from '@/app/lib/config'
 import { assertPublicUrl } from '@/app/lib/safeFetch'
+import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
 const FLASH_MODEL = 'google/gemini-2.5-flash'
 const PRO_MODEL = 'google/gemini-2.5-pro'
+
+function rateLimitResponse(retryAfterSec: number, headers: Record<string, string>) {
+  return NextResponse.json(
+    { error: 'För många förfrågningar — försök igen om en stund.' },
+    { status: 429, headers: { ...headers, 'Retry-After': String(retryAfterSec) } },
+  )
+}
 
 function extractJson(text: string): any {
   const trimmed = text.trim()
@@ -563,14 +571,35 @@ export async function POST(req: NextRequest) {
 
   try {
     const { url, city: cityInput, tier: tierInput } = await req.json()
+
+    const internalToken = req.headers.get('x-internal-scan-token')
+    const tokenOk = !!process.env.INTERNAL_SCAN_TOKEN && internalToken === process.env.INTERNAL_SCAN_TOKEN
+
+    // Rate limiting — internal-token calls (server-to-server, e.g. checkout finalize
+    // reusing a cached free scan) are exempt from all of it. Per-IP limits count EVERY
+    // call, including invalid URLs, so junk requests can't dodge the quota.
+    if (!tokenOk) {
+      const ip = getClientIp(req)
+      const perIp10min = checkLimit(`scan:ip10m:${ip}`, 5, 10 * 60 * 1000)
+      if (!perIp10min.ok) return rateLimitResponse(perIp10min.retryAfterSec, corsHeaders)
+      const perIpDay = checkLimit(`scan:ip1d:${ip}`, 20, 24 * 60 * 60 * 1000)
+      if (!perIpDay.ok) return rateLimitResponse(perIpDay.retryAfterSec, corsHeaders)
+    }
+
     if (!url || !url.startsWith('http')) {
       return NextResponse.json({ error: 'Ogiltig URL' }, { status: 400, headers: corsHeaders })
     }
     try { await assertPublicUrl(url) } catch {
       return NextResponse.json({ error: 'Ogiltig eller blockerad URL' }, { status: 400, headers: corsHeaders })
     }
-    const internalToken = req.headers.get('x-internal-scan-token')
-    const tokenOk = !!process.env.INTERNAL_SCAN_TOKEN && internalToken === process.env.INTERNAL_SCAN_TOKEN
+
+    // Global limit only counts requests that passed URL validation — otherwise a flood
+    // of junk requests could exhaust the shared quota and DoS legitimate scans.
+    if (!tokenOk) {
+      const global = checkLimit('scan:global1h', 60, 60 * 60 * 1000)
+      if (!global.ok) return rateLimitResponse(global.retryAfterSec, corsHeaders)
+    }
+
     const tier: 'free' | 'paid' = tierInput === 'paid' && tokenOk ? 'paid' : 'free'
 
     console.log(`[Enhanced Scan] Startar för ${url}${cityInput ? ` (stad: ${cityInput})` : ''} [tier=${tier}]`)
