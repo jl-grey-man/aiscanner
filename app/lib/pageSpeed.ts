@@ -42,7 +42,7 @@ function classifyInp(inp: number): 'good' | 'ni' | 'poor' {
   return 'poor'
 }
 
-export async function getCwvMetrics(url: string, timeoutMs = 12000): Promise<CwvMetrics> {
+export async function getCwvMetrics(url: string, timeoutMs = 30000): Promise<CwvMetrics> {
   const apiKey = process.env.GOOGLE_PSI_KEY || process.env.GOOGLE_PLACES_API_KEY
   if (!apiKey) {
     return {
