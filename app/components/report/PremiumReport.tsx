@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { ScanResult } from '@/app/lib/scanResult'
-import { CHECK_REGISTRY, maxAchievableScore } from '@/app/lib/scanResult'
+import { CHECK_REGISTRY, maxAchievableScore, calculateScores } from '@/app/lib/scanResult'
 import ScoreCircle from './ScoreCircle'
 import PriorityCard from './PriorityCard'
 import SolutionCard from './SolutionCard'
@@ -77,6 +77,10 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
   // Deterministisk förbättringsprognos — samma viktlogik som calculateScores,
   // räknar om fullpoängen som om alla bad/warning-checks åtgärdats till ok.
   const achievableScore = maxAchievableScore(checks)
+
+  // Mät-täckning: hur många av de poängsatta checkarna som faktiskt gick att
+  // mäta i denna scan (t.ex. ett AI-anrop som misslyckades → notMeasured).
+  const { measured: checksMeasured, total: checksTotal } = calculateScores(checks)
 
   // ---- Section 3: Top 3 critical findings ----
   const badChecks = checks
@@ -200,6 +204,12 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
               )}
             </div>
           </div>
+
+          {checksMeasured < checksTotal && (
+            <p className="text-xs text-gray-400 text-center -mt-2 mb-5">
+              Baserat på {checksMeasured} av {checksTotal} kontroller
+            </p>
+          )}
 
           {/* De 3 viktigaste fynden */}
           <div className="mb-5">

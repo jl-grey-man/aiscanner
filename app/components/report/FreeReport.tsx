@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import type { ScanResult, CheckResult, CheckRegistryEntry } from '@/app/lib/scanResult'
-import { CHECK_REGISTRY } from '@/app/lib/scanResult'
+import { CHECK_REGISTRY, calculateScores } from '@/app/lib/scanResult'
 import { ScoreCircle, PriorityCard, SolutionCard, LockedSection, CheckTable, Glossary } from '@/app/components/report'
 import { APP_DOMAIN } from '@/app/lib/config'
 
@@ -120,6 +120,7 @@ function renderStars(rating: number): string {
 
 export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JSX.Element {
   const { meta, scores, checks, synthesis } = scanResult
+  const { measured: checksMeasured, total: checksTotal } = calculateScores(checks)
   const freeChecks = getFreeChecks(checks)
   const topBad = getTopBadChecks(freeChecks, 3)
   const allSolutions = getAllFreeSolutionChecks(checks)
@@ -226,6 +227,12 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
               </div>
             )}
           </div>
+
+          {checksMeasured < checksTotal && (
+            <p className="text-xs text-gray-400 text-center -mt-2 mb-5">
+              Baserat på {checksMeasured} av {checksTotal} kontroller
+            </p>
+          )}
 
           {/* ==================== 3. SAMMANFATTNING ==================== */}
           {topBad.length > 0 && (

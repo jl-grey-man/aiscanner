@@ -117,6 +117,14 @@ const ScoresSchema = z.object({
   full: z.number().min(0).max(100),
   google: z.number().nullable(),
   googleCount: z.number().nullable(),
+  // Mät-täckning: hur många av de poängsatta checkarna som faktiskt gick att
+  // mäta (status ok|warning|bad) mot hur många som är poängsatta totalt.
+  // Optional — äldre ScanResult-payloads (t.ex. API-svar innan detta fält
+  // fanns) och route.ts-konstruktion som ännu inte satt fälten ska fortsätta
+  // validera. UI:t räknar annars ut samma sak direkt från checks via
+  // calculateScores() så fälten här är kompletterande, inte en hård dependens.
+  measured: z.number().int().min(0).optional(),
+  total: z.number().int().min(0).optional(),
 })
 
 const SynthesisSchema = z.object({
@@ -309,8 +317,18 @@ export const CHECK_REGISTRY: CheckRegistryEntry[] = [
  *
  * Final score = (sum of earned points / sum of applicable max points) * 100
  * Rounded to nearest integer. Returns 0 if no applicable checks.
+ *
+ * `measured`/`total` expose mät-täckning (measurement coverage) alongside the
+ * score: `total` is the count of poängsatta checks (any check with a
+ * registry entry carrying nonzero weight on either tier — i.e. all checks
+ * except `synthesis`, whose weight is {free:0, full:0}), and `measured` is
+ * how many of those actually have a scored status (ok|warning|bad). A free
+ * scan naturally measures fewer of them (premium checks are skipped →
+ * notApplicable), and any AI/scrape failure on a paid scan shows up the same
+ * way (notMeasured) — so `measured < total` is an honest signal to surface
+ * in the UI rather than silently presenting a score as if everything ran.
  */
-export function calculateScores(checks: CheckResult[]): { free: number; full: number } {
+export function calculateScores(checks: CheckResult[]): { free: number; full: number; measured: number; total: number } {
   // Build a lookup from key → registry entry for O(1) weight access
   const registryByKey = new Map<CheckKey, CheckRegistryEntry>()
   for (const entry of CHECK_REGISTRY) {
@@ -321,10 +339,20 @@ export function calculateScores(checks: CheckResult[]): { free: number; full: nu
   let freeMax = 0
   let fullEarned = 0
   let fullMax = 0
+  let measured = 0
+  let total = 0
 
   for (const check of checks) {
     const reg = registryByKey.get(check.key)
     if (!reg) continue
+
+    const isScoredCheck = reg.weight.free > 0 || reg.weight.full > 0
+    if (isScoredCheck) {
+      total++
+      if (check.status === 'ok' || check.status === 'warning' || check.status === 'bad') {
+        measured++
+      }
+    }
 
     // Excluded statuses contribute nothing to earned or max
     if (check.status === 'notMeasured' || check.status === 'notApplicable') {
@@ -349,7 +377,7 @@ export function calculateScores(checks: CheckResult[]): { free: number; full: nu
   const free = freeMax > 0 ? Math.round((freeEarned / freeMax) * 100) : 0
   const full = fullMax > 0 ? Math.round((fullEarned / fullMax) * 100) : 0
 
-  return { free, full }
+  return { free, full, measured, total }
 }
 
 /**
