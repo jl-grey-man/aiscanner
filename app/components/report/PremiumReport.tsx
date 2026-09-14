@@ -58,7 +58,8 @@ const PRIORITY_GROUP_CONFIG: {
 }[] = [
   { key: 'critical', label: 'Kritiskt', sublabel: 'fixa först', dotClass: 'bg-red-500', labelColor: 'text-red-700' },
   { key: 'important', label: 'Viktigt', sublabel: 'stärker er ytterligare', dotClass: 'bg-amber-500', labelColor: 'text-amber-700' },
-  { key: 'nice', label: 'Bra att ha', sublabel: 'finslipar', dotClass: 'bg-blue-500', labelColor: 'text-blue-700' },
+  // 'nice' utelämnad avsiktligt — backend sätter aldrig priority:'nice' (se
+  // scanResult.ts), gruppen renderade alltid tom. Typen behålls i schemat.
 ]
 
 // ---------------------------------------------------------------------------

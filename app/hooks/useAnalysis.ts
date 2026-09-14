@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ScanResult } from '@/app/lib/scanResult'
+import { RequestGuard } from '@/app/lib/requestGuard'
 
 /**
  * Fetch wrapper that retries on transient failures (network drops, 5xx).
@@ -213,22 +214,22 @@ export interface EnhancedReportData {
   } | null
 }
 
-export type AnalysisState = 'idle' | 'scanning' | 'done' | 'error' | 'premium-loading' | 'premium-done'
+export type AnalysisState = 'idle' | 'scanning' | 'done' | 'error'
 
 export function useAnalysis() {
   const [state, setState] = useState<AnalysisState>('idle')
   const [freeReport, setFreeReport] = useState<FreeReportData | null>(null)
-  const [premiumReport, setPremiumReport] = useState<PremiumReportData | null>(null)
   const [enhancedReport, setEnhancedReport] = useState<EnhancedReportData | null>(null)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [scanResultPaid, setScanResultPaid] = useState<ScanResult | null>(null)
   const [paidLoading, setPaidLoading] = useState(false)
   const [paidError, setPaidError] = useState<string | null>(null)
-  const [analysisLog, setAnalysisLog] = useState<LogEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [stepIndex, setStepIndex] = useState(0)
   const [simulatedProgress, setSimulatedProgress] = useState<number | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const paidAbortRef = useRef<AbortController | null>(null)
+  const paidGuardRef = useRef(new RequestGuard())
 
   const clearTimers = useCallback(() => {
     if (intervalRef.current) {
@@ -270,7 +271,6 @@ export function useAnalysis() {
     clearTimers()
     setState('scanning')
     setFreeReport(null)
-    setPremiumReport(null)
     setEnhancedReport(null)
     setScanResult(null)
     setScanResultPaid(null)
@@ -310,9 +310,19 @@ export function useAnalysis() {
   /**
    * Fetches a paid-tier scan in the background and stores it as scanResultPaid.
    * Used in dev for instant free↔paid toggling without re-scanning.
+   *
+   * A new call supersedes any in-flight one: it aborts the previous request
+   * via AbortController, and — since abort() doesn't guarantee the previous
+   * promise never resolves (e.g. it may already be past the fetch and into
+   * retry/JSON-parse handling) — a RequestGuard token additionally ensures a
+   * stale response/error can never overwrite state written by a newer call.
    */
   const analyzePaid = useCallback(async (url: string, city?: string) => {
-    if (paidLoading) return
+    paidAbortRef.current?.abort()
+    const controller = new AbortController()
+    paidAbortRef.current = controller
+    const token = paidGuardRef.current.start()
+
     setPaidLoading(true)
     setPaidError(null)
     try {
@@ -323,64 +333,37 @@ export function useAnalysis() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url, city, tier: 'paid' }),
+          signal: controller.signal,
         },
         2,
         'paid-scan',
       )
       const json = await res.json()
       if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
+      if (!paidGuardRef.current.isCurrent(token)) return // superseded — discard stale result
       console.log('[useAnalysis] paid scan done')
       setScanResultPaid(json as ScanResult)
     } catch (e: unknown) {
+      if (!paidGuardRef.current.isCurrent(token)) return // superseded — ignore stale error too
       const msg = e instanceof Error ? e.message : 'Något gick fel'
       console.error('[useAnalysis] paid scan failed:', msg)
       setPaidError(msg)
     } finally {
-      setPaidLoading(false)
+      if (paidGuardRef.current.isCurrent(token)) setPaidLoading(false)
     }
-  }, [paidLoading])
-
-  const runPremium = useCallback(async (url: string) => {
-    clearTimers()
-    setState('premium-loading')
-    setPremiumReport(null)
-    setError(null)
-    setSimulatedProgress(null)
-    simulateSteps()
-
-    try {
-      const res = await fetch('/api/full-scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.detail || json.error || 'Fel')
-      setPremiumReport(json.premium)
-      setAnalysisLog((json.log || json.free_log) || null)
-      setStepIndex(STEP_MESSAGES.length - 1)
-      setSimulatedProgress(100)
-      setState('premium-done')
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Något gick fel'
-      setError(msg)
-      setState('error')
-    } finally {
-      clearTimers()
-    }
-  }, [clearTimers, simulateSteps])
+  }, [])
 
   const reset = useCallback(() => {
     clearTimers()
+    paidAbortRef.current?.abort()
+    paidGuardRef.current.start() // supersede any in-flight paid scan so its result is discarded
     setState('idle')
     setFreeReport(null)
-    setPremiumReport(null)
     setEnhancedReport(null)
     setScanResult(null)
     setScanResultPaid(null)
     setPaidLoading(false)
     setPaidError(null)
-    setAnalysisLog(null)
     setError(null)
     setStepIndex(0)
     setSimulatedProgress(null)
@@ -396,20 +379,17 @@ export function useAnalysis() {
   return {
     state,
     freeReport,
-    premiumReport,
     enhancedReport,
     scanResult,
     scanResultPaid,
     paidLoading,
     paidError,
-    analysisLog,
     error,
     currentStep,
     progressPct,
     stepIndex,
     analyze,
     analyzePaid,
-    runPremium,
     reset,
   }
 }

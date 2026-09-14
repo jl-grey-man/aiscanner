@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 
 interface Props {
   onSubmit: (url: string, city: string) => void
@@ -9,6 +9,10 @@ interface Props {
 export function UrlInput({ onSubmit, disabled, compact }: Props) {
   const [url, setUrl] = useState('')
   const [city, setCity] = useState('')
+  // useId() so multiple UrlInput instances on the same page (Hero + ToolSection
+  // both render one on the idle landing page) never share duplicate DOM ids.
+  const urlId = useId()
+  const cityId = useId()
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -32,15 +36,19 @@ export function UrlInput({ onSubmit, disabled, compact }: Props) {
   return (
     <form onSubmit={handleSubmit} className="w-full">
       <div className={sizeClasses.wrap}>
+        <label htmlFor={urlId} className="sr-only">Webbadress</label>
         <input
-          type="text"
+          id={urlId}
+          type="url"
           value={url}
           onChange={e => setUrl(e.target.value)}
           placeholder="https://dittforetag.se"
           disabled={disabled}
           className={sizeClasses.url}
         />
+        <label htmlFor={cityId} className="sr-only">Stad</label>
         <input
+          id={cityId}
           type="text"
           value={city}
           onChange={e => setCity(e.target.value)}

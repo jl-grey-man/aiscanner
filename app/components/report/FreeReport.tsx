@@ -28,7 +28,8 @@ const PRIORITY_GROUPS: {
 }[] = [
   { priority: 'critical',  title: 'Kritiskt',   subtitle: 'fixa först',              dotClass: 'bg-red-500',   titleColor: 'text-red-700' },
   { priority: 'important', title: 'Viktigt',     subtitle: 'stärker er ytterligare', dotClass: 'bg-amber-500', titleColor: 'text-amber-700' },
-  { priority: 'nice',      title: 'Bra att ha',  subtitle: 'finslipar',               dotClass: 'bg-blue-500',  titleColor: 'text-blue-700' },
+  // 'nice' utelämnad avsiktligt — backend sätter aldrig priority:'nice' (se
+  // scanResult.ts), gruppen renderade alltid tom. Typen behålls i schemat.
 ]
 
 // ---------------------------------------------------------------------------
