@@ -10,6 +10,13 @@ import CheckTable from './CheckTable'
 import Glossary from './Glossary'
 import { renderMarkdown } from './RichMarkdown'
 import { APP_DOMAIN } from '@/app/lib/config'
+import {
+  buildNapRows,
+  napConsistencyLabel,
+  napConsistencyColor,
+  entityKnowsLabel,
+  categoryMentionedLabel,
+} from '@/app/lib/reportDisplay'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -59,10 +66,13 @@ const PRIORITY_GROUP_CONFIG: {
 // ---------------------------------------------------------------------------
 
 export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React.JSX.Element {
-  const { meta, scores, checks, synthesis, reviewReplies } = scanResult
+  const { meta, scores, checks, synthesis, reviewReplies, gbp, directories, aiMentions } = scanResult
 
   // Build a registry lookup for weights
   const registryByKey = new Map(CHECK_REGISTRY.map(e => [e.key, e]))
+
+  // NAP-tabell: en rad per katalog som kontrollerats (Eniro, Hitta, …)
+  const napRows = buildNapRows(directories.directories)
 
   // Deterministisk förbättringsprognos — samma viktlogik som calculateScores,
   // räknar om fullpoängen som om alla bad/warning-checks åtgärdats till ok.
@@ -139,9 +149,23 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           </div>
         </div>
 
-        {/* ==================== 2. SCORE CIRCLES ==================== */}
+        {/* ==================== 2. SAMMANFATTNING (Pro-genererad, företagsspecifik) ==================== */}
+        {synthesis.summary && (
+          <div className="bg-white border border-amber-200 rounded-xl shadow-sm p-6 mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-amber-600">&#9733;</span>
+              <h2 className="text-xl font-bold text-gray-900">Sammanfattning</h2>
+              <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                Skräddarsydd för er
+              </span>
+            </div>
+            <p className="text-gray-700 text-base leading-relaxed">{synthesis.summary}</p>
+          </div>
+        )}
+
+        {/* ==================== 3. POÄNG ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-5">Sammanfattning</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-5">Poäng och nyckeltal</h2>
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             {/* Free score */}
@@ -177,7 +201,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
             </div>
           </div>
 
-          {/* ==================== 3. SAMMANFATTNING — Top 3 findings ==================== */}
+          {/* De 3 viktigaste fynden */}
           <div className="mb-5">
             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
               De 3 viktigaste fynden
@@ -212,36 +236,55 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           )}
         </div>
 
-        {/* ==================== 4. ATGARDSPLAN ==================== */}
+        {/* ==================== 4. ÅTGÄRDSPLAN ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8" id="atgardsplan">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Åtgärdsplan</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <h2 className="text-xl font-bold text-gray-900">Åtgärdsplan</h2>
+            <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+              Skräddarsydd för er
+            </span>
+          </div>
           <p className="text-gray-400 text-sm mb-5">
-            Sorterad efter prioritet. Börja uppifrån &mdash; de första tre ger störst effekt.
+            Vår AI-analys av just er webbplats, i prioritetsordning.
           </p>
 
-          {priorityGroups.map((group) => (
-            <div key={group.key} className="mb-6 last:mb-0">
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`w-3 h-3 rounded-full shrink-0 ${group.dotClass}`} />
-                <h3 className={`font-semibold text-sm uppercase tracking-wide ${group.labelColor}`}>
-                  {group.label} &mdash; {group.sublabel}
-                </h3>
+          {synthesis.actionPlan ? (
+            <div
+              className="prose-sm mb-6"
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(synthesis.actionPlan) }}
+            />
+          ) : (
+            <p className="text-gray-400 text-sm mb-6">Ingen åtgärdsplan tillgänglig.</p>
+          )}
+
+          <div className="border-t border-gray-100 pt-5">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+              Snabböversikt &mdash; hoppa direkt till lösningen
+            </h3>
+            {priorityGroups.map((group) => (
+              <div key={group.key} className="mb-6 last:mb-0">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`w-3 h-3 rounded-full shrink-0 ${group.dotClass}`} />
+                  <h4 className={`font-semibold text-sm uppercase tracking-wide ${group.labelColor}`}>
+                    {group.label} &mdash; {group.sublabel}
+                  </h4>
+                </div>
+                <div className="space-y-2">
+                  {group.items.map((check) => {
+                    actionIndex++
+                    return (
+                      <PriorityCard
+                        key={check.key}
+                        check={check}
+                        index={actionIndex}
+                        linkTarget={`#fix-${check.key}`}
+                      />
+                    )
+                  })}
+                </div>
               </div>
-              <div className="space-y-2">
-                {group.items.map((check) => {
-                  actionIndex++
-                  return (
-                    <PriorityCard
-                      key={check.key}
-                      check={check}
-                      index={actionIndex}
-                      linkTarget={`#fix-${check.key}`}
-                    />
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* ==================== 5. DETALJERADE LÖSNINGAR ==================== */}
@@ -266,7 +309,178 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           ))}
         </div>
 
-        {/* ==================== 6. KONKURRENTANALYS ==================== */}
+        {/* ==================== 6. AI-TESTETS SVAR ==================== */}
+        {aiMentions && (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-amber-700">&#9733;</span>
+              <h2 className="text-xl font-bold text-gray-900">AI-testets svar</h2>
+              <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
+                Premium
+              </span>
+            </div>
+            <p className="text-gray-400 text-sm mb-5">
+              Så här svarade en AI-assistent när vi frågade om er &mdash; ordagrant, ingen tolkning.
+            </p>
+
+            <div className="mb-6">
+              <span
+                className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full border mb-2 ${
+                  aiMentions.entityKnows
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                    : 'text-red-700 bg-red-50 border-red-200'
+                }`}
+              >
+                {entityKnowsLabel(aiMentions.entityKnows)}
+              </span>
+              <p className="text-gray-500 text-xs mb-1">Vi frågade:</p>
+              <p className="text-gray-700 text-sm italic mb-3">&rdquo;{aiMentions.entityQuery}&rdquo;</p>
+              <p className="text-gray-500 text-xs mb-1">AI svarade:</p>
+              <blockquote className="border-l-2 border-gray-200 pl-3 text-gray-600 text-sm whitespace-pre-line">
+                {aiMentions.entityResponse}
+              </blockquote>
+            </div>
+
+            <div>
+              <span
+                className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full border mb-2 ${
+                  aiMentions.categoryMentioned
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                    : 'text-red-700 bg-red-50 border-red-200'
+                }`}
+              >
+                {categoryMentionedLabel(aiMentions.categoryMentioned)}
+              </span>
+              <p className="text-gray-500 text-xs mb-1">Vi frågade:</p>
+              <p className="text-gray-700 text-sm italic mb-3">&rdquo;{aiMentions.categoryQuery}&rdquo;</p>
+              <p className="text-gray-500 text-xs mb-1">AI svarade:</p>
+              <blockquote className="border-l-2 border-gray-200 pl-3 text-gray-600 text-sm whitespace-pre-line">
+                {aiMentions.categoryResponse}
+              </blockquote>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== 7. GOOGLE BUSINESS PROFILE ==================== */}
+        {gbp && (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-amber-700">&#9733;</span>
+              <h2 className="text-xl font-bold text-gray-900">Google Business Profile</h2>
+              <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
+                Premium
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+              <div>
+                <p className="text-gray-400 text-xs mb-1">Betyg</p>
+                <p className="text-gray-900 font-semibold">
+                  {gbp.rating != null ? gbp.rating.toFixed(1) : '—'}
+                  {gbp.rating != null && (
+                    <span className="text-yellow-700 ml-1 text-sm">{renderStars(gbp.rating)}</span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-1">Antal recensioner</p>
+                <p className="text-gray-900 font-semibold">{gbp.userRatingCount ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-1">Kategori</p>
+                <p className="text-gray-900 font-semibold capitalize">{meta.bransch}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-1">Telefon</p>
+                <p className="text-gray-900 font-semibold">{gbp.phone ?? '—'}</p>
+              </div>
+            </div>
+
+            {gbp.address && (
+              <p className="text-gray-600 text-sm mb-4">{gbp.address}</p>
+            )}
+
+            {gbp.weekdayDescriptions && gbp.weekdayDescriptions.length > 0 && (
+              <div>
+                <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">
+                  Öppettider
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                  {gbp.weekdayDescriptions.map((line) => (
+                    <p key={line} className="text-gray-600 text-sm">{line}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ==================== 8. NAP-KONSISTENS PER KATALOG ==================== */}
+        {napRows.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-amber-700">&#9733;</span>
+              <h2 className="text-xl font-bold text-gray-900">NAP-konsistens per katalog</h2>
+              <span className="text-xs bg-amber-50/50 text-amber-600 px-2 py-0.5 rounded-full">
+                Premium
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+              <span
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${napConsistencyColor(directories.napConsistency.consistent)}`}
+              >
+                {napConsistencyLabel(directories.napConsistency.consistent)}
+              </span>
+              <p className="text-gray-400 text-xs">{directories.napConsistency.finding}</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-400 text-xs uppercase tracking-wide border-b border-gray-100">
+                    <th className="py-2 pr-4 font-medium">Katalog</th>
+                    <th className="py-2 pr-4 font-medium">Status</th>
+                    <th className="py-2 pr-4 font-medium">Adress (extraherad)</th>
+                    <th className="py-2 font-medium">Telefon (extraherad)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {napRows.map((row) => (
+                    <tr key={row.name} className="border-b border-gray-50 last:border-0">
+                      <td className="py-2 pr-4 text-gray-900 font-medium">
+                        {row.profileUrl ? (
+                          <a
+                            href={row.profileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-amber-700 hover:underline"
+                          >
+                            {row.name}
+                          </a>
+                        ) : (
+                          row.name
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span
+                          className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                            row.found ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-500'
+                          }`}
+                        >
+                          {row.found ? 'Hittad' : 'Ej hittad'}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-gray-600">{row.address ?? '—'}</td>
+                      <td className="py-2 text-gray-600">{row.phone ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== 9. KONKURRENTANALYS ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
           <div className="flex items-center gap-2 mb-5">
             <span className="text-amber-700">&#9733;</span>
@@ -286,7 +500,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           )}
         </div>
 
-        {/* ==================== 7. RECENSIONSANALYS ==================== */}
+        {/* ==================== 10. RECENSIONSANALYS ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
           <div className="flex items-center gap-2 mb-5">
             <span className="text-amber-700">&#9733;</span>
@@ -350,7 +564,7 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           )}
         </div>
 
-        {/* ==================== 8. KONTROLLER ==================== */}
+        {/* ==================== 11. KONTROLLER ==================== */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-5">
             Alla {displayChecks.length} kontroller
@@ -366,10 +580,10 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           ))}
         </div>
 
-        {/* ==================== 9. ORDLISTA ==================== */}
+        {/* ==================== 12. ORDLISTA ==================== */}
         <Glossary />
 
-        {/* ==================== 10. FOOTER ==================== */}
+        {/* ==================== 13. FOOTER ==================== */}
         <p className="text-center text-gray-400 text-xs pb-8">
           Genererad av {APP_DOMAIN} &middot; Rapport-ID: {meta.scanId} &middot; Data hämtad {meta.scanDate}
         </p>
