@@ -83,6 +83,7 @@ app/
     reportWriter.ts           # enrichChecksWithReportWriter() — parallel Pro calls for rich report content; sanitizeCodeExample() strips ANPASSA/PLACEHOLDER lines defensively
     masterSchema.ts           # Audit #7: buildMasterSchema() — ONE deterministic LocalBusiness JSON-LD from verified data; codeRef/delta for other schema checks; dedupeCodeExamples() similarity safety net
     factGuard.ts              # Audit #6: buildVerifiedFacts() + prompt-fakta/GROUNDING_RULES; groundReport() efterkontroll rättar/tar bort påhittade öppettider, telefon, interna URL:er, menyrätter/priser (loggar [FactCheck])
+    bransch.ts                # Audit #10: deriveBransch()/mapPlacesType() — svensk bransch från Places primaryType/types (suffix _restaurant/_store), aldrig identisk med companyName
     enhancedScraper.ts        # Enhanced scraping: robots.txt, OG, FAQ schema, sitemap, E-A-T
     scraper.ts                # Basic scraping + PageSummary extraction
     directoryChecker.ts       # Swedish directory check via Tavily API (Eniro, Hitta) + NAP consistency

@@ -17,6 +17,7 @@ import { checkLimit, getClientIp } from '@/app/lib/rateLimit'
 import { withRetry } from '@/app/lib/retry'
 import { buildVerifiedFacts, formatFactsForPrompt, GROUNDING_RULES, groundReport } from '@/app/lib/factGuard'
 import type { VerifiedFacts } from '@/app/lib/factGuard'
+import { deriveBransch } from '@/app/lib/bransch'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -658,26 +659,17 @@ export async function POST(req: NextRequest) {
     }
     const placeForAnalysis = placeDetails || place
 
-    // Derive bransch from Places types (most accurate) or page title
-    const PLACES_TYPE_MAP: Record<string, string> = {
-      restaurant: 'restaurang', food: 'restaurang', bar: 'bar',
-      real_estate_agency: 'mäklare', lodging: 'hotell',
-      plumber: 'rörmokare', electrician: 'elektriker',
-      general_contractor: 'hantverkare', painter: 'målare',
-      dentist: 'tandläkare', doctor: 'läkare', hospital: 'sjukhus',
-      lawyer: 'advokatbyrå', accounting: 'redovisning',
-      car_repair: 'bilverkstad', car_dealer: 'bilhandlare',
-      beauty_salon: 'skönhetssalong', hair_care: 'frisör',
-      gym: 'gym', school: 'skola',
-      supermarket: 'matbutik', grocery_or_supermarket: 'matbutik',
-      clothing_store: 'klädbutik', electronics_store: 'elektronikbutik',
-    }
-    const placeTypes: string[] = placeForAnalysis?.types || []
-    const mappedType = placeTypes.map((t: string) => PLACES_TYPE_MAP[t]).find(Boolean)
-    const bransch = mappedType || mainPage?.title?.split(/\s*[\|–\-]\s*/)[0]?.trim() || 'okänd'
-
-    // Extract company name and city for new checks
+    // Extract company name first — deriveBransch needs it to guard against ever
+    // landing on the same value (Audit #10).
     const companyName = placeForAnalysis?.displayName?.text || mainPage?.title?.split(/\s*[\|–\-]\s*/)[0]?.trim() || ''
+
+    const placeTypes: string[] = placeForAnalysis?.types || []
+    const bransch = deriveBransch({
+      primaryType: placeForAnalysis?.primaryType ?? null,
+      types: placeTypes,
+      title: mainPage?.title ?? null,
+      companyName,
+    })
 
     // City priority: 1) user input, 2) Places address, 3) scraped — never use 'Sverige'
     const cityFromPlace = placeForAnalysis?.formattedAddress
