@@ -349,7 +349,7 @@ The scraper extracts these fields per page:
 
 ```bash
 # Development
-npm run dev          # Next.js dev server on port 3000
+npm run dev          # Next.js dev server on port 3000, builds into .next-dev/ (never touches .next/standalone — see "Staging på Pi:n / deploy-flöde")
 
 # Production build (Railway runs this automatically)
 npm run build        # outputs to .next/standalone/
@@ -401,6 +401,20 @@ railway deployment redeploy     # trigger redeploy
 - **Telegram-token:** läses i körtid från `BOT_TOKEN` i `/mnt/storage/secrets.env` (fil utanför repot — claudebot, `@Claudius_Codius_bot`), med fallback till `data/.telegram` (gitignorerad, `chmod 600`) om den nyckeln någon gång försvinner ur `secrets.env`. Token skrivs ALDRIG till loggen eller stdout.
 - **Cron:** `*/5 * * * * /mnt/storage/aiscanner/deploy/uptime-check.sh` i `crontab -u jens`. Verifiera: `crontab -l | grep -c uptime-check` → `1`.
 - **Test:** `bash tests/uptime-check.test.sh` (körs manuellt — matchar inte vitest include-mönstret `tests/**/*.test.ts`, plockas alltså aldrig upp av `npm test`) kör tillståndsbytes-scenariot isolerat mot en temp-state/logg: `UPTIME_TARGETS`/`STATE_FILE`/`LOG_FILE`/`DRY_RUN` är miljövariabel-overrides skriptet stödjer just för detta — `DRY_RUN=1` skriver larmtexten till loggen i stället för att posta till Telegram. Asserterar exakt 1 nere-larm efter 2 misslyckade kontroller mot en blockerad lokal adress (`http://127.0.0.1:1/`, inget lyssnar där → snabb `connection refused`) och exakt 1 uppe-larm vid nästa lyckade kontroll, ingen dubblett vid en tredje lyckad kontroll.
+
+## Staging på Pi:n / deploy-flöde (sep 2026)
+
+**`git push` till `master` deployar produktion.** Railway auto-deployar från GitHub master till `robotbyran.com` vid varje push — det finns ingen mellanhand. Pi:n har en separat, oberoende staging-kopia som INTE synkas via push/pull: `ai-scanner-api.service` kör `node .next/standalone/server.js` på `127.0.0.1:8010`, publikt speglad på `https://analyze.pipod.net` via Cloudflare Tunnel. All verifiering av en ändring ska ske mot staging FÖRE push.
+
+**Arbetsflöde:**
+1. Gör ändringen på Pi:n (`/mnt/storage/aiscanner`).
+2. Kör `deploy/pi-staging.sh` — testar (`npm test`), bygger (`npm run build`), startar om `ai-scanner-api.service`, väntar på att den svarar lokalt, och röktestar sedan mot `https://analyze.pipod.net` (startsida, SSRF-blockering, en riktig gratis-scan med 37 checks och noll `"Kunde inte analyseras"`). Icke-noll exitkod = något gick fel — **pusha inte**.
+3. Verifiera manuellt på `https://analyze.pipod.net` om ändringen är visuell/UX (skriptet täcker bara API-kontrakt, inte UI).
+4. Först då: `git push` (deployar produktion).
+
+**`npm run dev` bygger numera in i `.next-dev`, inte `.next`** (`next.config.ts`, `PHASE_DEVELOPMENT_SERVER` — se commit `fix(dev): build next dev into .next-dev`). Bakgrund: `next dev` körd i det här repot delade tidigare `.next/` med produktionsbygget, skrev över det och raderade `.next/standalone` — staging-tjänsten kraschade vid nästa omstart eftersom `ExecStart` pekar på `.next/standalone/server.js`. `next dev` kan alltså aldrig mer röra produktionsbygget. `.next-dev/` är gitignorerad.
+
+**Doc-guard:** ett globalt pre-commit-hook (`/mnt/storage/doc-guard`, se `/home/jens/CLAUDE.md`) kräver att CLAUDE.md **och** Checklist.md uppdateras i samma commit som en kodändring i det här repot.
 
 ## Overseer-regler för implementationsplaner
 

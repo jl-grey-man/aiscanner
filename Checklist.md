@@ -164,6 +164,9 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 - [x] OpenRouter API integration (not direct Gemini)
 - [x] Google Places API (New) integration
 - [x] CORS headers for API routes
+- [x] `next dev` builds into `.next-dev/` — can never overwrite `.next/standalone` (sep 2026, `next.config.ts` `PHASE_DEVELOPMENT_SERVER`, regression test `tests/nextConfig.test.ts`)
+- [x] `deploy/pi-staging.sh` — test + build + restart + smoke-test staging in one gate before pushing to master (sep 2026)
+- [x] Deploy-flöde dokumenterat i CLAUDE.md ("Staging på Pi:n / deploy-flöde", sep 2026)
 
 ---
 
