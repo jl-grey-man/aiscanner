@@ -38,6 +38,17 @@ describe('extractFAQContent', () => {
     expect(extractFAQContent($)).toBe(false)
   })
 
+  it('does not treat a non-FAQ accordion (menu, price list) as FAQ content', () => {
+    const html = `
+      <div class="menu accordion">
+        <h4>Förrätter</h4><p>Toast Skagen 145 kr</p>
+        <h4>Varmrätter</h4><p>Köttbullar 195 kr</p>
+      </div>
+    `
+    const $ = cheerio.load(html)
+    expect(extractFAQContent($)).toBe(false)
+  })
+
   it('detects dl/dt FAQ markup', () => {
     const $ = cheerio.load('<dl><dt>Fråga 1?</dt><dd>Svar</dd><dt>Fråga 2?</dt><dd>Svar</dd><dt>Fråga 3?</dt><dd>Svar</dd></dl>')
     expect(extractFAQContent($)).toBe(true)

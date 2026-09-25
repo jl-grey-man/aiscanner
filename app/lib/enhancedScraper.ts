@@ -382,7 +382,10 @@ export function extractFAQContent($: cheerio.CheerioAPI): boolean {
   // almost never contain that English abbreviation inside the accordion's own text, so the old
   // `.text().includes('faq')` requirement produced false negatives on real FAQ content (QA June 2026,
   // roranalys.se faqSchema: truth=warning, scanner=bad because hasFAQContent was wrongly false).
-  const hasAccordion = $('[class*="accordion"]').length > 0
+  // An accordion alone is not enough, though — accordions are also used for menus, price lists
+  // and product specs. It counts as FAQ content only when its text holds at least two questions.
+  const accordionText = $('[class*="accordion"]').text()
+  const hasAccordion = (accordionText.match(/\?/g) ?? []).length >= 2
 
   return hasDlFaq || hasDetails || hasFaqClass || hasAccordion
 }

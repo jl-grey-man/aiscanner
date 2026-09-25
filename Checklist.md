@@ -33,6 +33,8 @@ threshold alone gives the right verdict now) — 4 of the original 5 mismatches 
 - `app/lib/enhancedScraper.ts` `extractFAQContent()` — dropped the `.includes('faq')`
   requirement on the accordion check, matching `VERIFICATION-PROTOCOL.md`'s own wording
   ("accordion" is an independent pattern, not conditional on the word "faq").
+  Tightened afterwards: an accordion only counts as FAQ content if its text contains at least two
+  "?" — otherwise menu/price-list/spec accordions were reported as FAQ content (test added).
 - New tests: `tests/eatSignalsDeterministic.test.ts` (6 cases incl. the sprej.nu control case —
   all 3 signals missing must stay `bad`), `tests/enhancedScraper.test.ts` (5 cases incl. the
   roranalys.se accordion regression + a sprej.nu no-FAQ control), `tests/eatPromptThresholds.test.ts`

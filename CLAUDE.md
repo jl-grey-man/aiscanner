@@ -367,9 +367,11 @@ Pro-eskalering:
   `hasAccordion` krävde tidigare att ordet "faq" fanns i ACKORDIONENS EGEN text
   (`.text().includes('faq')`). roranalys.se har en `<h3>FAQ</h3>`-rubrik i en SYSKON-div, inte i
   ackordion-elementet, så `.text()` innehöll aldrig "faq" trots 4 riktiga frågor i ackordion. Protokollet
-  listar "accordion" som eget, självständigt HTML-mönster utan textkrav — kravet togs bort. Regressionstest:
+  listar "accordion" som eget, självständigt HTML-mönster utan textkrav — kravet togs bort. I stället räknas en
+  accordion som FAQ-innehåll bara om dess text innehåller **minst två frågetecken** — accordions används
+  också för menyer, prislistor och produktspecar, som annars felaktigt gav "FAQ-innehåll finns". Regressionstest:
   `tests/enhancedScraper.test.ts` (inkl. kontrollfallet sprej.nu: ingen FAQ-struktur alls → måste förbli
-  `bad`).
+  `bad`, och en meny-accordion utan frågor → inte FAQ).
 - **Verifierat på riktiga sajter** (free-tier scans mot `npm run dev -- -p 8012`, 2× per sajt för att
   täcka Flash:s icke-determinism): tvakanten/roranalys/bjurfors `eatSignals` → `warning` (var `bad`),
   roranalys `faqSchema` → `warning` (var `bad`), sprej `eatSignals`/`faqSchema`/`contentDepth` oförändrat
