@@ -2,226 +2,16 @@
 
 ---
 
-## 📍 SESSION LOG — 2026-09-25 (Issue 3: national chains with no city no longer pick a random office)
+## Sessionshistorik (komprimerad — detaljer i CLAUDE.md)
 
-**Issue 3 from the 2026-06-15 session log (below) fixed.** Root cause reproduced live against
-real Places data: Text Search on a bare domain (`"bjurfors"`, no city) returns every office that
-shares the chain's website — 12–15 distinct offices for bjurfors.se in this session's runs
-(Linköping, Jönköping, Bromma, Hallsberg, Solna, Uppsala, Strängnäs, Stockholm×4, Lidingö,
-Västerås, Simrishamn, Enskede — varies per call, Google doesn't guarantee order). The old
-`findBusinessByUrl()` (`app/lib/places.ts`) only ever looked at `data.places[0]` — whichever
-office Google happened to rank first — and attributed that random office's GBP data (rating,
-opening hours, address, nearby "competitors") to the whole report.
-
-**Fix — detect ambiguity, never attribute a guess:**
-- `findBusinessByUrl(url, cityHint)`: when no `cityHint` is given, it now inspects **all**
-  domain-matching results from the plain-domain Text Search (not just the first), dedupes them
-  by city (`extractCityFromAddress()`, new helper — also fixes a pre-existing dead regex in
-  route.ts's `cityFromPlace` fallback that never matched Swedish "NNN NN City" postal codes and
-  so silently never fired). More than one distinct city → returns `{ _multipleLocations: { count,
-  cities } }` and **no place** — `collectScanData()` in `route.ts` nulls out `placeForAnalysis`
-  entirely in that case, so every downstream Places-derived field (companyName, bransch, rating,
-  gbp, competitors, opening hours) falls back to its existing "no GBP found" path instead of a
-  wrong office. Exactly one distinct city among the matches (e.g. duplicate listings of the same
-  office) → attributes normally, unchanged. A city hint is given → unchanged single-query
-  domain+city lookup (Google's own text-relevance ranking narrows it, verified live).
-- `checkBuilder.ts`: `gbpData` (#35), `competitors` (#36) and `openingHours` (#17) get a specific
-  Swedish finding ("Flera kontor hittades … ange stad …") instead of the generic "ingen profil
-  hittades" text when `multipleLocations` is set, so the free report explains *why* those checks
-  are unmeasured instead of implying a technical failure. `buildCompetitorsNotMeasuredFinding()`
-  takes an optional second param for this — the `roranalys.se` "location+primaryType but no
-  match" case (see session log below) still wins first, unaffected.
-- API contract: `ScanResult.meta.multipleLocations: { count, cities } | null` (`scanResult.ts`).
-  The scan still runs and returns 200 with a full report (site-level checks are unaffected) —
-  chose this over a 4xx "need city" response because most of the 29 free checks don't depend on
-  Places data at all, and the existing frontend has no "ask before scanning" step to hook a 4xx
-  into; a flag on the normal response fits the existing single-request report flow.
-- **Places compliance:** `cities` (other offices' addresses) is Places-derived content — shown
-  live in the response and the UI, never persisted. `meta.multipleLocations.cities` added to
-  `PLACES_CONTENT_FIELDS` / `stripPlacesContent()` (stripped to `[]` before a paid report is
-  saved to `checkouts`, `count` kept — same exception as `place_id`/`domainMatch`/`placeWarning`).
-  `scan_cache`'s `CachedScanContext` gets `multipleLocationsCount` (number only, no city names) so
-  a paid scan reusing a cached ambiguous free-scan keeps the specific "ange stad" finding instead
-  of losing it; the check findings' own `${count} st` text was verified to already survive
-  `stripPlacesContent()` unstripped (no `c.data` payload, so the existing per-check strip
-  conditions never trigger) — no change needed there.
-- **Frontend:** `FreeReport.tsx`/`PremiumReport.tsx` show an amber banner ("Flera kontor
-  hittades — ange stad") right under the header when `meta.multipleLocations` is set, naming up
-  to 3 example cities live. `FreeReport` additionally renders a one-step rescan form (city input
-  + "Skanna igen med stad") that calls a new `onRescan` prop, wired in `AppShell.tsx` to
-  `analyze(scanResult.meta.url, city)` — no need to retype the URL. `PremiumReport` shows the
-  same notice without a rescan form (already paid).
-- Tests (23 new, 431/431 passing): `tests/places.test.ts` (`extractCityFromAddress`,
-  `findBusinessByUrl` — ambiguous/single-city/single-location/with-city/no-domain-match cases),
-  `tests/multipleLocations.test.ts` (new — `gbpData`/`competitors`/`openingHours` finding text,
-  `buildCompetitorsNotMeasuredFinding`, `ScanResultSchema` accepts/omits the field),
-  `tests/placesContent.test.ts` (strip keeps count, clears cities), `tests/scanCache.test.ts`
-  (`toCachedContext`/`restoreScanContext` carry `multipleLocationsCount`).
-- **Live-verified against `deploy/pi-staging.sh` (all 5 smoke checks PASS) + real browser flow
-  (Playwright against `http://127.0.0.1:8010`, screenshots taken):**
-  - `bjurfors.se`, no city → `meta.multipleLocations = { count: 12, cities: [...] }`, `gbpData`/
-    `competitors`/`openingHours` all `notMeasured` with the "ange stad" finding, `scores.google`
-    null. Banner + rescan form render correctly (desktop 1440px and mobile 390px).
-  - `bjurfors.se`, city "Göteborg" → normal scan, real Göteborg office (`gbpData` "betyg 3/5 (32
-    recensioner)", 5 real nearby competitors, real opening hours), `multipleLocations: null`.
-  - `tvakanten.se`, no city → unchanged: single office, `multipleLocations: null`, normal
-    `ok` gbpData/competitors/openingHours (4.2★/944 reviews).
-  - Clicking "Skanna igen med stad" with "Göteborg" in the live report re-triggers a scan of the
-    same URL with the city filled in (`analyze()` reused, no new UI state needed).
-- **Not addressed (out of scope for this fix):** a stored premium report re-opened later
-  (`/api/checkout/status`) shows the ambiguity count but no example cities (Places content isn't
-  re-derivable from a stored report with no `placeId` — see comments in `placesContent.ts`). Rare
-  edge case (would require an ambiguous free scan to reach checkout without a city); not blocking.
-
----
-
-## 📍 SESSION LOG — 2026-09-25 (three diagnosed bugs: competitors 400, contactInfo false positive, hreflang notApplicable)
-
-Three pre-diagnosed bugs fixed, one commit each, TDD (failing test first):
-
-1. **`competitors` (#36) notMeasured on roranalys.se** — `findNearbyCompetitors()` (`app/lib/places.ts`)
-   passed the business's `primaryType` (`general_contractor`) as Nearby Search's `includedPrimaryTypes`
-   filter; Google rejects it with HTTP 400 `"Unsupported types: general_contractor."`, and the old
-   `!res.ok` branch silently returned `[]`. First fix attempt (commit `c68a56c`) retried without the
-   type filter and, if post-filtering left nothing, fell back to the unfiltered nearby list — **code
-   review caught that this produced arbitrary unrelated neighbouring businesses labelled as
-   "competitors" and fed them into the PAID competitor comparison** (irrelevant results are worse
-   than notMeasured). Corrected same day (separate commit, history not rewritten): on the 400,
-   run a **Text Search** for the business's own Swedish `primaryTypeDisplayName` (e.g.
-   "Generalentreprenör" — new field, threaded from `getPlaceDetails()` through
-   `placesContent.ts`'s `competitorsForPlace()`), biased to the same location, NO `includedType`
-   (Google rejects that too — verified live), post-filtered by returned `types`, sorted by distance,
-   capped. **The unfiltered-list fallback is removed entirely** — if nothing matches the exact type,
-   returns `[]` and the check stays `notMeasured` with an accurate "hittade inga företag av samma
-   typ i närheten" finding (`buildCompetitorsNotMeasuredFinding()`, distinct from "GBP/positionsdata
-   saknas"). Text Search is a different Places billing SKU than Nearby Search. Tests:
-   `tests/places.test.ts`, `tests/placesContent.test.ts`, `tests/checkBuilder.test.ts`. See CLAUDE.md
-   "Competitors check #36". Live-verified: roranalys.se `competitors` now lists real
-   `general_contractor` businesses near 59.3265,18.0193 (Norrmalm Byggare, SVEA gruppen, DEKÅ
-   Entreprenad, ...), not arbitrary neighbours.
-2. **`contactInfo` (#30) false-positive `ok` on bjurfors.se** — `hasContactInfo` (`app/lib/scraper.ts`)
-   had a bare-keyword fallback (`/kontakt|contact|telefon|\btel\b/i.test(bodyText)`) that passed on the
-   nav link "Kontakta mäklare"; bjurfors.se has no `<nav>`/`<header>` so that link is never stripped,
-   and the page has no phone or email at all. Fix: dropped the keyword branch; `hasContactInfo` is now
-   `phones.length > 0 || <email regex against fullBodyText>` (was checked against the 800-char sliced
-   `bodyText`, missing emails placed later in longer pages). Test: `tests/scraper.test.ts` (4 cases).
-   See CLAUDE.md "contactInfo (#30) — no bare-keyword branch".
-3. **`hreflang` (#9) false `notApplicable` on tvakanten.se** — check #9 is Flash-driven off
-   the extracted `hreflangTags` list only; tvakanten.se has a same-origin "🇬🇧 ENGLISH" nav
-   link to an English page but no hreflang tags, so Flash never saw the language-switcher
-   signal and concluded (correctly per its own prompt rule) that the site had one language.
-   Fix: new deterministic `detectLanguageSwitcher()` in `enhancedScraper.ts` (same-origin,
-   language-name/flag-emoji link text, or `/en/`-style path segment / `lang=` query) feeds a
-   new `EnhancedData.hasLanguageSwitcher` field; `checkBuilder.ts`'s new `buildHreflangCheck()`
-   overrides to `bad` only when there are no hreflang tags AND a switcher was detected —
-   otherwise the Flash result passes through unchanged (sprej.nu stays `notApplicable`).
-   Tests: `tests/enhancedScraper.test.ts` (7 cases), `tests/checkBuilder.test.ts` (3 cases).
-   See CLAUDE.md "hreflang (#9) — deterministic language-switcher override".
-   Follow-up (Issue 3): with a city given, `findBusinessByUrl` picks the domain match in THAT city instead of Google's first hit; no office there + several elsewhere → multiple-locations flag (tests added).
-   Follow-up: competitors Text Search fallback now enforces the 1500 m radius itself (locationBias is only a bias; live roranalys showed hits at 1.6 and 2.2 km under a "≤1,5 km" heading).
-   Follow-up: `/sv/` removed from the language path-segment pattern — a Swedish-only site with `/sv/` paths was a false positive (test added).
-
----
-
-## 📍 SESSION LOG — 2026-09-25 (Issue 2 fixed — eatSignals/faqSchema calibration)
-
-Picked up Issue 2 from the 2026-06-15 session log. Read `docs/qa-run-2026-06/RESULTS.md`,
-the 4 sites' `*.truth.*.json` files and `VERIFICATION-PROTOCOL.md`, then re-scanned the 4 QA
-sites (free tier, `npm run dev -- -p 8012`, 2× per site to cover Flash's non-determinism) as a
-BEFORE baseline. Result: `contentDepth` was already correct on current code (page-count
-threshold alone gives the right verdict now) — 4 of the original 5 mismatches remained:
-`eatSignals` bad on tvakanten/roranalys/bjurfors (truth: warning), `faqSchema` bad on roranalys
-(truth: warning).
-
-**Root causes (not just "Flash being harsh"):**
-1. `eatSignals`'s prompt REGLER text said "ok/warning/delvis/mycket svaga" with no numbers —
-   Flash counted certification and Person-schema/named-person as TWO separate missing signals
-   instead of the ONE combined signal the protocol's own "good" definition implies (3 real
-   requirements, not 4), so 2-of-3 real requirements missing looked like "3-4 missing" → `bad`.
-2. `faqSchema`: `extractFAQContent()` in `enhancedScraper.ts` required the literal word "faq"
-   inside the accordion element's own text. roranalys.se's `<h3>FAQ</h3>` heading is in a
-   SIBLING div, not inside `<div class="module accordion">`, so the 4 real FAQ questions in
-   the accordion were never detected.
-
-**Fixes (see CLAUDE.md "eatSignals/faqSchema-kalibrering..." for full detail):**
-- `app/api/enhanced-scan/route.ts` `buildEATPrompt()` — REGLER rewritten with an explicit
-  three-requirement count (Om oss + org.nr + cert-OR-person as one signal; warning=1-2
-  missing, bad=all 3 missing).
-- `app/lib/checkBuilder.ts` #25 `eatSignals` — status is now decided **deterministically** from
-  the same three scraper facts (never from Flash's own status field), because even after the
-  prompt fix Flash proved nondeterministic (two identical scans of tvakanten.se, same correctly
-  grouped found/missing list, different status). Flash still supplies the finding/fix text.
-- `app/lib/enhancedScraper.ts` `extractFAQContent()` — dropped the `.includes('faq')`
-  requirement on the accordion check, matching `VERIFICATION-PROTOCOL.md`'s own wording
-  ("accordion" is an independent pattern, not conditional on the word "faq").
-  Tightened afterwards: an accordion only counts as FAQ content if its text contains at least two
-  "?" — otherwise menu/price-list/spec accordions were reported as FAQ content (test added).
-- New tests: `tests/eatSignalsDeterministic.test.ts` (6 cases incl. the sprej.nu control case —
-  all 3 signals missing must stay `bad`), `tests/enhancedScraper.test.ts` (5 cases incl. the
-  roranalys.se accordion regression + a sprej.nu no-FAQ control), `tests/eatPromptThresholds.test.ts`
-  (grep-lock on the prompt text). Full suite: 378/378 passing (was 372 before this session).
-
-**AFTER verification** (2× per site, free tier): tvakanten/roranalys/bjurfors `eatSignals` →
-`warning` (matches truth) on every run, roranalys `faqSchema` → `warning` (matches truth) on
-every run, sprej `eatSignals`/`faqSchema`/`contentDepth` unchanged at `bad` (control case —
-protocol requires `bad`, confirmed NOT softened). No Pro escalation was needed — recalibrating
-the prompt + a deterministic status computation was sufficient. bjurfors `faqSchema` stays
-`bad` vs. truth `warning`, but that's the separately-classified BUG4 cascade (`/sv/faq/` not
-scanned), not part of Issue 2.
-
-**Not touched:** Issue 1 (PSI timeout), Issue 3 (multi-office UX), Issue 4 (3 investigations) —
-still open, see below.
-
----
-
-## 📍 SESSION LOG — 2026-06-15 (overseer planning; no code changed)
-
-Context: returned to the project after the June-10 QA run (`docs/qa-run-2026-06/RESULTS.md`,
-QA match 83% / 119-144). Synced Mac with `origin/master` (pulled 4 commits pushed from the PiPod:
-dead Gemini model fix, å/ä/ö fix, the QA run, and the scraper QA bug batch). Reviewed the open items
-and agreed a fix plan. **No code was changed this session.** Decisions below; pick up from "NEXT".
-
-### Findings
-- **Issue 1 — PSI / Core Web Vitals (`cwv` = notMeasured): RESOLVED, not a real bug.**
-  Verified live: a direct PageSpeed Insights call for sprej.nu returns a real score (0.65).
-  The June-10 `429 "Queries per day"` was **transient daily-quota exhaustion** during heavy QA
-  testing, not a misconfiguration. PSI API **is enabled** in Google Cloud project
-  `ferrous-cursor-322611` (project number 583797351490), and the existing Maps Platform key
-  (the `GOOGLE_PLACES_API_KEY`, ends `…1jyo`, no API restrictions) **already permits PSI**.
-  The scanner's `pageSpeed.ts` already falls back to that key, so PSI works again now that the
-  daily quota reset. **No new key, no quota increase, no Console change needed.**
-  - Only remaining: optional robustness — bump `getCwvMetrics` timeout 12s → 30s (`app/lib/pageSpeed.ts:45`).
-
-- **Issue 2 — Flash verdicts too harsh** (`eatSignals`, `faqSchema`, `contentDepth` set `bad` where
-  protocol says `warning`; 5 QA mismatches). DECISION: **No Anthropic models** (cost). Plan =
-  recalibrate the Flash prompt verdict thresholds to match `VERIFICATION-PROTOCOL.md` first (free).
-  Only if that's not enough, escalate **just those 3 checks** to `google/gemini-2.5-pro`
-  (already integrated in PRO_MODELS). Do NOT add Claude/OpenAI for this.
-
-- **Issue 3 — National chains with no city pick the wrong office** (bjurfors matched Spain / Kungälv
-  instead of HQ Göteborg). Plan = when Places returns multiple offices and no city was entered,
-  flag "flera kontor hittade — ange stad" in the UI instead of silently scanning a random one.
-
-- **Issue 4 — 3 "needs investigation" items** (from RESULTS.md §Behöver vidare undersökning):
-  `roranalys competitors`=notMeasured (check `places.ts` — missing location/primaryType in Place Details);
-  `bjurfors contactInfo`=good but truth says bad (log bodyText to see what window was scanned);
-  `tvakanten hreflang`=notMeasured (language switcher likely in stripped nav). Diagnose before fixing.
-
-### Recommended order (agreed)
-1. Issue 1 timeout bump (12→30s) — trivial
-2. Issue 2 recalibrate Flash prompts → re-test → escalate to 2.5 Pro only if needed
-3. Issue 3 chain/no-city UI flag
-4. Issue 4 investigations
-Test every change against the truth files in `docs/qa-run-2026-06/`; target QA match 83% → ~90%.
-Commit + push each (Mac ↔ PiPod sync via GitHub).
-
-### NEXT SESSION — start here
-- [ ] Issue 1: bump PSI timeout 12s→30s in `app/lib/pageSpeed.ts:45`
-- [x] Issue 2: recalibrate Flash verdict thresholds (eatSignals/faqSchema/contentDepth); re-scan 4 QA sites — done 2026-09-25, see session log above
-- [x] Issue 3: multi-office "ange stad" flag (no-city chains) — done 2026-09-25, see session log above
-- [ ] Issue 4: diagnose roranalys competitors / bjurfors contactInfo / tvakanten hreflang
-- (separate, NOT this project) `~/scan-mac.log` cron job points at missing `~/.local/bin/python3`;
-  real python3 is `/opt/homebrew/bin/python3` — one-line crontab fix if wanted.
+- [x] Issue 1 (PSI-timeout 12s→30s) — löst, ej en riktig bugg (transient kvot), timeout ändå bumpad (commit `e2cbfe4`)
+- [x] Issue 2 (eatSignals/faqSchema-kalibrering mot VERIFICATION-PROTOCOL.md) — commits `f98e3a9`, `db25529`; se CLAUDE.md "eatSignals/faqSchema-kalibrering"
+- [x] Issue 3 (nationella kedjor utan stad → "ange stad"-flagga i stället för slumpmässigt kontor) — commits `5919ff6`, `4e4a8c8`; se CLAUDE.md "Flera kontor / ingen stad"
+- [x] Issue 4a (roranalys competitors notMeasured — Places 400 på `includedPrimaryTypes`) — commits `c68a56c`, `0828caf`; se CLAUDE.md "Competitors check #36"
+- [x] Issue 4b (bjurfors contactInfo false positive på bar-ordet "kontakt") — commit `2039604`; se CLAUDE.md "contactInfo (#30)"
+- [x] Issue 4c (tvakanten hreflang false notApplicable — språkväljare utan hreflang-taggar) — commit `f6eb841`; se CLAUDE.md "hreflang (#9)"
+- [x] Uppföljningar samma session: competitors-radie 1,5 km enforced (`8cfb91c`), `/sv/` borttagen ur språkväljar-mönstret (`8cfb91c`)
+- [x] Staging-flöde dokumenterat + `deploy/pi-staging.sh` (`555af5b`, `9c7ac3f`); `next dev`/`next build` kan aldrig mer skriva över prod-bygget (`eb5c569`, `ccab807`)
 
 ---
 
@@ -357,49 +147,50 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 
 ## Polish / Launch Prep
 
-- [ ] Remove dev toggle from production (env-gate or delete)
-- [ ] Add rate limiting to Next.js API routes (3 scans/IP/hour)
-- [ ] Move .env API keys to .env.local (and add .env to .gitignore)
-- [ ] Update CLAUDE.md to reflect actual Next.js architecture
+- [x] Remove dev toggle from production — env-gated (`AppShell.tsx` `IS_DEV = NODE_ENV === 'development'`, auto-paid preview never runs in prod)
+- [x] Rate limiting on API routes — `app/lib/rateLimit.ts`: 5 scans/10 min + 20/dag per IP, 60/timme globalt, checkout 10/10 min (in-app, not nginx-level 3/hour as originally sketched)
+- [x] Move .env API keys to .env.local (and add .env to .gitignore) — `.gitignore` excludes `.env`, `.env.local`, `.env.*.local`
+- [x] Update CLAUDE.md to reflect actual Next.js architecture
 - [ ] Clean up or archive dead code (backend/, frontend/ directories)
-- [ ] Fix nginx config for analyze.pipod.net (proxy everything to 8010, not alias to dead frontend/dist/)
+- [x] Fix nginx config for analyze.pipod.net — proxies to `127.0.0.1:8010`
 - [ ] Add robots meta tag check to scraper (`<meta name="robots" content="noindex">` detection)
-- [ ] Add Open Graph tag extraction to scraper
-- [ ] SEO: add proper `<title>` and `<meta description>` to the app itself
+- [x] Open Graph tag extraction — `enhancedScraper.ts` (og:title/description/image)
+- [x] SEO: proper `<title>` and `<meta description>` — `app/layout.tsx`
 - [ ] Favicon / branding on the scanner page
-- [ ] Footer with contact/about info
+- [x] Footer with contact/about info — `landing/Footer.tsx`, `app/om-oss`
 - [ ] Loading state improvements (skeleton or better spinner for premium scan)
 - [ ] Analytics (simple page view / scan count tracking)
 
 ---
 
-## Fas 4: Leveranskedja (planerad — IMPLEMENTATION-PLAN.md)
+## Fas 4: Leveranskedja
 
-- [ ] 4.1 Email: Gratis-rapport via email (send-report API route)
-- [ ] 4.2 Persistens: Spara ScanResult till fil (storage.ts)
-- [ ] 4.3 PDF-generering via Playwright
-- [ ] 4.4 Premium webbsida med token-baserat inlogg (/report/[scanId])
-- [ ] 4.5 Betalflöde (Stripe/Swish)
-- [ ] 4.6 Review-verktyg för Jens (/admin/[scanId])
+- [x] 4.2 Persistens — SQLite `data/checkouts.db` (`checkouts` + `scan_cache`), Places-innehåll strippat före lagring, rehydreras vid läsning (se CLAUDE.md "Google Places-villkoren")
+- [x] 4.4 Premium-sida — `/report?session_id=`, gated på Stripe `payment_status` (ej det ursprungligen tänkta token-baserade `/report/[scanId]`)
+- [x] 4.5 Betalflöde — Stripe (499 kr), asynkron finalize + statuspolling; ingen Swish
+- [ ] 4.1 Email — gratis-rapport via e-post. Blockerad på ägarbeslut: vilken provider (Resend/Postmark/SES) + API-nyckel + avsändardomän-DNS (SPF/DKIM/DMARC), och om det ens är önskat för lead capture på gratisrapporten (Jens)
+- [ ] 4.3 PDF-generering. Blockerad på ägarbeslut: är PDF fortfarande önskat nu när det finns en webbrapport (Jens)
+- [ ] 4.6 Review-verktyg för Jens. Blockerad på ägarbeslut: vill Jens ha manuell granskning före leverans (ändrar dagens auto-leverans-flöde) + admin-autentisering (Jens)
+- [ ] Riktigt end-to-end-köp i produktion (Stripe) — aldrig verifierat; kräver Jens
 
 ## Future / V2
 
 - [ ] Proper Redis or persistent cache (survive restarts)
 - [x] E-A-T dedicated check — included in enhanced scan (Flash #3: E-A-T analysis)
 - [ ] Schema validation (correctness, not just existence)
-- [ ] Core Web Vitals / page speed measurement
+- [x] Core Web Vitals / page speed measurement — `pageSpeed.ts` (PSI, CrUX field data preferred)
 - [x] Internal link structure analysis — included in enhanced scan checks
 - [x] Local directory presence check (Eniro, Hitta) — directoryChecker.ts via Tavily
 - [ ] Content freshness cycle analysis (regularity, not just dates)
 - [x] NAP consistency — included in enhanced scan (directoryChecker + Places API)
 - [ ] SSE streaming for real-time progress (instead of simulated steps)
 - [ ] User accounts / scan history
-- [ ] Stripe payment integration (→ Fas 4.5)
+- [x] Stripe payment integration (→ Fas 4.5)
 - [ ] PDF report export (→ Fas 4.3)
 - [ ] Email report delivery (→ Fas 4.1)
 - [ ] Agency plan (multi-client dashboard)
 - [x] Competitor comparison — included in Pro synthesis
 - [ ] Content recommendations via AI
-- [ ] Tests for Next.js API routes and lib functions
+- [x] Tests for Next.js API routes and lib functions — `tests/` has 39 files
 - [ ] Error tracking (Sentry or similar)
 - [ ] Structured logging (beyond console.error)

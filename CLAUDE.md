@@ -418,14 +418,15 @@ railway deployment redeploy     # trigger redeploy
 
 ## URLs
 
-- **Production:** https://aiscanner-production.up.railway.app
+- **Production:** https://robotbyran.com (Railway, auto-deploy on push to master)
+- **Staging (Pi):** https://analyze.pipod.net (independent copy, `ai-scanner-api.service` — see "Staging på Pi:n / deploy-flöde")
 - **Local:** http://localhost:3000
 - **Main API:** POST /api/enhanced-scan (city param optional)
 - **Legacy API:** POST /api/scan, POST /api/full-scan
 
 ## Environment
 
-- `.env.local` at project root — synced from Railway variables: `OPENROUTER_API_KEY`, `GOOGLE_PLACES_API_KEY`, `TAVILY_API_KEY`, `NEXT_PUBLIC_APP_URL`
+- `.env.local` at project root — synced from Railway variables: `OPENROUTER_API_KEY`, `GOOGLE_PLACES_API_KEY`, `TAVILY_API_KEY`, `NEXT_PUBLIC_APP_URL`, `STRIPE_API_KEY`, `INTERNAL_SCAN_TOKEN` (never printed, never committed — see "Betalflöde"/Task 3 above for what the latter two gate)
 - `railway.toml`: nixpacks build, standalone start command, healthcheck
 - Railway auto-deploys on push to GitHub master
 - `HOSTNAME=0.0.0.0` required in Railway env for Next.js standalone to bind correctly
