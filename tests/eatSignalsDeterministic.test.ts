@@ -57,6 +57,7 @@ function makeEnhancedData(overrides: Partial<EnhancedData> = {}): EnhancedData {
     socialLinks: [],
     sameAsLinks: [],
     hreflangTags: [],
+    hasLanguageSwitcher: false,
     hasFAQSchema: false,
     faqQuestions: [],
     hasFAQContent: false,

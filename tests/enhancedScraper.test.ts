@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import * as cheerio from 'cheerio'
-import { extractFAQContent } from '@/app/lib/enhancedScraper'
+import { extractFAQContent, detectLanguageSwitcher } from '@/app/lib/enhancedScraper'
 
 // QA-körning juni 2026 (docs/qa-run-2026-06/RESULTS.md): roranalys.se faqSchema fick "bad" av
 // scannern trots att truth-agenten (verifierad mot live-HTML) bedömde "warning" — sajten har ett
@@ -62,5 +62,58 @@ describe('extractFAQContent', () => {
   it('detects class/id containing "faq"', () => {
     const $ = cheerio.load('<div class="faq-section"><p>Vanliga frågor</p></div>')
     expect(extractFAQContent($)).toBe(true)
+  })
+})
+
+// tvakanten.se-buggen (verifierad live sep 2026): hreflang (#9) blev "notApplicable" trots
+// att sajten har en "🇬🇧 ENGLISH"-länk till en engelsk sidversion (https://www.tvakanten.se/home/)
+// och inga hreflang-taggar alls. Flash-checken byggde bara på hreflangTags-listan -- den fick
+// aldrig se navigeringens språklänk.
+describe('detectLanguageSwitcher', () => {
+  const origin = 'https://www.tvakanten.se'
+
+  it('upptäcker en flagg-emoji-länk till en engelsk sidversion (tvakanten.se-fallet)', () => {
+    const $ = cheerio.load(`
+      <nav>
+        <a href="/">Hem</a>
+        <a href="/home/">🇬🇧 ENGLISH</a>
+      </nav>
+    `)
+    expect(detectLanguageSwitcher($, origin)).toBe(true)
+  })
+
+  it('upptäcker en länktext som är ett rent språknamn (utan flagga)', () => {
+    const $ = cheerio.load(`<nav><a href="/en/">English</a></nav>`)
+    expect(detectLanguageSwitcher($, origin)).toBe(true)
+  })
+
+  it('upptäcker ett /en/-sökvägssegment även utan språknamn i länktexten', () => {
+    const $ = cheerio.load(`<nav><a href="/en/home">Switch</a></nav>`)
+    expect(detectLanguageSwitcher($, origin)).toBe(true)
+  })
+
+  it('upptäcker en lang=-querysträng', () => {
+    const $ = cheerio.load(`<nav><a href="/page?lang=en">Switch</a></nav>`)
+    expect(detectLanguageSwitcher($, origin)).toBe(true)
+  })
+
+  it('ignorerar en länk till en EXTERN engelskspråkig sajt (kräver samma origin)', () => {
+    const $ = cheerio.load(`<nav><a href="https://www.bbc.com/">🇬🇧 English news</a></nav>`)
+    expect(detectLanguageSwitcher($, origin)).toBe(false)
+  })
+
+  it('returnerar false utan någon språklänk (sprej.nu-fallet -- ska förbli notApplicable)', () => {
+    const $ = cheerio.load(`
+      <nav>
+        <a href="/kontakt">Kontakt</a>
+        <a href="/om-oss">Om oss</a>
+      </nav>
+    `)
+    expect(detectLanguageSwitcher($, origin)).toBe(false)
+  })
+
+  it('kräver att länktexten är ett RENT språknamn -- en artikel om "England" ska inte räknas', () => {
+    const $ = cheerio.load(`<a href="/resa-till-england">Resa till England</a>`)
+    expect(detectLanguageSwitcher($, origin)).toBe(false)
   })
 })

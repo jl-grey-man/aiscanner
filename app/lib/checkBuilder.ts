@@ -191,6 +191,45 @@ export function buildOpeningHoursCheck(
 }
 
 /**
+ * Check #9 (hreflang) — normalt Flash-driven (techHreflang), men Flash-prompten ser
+ * bara den extraherade hreflangTags-listan, aldrig om sajten har en språkväxlare i
+ * navigeringen. Fix sep 2026 (tvakanten.se-buggen): sajten har en "🇬🇧 ENGLISH"-länk
+ * till en engelsk sidversion men saknar hreflang-taggar helt, vilket Flash tolkade som
+ * notApplicable ("bara ett språk"). När det INTE finns hreflang-taggar OCH en
+ * same-origin språkväxlare upptäcks deterministiskt (enhancedScraper.detectLanguageSwitcher)
+ * skriver vi över med ett definitivt "bad" i stället för att lita på att modellen
+ * märker en signal den aldrig fick se. I alla andra fall: oförändrat Flash-beteende.
+ */
+export function buildHreflangCheck(
+  hreflangTags: string[],
+  hasLanguageSwitcher: boolean,
+  flash: { status: CheckStatus; finding: string; fix: string | null; data: Record<string, unknown> | null }
+): {
+  status: CheckStatus
+  source: CheckResult['source']
+  finding: string
+  fix: string | null
+  data: Record<string, unknown> | null
+} {
+  if (hreflangTags.length === 0 && hasLanguageSwitcher) {
+    return {
+      status: 'bad',
+      source: 'scraper',
+      finding: 'Sajten har innehåll på flera språk men saknar hreflang-taggar.',
+      fix: 'Lägg till <link rel="alternate" hreflang="..." href="..."> i <head> för varje språkversion (t.ex. hreflang="sv" och hreflang="en"), plus en hreflang="x-default" som pekar på standardspråket.',
+      data: null,
+    }
+  }
+  return {
+    status: flash.status,
+    source: 'ai',
+    finding: flash.finding,
+    fix: flash.fix,
+    data: flash.data,
+  }
+}
+
+/**
  * Check #35 (gbpData) för en hittad Places-plats. Exporterad så en lagrad
  * premiumrapport kan bygga om exakt samma finding/data från färsk Places-data
  * (placesContent.ts) — Places-innehåll får inte lagras.
@@ -442,15 +481,11 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     techSocial.data,
   ))
 
-  // #9 hreflang (AI)
-  checks.push(makeCheck(
-    'hreflang',
-    techHreflang.status,
-    'ai',
-    techHreflang.finding,
-    techHreflang.fix,
-    techHreflang.data,
-  ))
+  // #9 hreflang (AI, deterministic override when no tags + language switcher detected)
+  {
+    const hreflang = buildHreflangCheck(enhancedData.hreflangTags, enhancedData.hasLanguageSwitcher, techHreflang)
+    checks.push(makeCheck('hreflang', hreflang.status, hreflang.source, hreflang.finding, hreflang.fix, hreflang.data))
+  }
 
   // #10 cwv (PageSpeed Insights API)
   if (cwvMetrics) {

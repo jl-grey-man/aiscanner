@@ -22,7 +22,17 @@ Three pre-diagnosed bugs fixed, one commit each, TDD (failing test first):
    `phones.length > 0 || <email regex against fullBodyText>` (was checked against the 800-char sliced
    `bodyText`, missing emails placed later in longer pages). Test: `tests/scraper.test.ts` (4 cases).
    See CLAUDE.md "contactInfo (#30) — no bare-keyword branch".
-3. *(next commit)* `hreflang` (#9) false `notApplicable` on tvakanten.se.
+3. **`hreflang` (#9) false `notApplicable` on tvakanten.se** — check #9 is Flash-driven off
+   the extracted `hreflangTags` list only; tvakanten.se has a same-origin "🇬🇧 ENGLISH" nav
+   link to an English page but no hreflang tags, so Flash never saw the language-switcher
+   signal and concluded (correctly per its own prompt rule) that the site had one language.
+   Fix: new deterministic `detectLanguageSwitcher()` in `enhancedScraper.ts` (same-origin,
+   language-name/flag-emoji link text, or `/en/`-style path segment / `lang=` query) feeds a
+   new `EnhancedData.hasLanguageSwitcher` field; `checkBuilder.ts`'s new `buildHreflangCheck()`
+   overrides to `bad` only when there are no hreflang tags AND a switcher was detected —
+   otherwise the Flash result passes through unchanged (sprej.nu stays `notApplicable`).
+   Tests: `tests/enhancedScraper.test.ts` (7 cases), `tests/checkBuilder.test.ts` (3 cases).
+   See CLAUDE.md "hreflang (#9) — deterministic language-switcher override".
 
 ---
 

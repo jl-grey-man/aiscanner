@@ -3,6 +3,7 @@ import {
   computeWeightedPriorities,
   buildOpeningHoursCheck,
   buildCompetitorsNotMeasuredFinding,
+  buildHreflangCheck,
   MAX_CRITICAL_CHECKS,
 } from '@/app/lib/checkBuilder'
 import type { CheckKey, CheckResult } from '@/app/lib/scanResult'
@@ -157,5 +158,35 @@ describe('buildCompetitorsNotMeasuredFinding', () => {
     })
     expect(finding).toContain('sökningen mot Google Places misslyckades')
     expect(finding).not.toContain('Google Business Profile eller positionsdata saknas')
+  })
+})
+
+// tvakanten.se-buggen (sep 2026): sajten har en "🇬🇧 ENGLISH"-navigeringslänk men inga
+// hreflang-taggar. Flash-prompten ser bara hreflangTags-listan, aldrig språkväxlaren,
+// och bedömde det som notApplicable ("bara ett språk").
+describe('buildHreflangCheck', () => {
+  const flashNotApplicable = { status: 'notApplicable' as Status, finding: 'Sajten verkar bara ha ett språk.', fix: null, data: null }
+  const flashOk = { status: 'ok' as Status, finding: 'hreflang korrekt implementerad.', fix: null, data: { foo: 'bar' } }
+
+  it('skriver över till bad när inga hreflang-taggar finns OCH en språkväxlare upptäckts (tvakanten.se-fallet)', () => {
+    const res = buildHreflangCheck([], true, flashNotApplicable)
+    expect(res.status).toBe('bad')
+    expect(res.source).toBe('scraper')
+    expect(res.finding).toBe('Sajten har innehåll på flera språk men saknar hreflang-taggar.')
+    expect(res.fix).toContain('hreflang')
+  })
+
+  it('behåller Flash-resultatet oförändrat när ingen språkväxlare upptäckts (sprej.nu-fallet -- ska förbli notApplicable)', () => {
+    const res = buildHreflangCheck([], false, flashNotApplicable)
+    expect(res.status).toBe('notApplicable')
+    expect(res.source).toBe('ai')
+    expect(res.finding).toBe(flashNotApplicable.finding)
+  })
+
+  it('behåller Flash-resultatet oförändrat när hreflang-taggar redan finns, även med en språkväxlare', () => {
+    const res = buildHreflangCheck(['sv', 'en'], true, flashOk)
+    expect(res.status).toBe('ok')
+    expect(res.source).toBe('ai')
+    expect(res.data).toEqual({ foo: 'bar' })
   })
 })

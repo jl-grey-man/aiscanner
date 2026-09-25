@@ -56,7 +56,7 @@ function enhanced(overrides: Partial<EnhancedData> = {}): EnhancedData {
   return {
     robotsTxt: '', aiCrawlersBlocked: [], aiCrawlerBlocks: [],
     ogTitle: null, ogDescription: null, ogImage: null, hasOgTags: false,
-    socialLinks: [], sameAsLinks: [], hreflangTags: [],
+    socialLinks: [], sameAsLinks: [], hreflangTags: [], hasLanguageSwitcher: false,
     hasFAQSchema: false, faqQuestions: [], hasFAQContent: false,
     hasServiceSchema: false, hasMenuSchema: false, hasProductSchema: false, serviceSchemaTypes: [],
     sitemapPageCount: 0, hasBlogOrGuide: false, blogPaths: [],

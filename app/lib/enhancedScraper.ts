@@ -57,6 +57,8 @@ export interface EnhancedData {
 
   // hreflang
   hreflangTags: string[]
+  /** Same-origin språkväxlare i navigeringen (t.ex. "🇬🇧 ENGLISH") — se detectLanguageSwitcher(). */
+  hasLanguageSwitcher: boolean
 
   // FAQ
   hasFAQSchema: boolean
@@ -390,6 +392,66 @@ export function extractFAQContent($: cheerio.CheerioAPI): boolean {
   return hasDlFaq || hasDetails || hasFaqClass || hasAccordion
 }
 
+// Rena språknamn (inte förkortningar som "EN"/"SV" -- för lätt att träffa av misstag)
+// som en språkväxlares länktext brukar visa, med eller utan flaggemoji intill.
+const LANGUAGE_SWITCHER_WORDS = [
+  'english', 'svenska', 'deutsch', 'suomi', 'norsk', 'norsk bokmål', 'dansk',
+  'français', 'francais', 'español', 'espanol', 'italiano', 'nederlands',
+  'polski', 'português', 'portugues', 'suomeksi', 'русский', '中文', '日本語',
+]
+// Två regionala indikator-emoji i följd (flaggor), t.ex. 🇬🇧.
+const FLAG_EMOJI_RE = /\p{Regional_Indicator}{2}/u
+const LANG_PATH_SEGMENT_RE = /\/(en|en-us|en-gb|sv|de|fr|es|it|nl|pl|fi|da|no)(\/|$)/i
+const LANG_QUERY_RE = /(?:^|[?&])(?:lang|language|hl)=/i
+
+/**
+ * Deterministisk detektor för en språkväxlare i sidans navigering (fix sep 2026,
+ * tvakanten.se-buggen): sajten har en "🇬🇧 ENGLISH"-länk till en engelsk sidversion
+ * men saknar hreflang-taggar helt. Den gamla hreflang-checken (#9) byggde bara på
+ * Flash-promptens hreflangTags-lista -- modellen fick aldrig se navigeringens
+ * språklänkar och bedömde det som notApplicable ("bara ett språk").
+ *
+ * Konservativ med flit för att undvika falska positiva: kräver SAMMA origin (en
+ * länk till en extern engelskspråkig sajt räknas inte) och antingen en kort
+ * länktext som är ett rent språknamn eller en flaggemoji, eller en URL med ett
+ * tydligt språksegment i sökvägen (/en/, /en-gb/, ...) eller en lang-querysträng.
+ */
+export function detectLanguageSwitcher($: cheerio.CheerioAPI, origin: string): boolean {
+  let originHost: string
+  try {
+    originHost = new URL(origin).hostname.replace(/^www\./, '')
+  } catch {
+    return false
+  }
+
+  let found = false
+  $('a[href]').each((_, el) => {
+    if (found) return
+    const href = $(el).attr('href') || ''
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return
+
+    let resolved: URL
+    try {
+      resolved = new URL(href, origin)
+    } catch {
+      return
+    }
+    // Kräver samma origin -- en länk till en extern engelskspråkig sajt ska inte räknas.
+    if (resolved.hostname.replace(/^www\./, '') !== originHost) return
+
+    const text = $(el).text().trim().toLowerCase()
+    const textIsLanguageName = LANGUAGE_SWITCHER_WORDS.includes(text)
+    const textHasFlag = FLAG_EMOJI_RE.test($(el).text())
+    const pathHasLangSegment = LANG_PATH_SEGMENT_RE.test(resolved.pathname)
+    const hasLangQuery = LANG_QUERY_RE.test(resolved.search)
+
+    if (textIsLanguageName || textHasFlag || pathHasLangSegment || hasLangQuery) {
+      found = true
+    }
+  })
+  return found
+}
+
 export async function scrapeEnhanced(url: string): Promise<EnhancedData> {
   const base = new URL(url).origin
   const defaults: EnhancedData = {
@@ -403,6 +465,7 @@ export async function scrapeEnhanced(url: string): Promise<EnhancedData> {
     socialLinks: [],
     sameAsLinks: [],
     hreflangTags: [],
+    hasLanguageSwitcher: false,
     hasFAQSchema: false,
     faqQuestions: [],
     hasFAQContent: false,
@@ -462,6 +525,7 @@ export async function scrapeEnhanced(url: string): Promise<EnhancedData> {
     const lang = $(el).attr('hreflang')
     if (lang) hreflangTags.push(lang)
   })
+  const hasLanguageSwitcher = detectLanguageSwitcher($, base)
 
   // Schema info
   const schemaInfo = extractSchemaInfo($)
@@ -524,6 +588,7 @@ export async function scrapeEnhanced(url: string): Promise<EnhancedData> {
     socialLinks,
     sameAsLinks,
     hreflangTags: [...new Set(hreflangTags)],
+    hasLanguageSwitcher,
     hasFAQSchema: schemaInfo.hasFAQSchema,
     faqQuestions: schemaInfo.faqQuestions,
     hasFAQContent,
