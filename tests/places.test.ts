@@ -114,8 +114,22 @@ describe('findNearbyCompetitors', () => {
     expect(textBody.locationBias.circle.center).toEqual({ latitude: 57.7, longitude: 11.97 })
 
     // Post-filtrerad på types.includes('general_contractor') -> bara Alfa/Fjärran, inte Beta
-    // (electrician), och sorterad på avstånd -> Alfa (nära) före Fjärran (långt bort).
-    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-a', 'ChIJ-far'])
+    // (electrician). Fjärran ligger ~40 km bort, utanför radien på 1500 m -> bortfiltrerad
+    // (locationBias är bara en viktning, ingen gräns, så radien måste kontrolleras själv).
+    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-a'])
+  })
+
+  it('Text Search-fallbacken sorterar på avstånd inom radien', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    // ~1 km bort, står först i Googles svar -- ska hamna efter Alfa (~0 m).
+    const enKmBort = { ...konkurrentA, id: 'ChIJ-1km', displayName: { text: 'Kilometer Bygg' }, location: { latitude: 57.709, longitude: 11.97 } }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('Unsupported types: general_contractor.', { status: 400 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [enKmBort, konkurrentA] }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await findNearbyCompetitors(57.71, 11.97, 'general_contractor', 'exclude-me', 1500, 6, 'Generalentreprenör')
+    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-a', 'ChIJ-1km'])
   })
 
   it('HTTP 400 "Unsupported types" utan primaryTypeDisplayName -> ingen Text Search, returnerar []', async () => {
@@ -194,7 +208,8 @@ describe('findNearbyCompetitors', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ places: [far, near, mid] }), { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 2, 'Generalentreprenör')
+    // Stor radie (100 km) så att testet bara prövar capningen, inte radiefiltret.
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 100000, 2, 'Generalentreprenör')
     expect(result.map((c) => c.placeId)).toEqual(['ChIJ-near', 'ChIJ-mid'])
   })
 })

@@ -284,8 +284,11 @@ export async function findNearbyCompetitors(
         ? haversineMeters(lat, lng, p.location.latitude, p.location.longitude)
         : Infinity,
     }))
-    withDistance.sort((a, b) => a.distance - b.distance)
-    const capped = withDistance.slice(0, maxResultCount).map((x) => x.place)
+    // Text Search's locationBias only weights results — it is not a boundary — so enforce
+    // the same radius as Nearby Search ourselves (the finding text says "≤1,5 km").
+    const withinRadius = withDistance.filter((x) => x.distance <= radiusMeters)
+    withinRadius.sort((a, b) => a.distance - b.distance)
+    const capped = withinRadius.slice(0, maxResultCount).map((x) => x.place)
 
     return toCompetitorsList(capped, lat, lng).slice(0, 5)
   } catch (err: any) {

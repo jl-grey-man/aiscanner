@@ -401,7 +401,9 @@ const LANGUAGE_SWITCHER_WORDS = [
 ]
 // Två regionala indikator-emoji i följd (flaggor), t.ex. 🇬🇧.
 const FLAG_EMOJI_RE = /\p{Regional_Indicator}{2}/u
-const LANG_PATH_SEGMENT_RE = /\/(en|en-us|en-gb|sv|de|fr|es|it|nl|pl|fi|da|no)(\/|$)/i
+// Inte "sv": scannern riktar sig mot svenska sajter, och en helt svensk sajt med /sv/-prefix i
+// alla sökvägar är inte flerspråkig. Bara segment för ANDRA språk än svenska räknas.
+const LANG_PATH_SEGMENT_RE = /\/(en|en-us|en-gb|de|fr|es|it|nl|pl|fi|da|no)(\/|$)/i
 const LANG_QUERY_RE = /(?:^|[?&])(?:lang|language|hl)=/i
 
 /**

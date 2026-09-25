@@ -72,6 +72,17 @@ describe('extractFAQContent', () => {
 describe('detectLanguageSwitcher', () => {
   const origin = 'https://www.tvakanten.se'
 
+  it('räknar inte en helt svensk sajt vars sökvägar börjar med /sv/ som flerspråkig', () => {
+    const $ = cheerio.load(`
+      <nav>
+        <a href="/sv/">Hem</a>
+        <a href="/sv/tjanster/">Tjänster</a>
+        <a href="/sv/kontakt/">Kontakt</a>
+      </nav>
+    `)
+    expect(detectLanguageSwitcher($, origin)).toBe(false)
+  })
+
   it('upptäcker en flagg-emoji-länk till en engelsk sidversion (tvakanten.se-fallet)', () => {
     const $ = cheerio.load(`
       <nav>

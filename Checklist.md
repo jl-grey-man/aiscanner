@@ -44,6 +44,8 @@ Three pre-diagnosed bugs fixed, one commit each, TDD (failing test first):
    otherwise the Flash result passes through unchanged (sprej.nu stays `notApplicable`).
    Tests: `tests/enhancedScraper.test.ts` (7 cases), `tests/checkBuilder.test.ts` (3 cases).
    See CLAUDE.md "hreflang (#9) — deterministic language-switcher override".
+   Follow-up: competitors Text Search fallback now enforces the 1500 m radius itself (locationBias is only a bias; live roranalys showed hits at 1.6 and 2.2 km under a "≤1,5 km" heading).
+   Follow-up: `/sv/` removed from the language path-segment pattern — a Swedish-only site with `/sv/` paths was a false positive (test added).
 
 ---
 
