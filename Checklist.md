@@ -15,7 +15,13 @@ Three pre-diagnosed bugs fixed, one commit each, TDD (failing test first):
    finding text now also distinguishes "search failed" (place has location+primaryType) from "no GBP/
    position" (`buildCompetitorsNotMeasuredFinding()`). Tests: `tests/places.test.ts` (7 new cases),
    `tests/checkBuilder.test.ts` (3 new cases). See CLAUDE.md "Competitors check #36".
-2. *(next commit)* `contactInfo` (#30) false-positive `ok` on bjurfors.se.
+2. **`contactInfo` (#30) false-positive `ok` on bjurfors.se** — `hasContactInfo` (`app/lib/scraper.ts`)
+   had a bare-keyword fallback (`/kontakt|contact|telefon|\btel\b/i.test(bodyText)`) that passed on the
+   nav link "Kontakta mäklare"; bjurfors.se has no `<nav>`/`<header>` so that link is never stripped,
+   and the page has no phone or email at all. Fix: dropped the keyword branch; `hasContactInfo` is now
+   `phones.length > 0 || <email regex against fullBodyText>` (was checked against the 800-char sliced
+   `bodyText`, missing emails placed later in longer pages). Test: `tests/scraper.test.ts` (4 cases).
+   See CLAUDE.md "contactInfo (#30) — no bare-keyword branch".
 3. *(next commit)* `hreflang` (#9) false `notApplicable` on tvakanten.se.
 
 ---

@@ -413,7 +413,13 @@ export function extractSummary(html: string, url: string): PageSummary {
     ? 'Innehåller prisuppgifter'
     : 'Ingen meny/priser hittade'
 
-  const hasContactInfo = phones.length > 0 || /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(bodyText) || /kontakt|contact|telefon|\btel\b/i.test(bodyText)
+  // Sökes i HELA fullBodyText (som telefonsökningen ovan), inte den 800-tecken-kapade
+  // bodyText-slicen -- annars missas en e-postadress som råkar hamna efter cap:et.
+  // Den tidigare bara-nyckelord-grenen (/kontakt|contact|telefon|\btel\b/i) togs bort:
+  // den slog till på rena navigeringslänkar som "Kontakta mäklare" även när sidan
+  // varken hade telefon eller e-post (bjurfors.se saknar <nav>/<header> helt, så
+  // menyn strippas aldrig bort innan bodyText extraheras).
+  const hasContactInfo = phones.length > 0 || /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(fullBodyText)
 
   return {
     url,

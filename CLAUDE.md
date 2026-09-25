@@ -326,7 +326,7 @@ The scraper extracts these fields per page:
 | `phones` | string[] | Swedish format — söks i HELA strippade sidtexten (inte 800-fönstret) + JSON-LD `telephone` ur fulltexten, inkl. `@graph` |
 | `cities` | string[] | 12 major Swedish cities |
 | `menuSummary` | string | |
-| `hasContactInfo` | boolean | |
+| `hasContactInfo` | boolean | phone found OR email regex matches the FULL stripped body text (not the 800-char slice). No bare-keyword fallback — see below. |
 
 **Important:** Schema detection uses LOCAL_BUSINESS_SUBTYPES whitelist (~60 types). `Plumber`, `RealEstateAgent`, `Restaurant`, `Dentist` etc. all count as LocalBusiness. The AI prompt receives `LOCALBUSINESS_SUBTYP: Ja/Nej` so it knows whether a subtype is present.
 
@@ -498,6 +498,7 @@ Every frontend change MUST pass the following gate before being presented to the
 
 - **Schema detection:** The LOCAL_BUSINESS_SUBTYPES list in scraper.ts must be maintained. When schema.org adds new LocalBusiness subtypes, add them here. `@type`-extraktionen packar upp `@graph` (WordPress/Yoast lägger ALLA typer där utan toppnivå-@type) — ta aldrig bort den uppackningen. `telephone` extraheras ur schemats FULLTEXT i samma loop; `schemaScripts`-arrayen är 500-tecken-kapad och får ALDRIG användas för JSON.parse.
 - **Subpage fetching:** All page fetches use the full `BROWSER_HEADERS` — never override with a bare `User-Agent: Mozilla/5.0` (triggers WAF 466 on sites that accept the full header set). Sitemap `<loc>` values can be CDATA-wrapped (All in One SEO) — the wrapper is stripped before URL parsing. Host comparisons treat `www.` and naked domain as the same site, and all downstream URL logic uses the FINAL URL after redirects (`mainRes.url`).
+- **contactInfo (#30) — no bare-keyword branch (fix sep 2026, bjurfors.se-buggen):** `hasContactInfo` used to also pass on `/kontakt|contact|telefon|\btel\b/i.test(bodyText)` alone, with no phone or email required. bjurfors.se has neither a `<nav>` nor a `<header>` element, so its nav links (e.g. "Kontakta mäklare") are never stripped before `bodyText` is extracted — the check verified `ok` off a pure navigation link on a page with zero actual contact info. Fix: dropped the bare-keyword branch entirely; `hasContactInfo` is now `phones.length > 0 || <email regex>`, and the email regex is tested against the FULL stripped `fullBodyText` (like the phone search already was), not the 800-char AI-prompt `bodyText` slice. Test: `tests/scraper.test.ts`.
 - **JSON-LD parsing:** Wrapped in try/catch. Malformed JSON falls back to text search. Both code paths must set `hasAnyLocalBusinessSchema`.
 - **Google Maps detection:** Regex must be Google-specific: `/google\.com\/maps|maps\.google\.com|goo\.gl\/maps/i`. Do NOT widen to generic "map" detection.
 - **Canonical:** Extracted BEFORE cheerio removes `<head>` elements (step 2 in extractSummary).
