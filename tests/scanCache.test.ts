@@ -132,6 +132,7 @@ function makeContext(): ScanContext {
     placeId: 'ChIJtest-krogen',
     domainMatch: true,
     placeWarning: null,
+    multipleLocationsCount: null,
   }
 }
 
@@ -207,6 +208,20 @@ describe('serializeFreeScan / parseCachedFreeScan (v2 — inget Places-innehåll
   it('toCachedContext är en vitlista — okända fält följer inte med', () => {
     const ctx = { ...makeContext(), extraPlacesField: 'Testgatan 12' } as ScanContext
     expect(JSON.stringify(toCachedContext(ctx))).not.toContain('Testgatan 12')
+  })
+
+  // bjurfors.se-buggen (Checklist.md juni 2026): bara ANTALET kontor cachas -- ortnamnen
+  // är Places-innehåll (andra kontors adresser) och får inte lagras.
+  it('toCachedContext tar med multipleLocationsCount (bara antalet, inga ortnamn)', () => {
+    const ctx = { ...makeContext(), multipleLocationsCount: 15 }
+    expect(toCachedContext(ctx).multipleLocationsCount).toBe(15)
+  })
+
+  it('restoreScanContext för en tvetydig cachad rad behåller multipleLocationsCount', () => {
+    const ctx = { ...makeContext(), placeId: null, domainMatch: null, multipleLocationsCount: 15 }
+    const cached = toCachedContext(ctx)
+    const restored = restoreScanContext(cached, { place: null, competitorList: [] })
+    expect(restored.multipleLocationsCount).toBe(15)
   })
 
   it('rundtur ger samma kontext (utan Places-delar), scanDate, poäng och statusar', () => {

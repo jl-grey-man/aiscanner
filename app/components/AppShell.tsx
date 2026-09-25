@@ -164,7 +164,7 @@ export function AppShell() {
         {showPremium && IS_DEV && scanResultPaid ? (
           <PremiumReport scanResult={scanResultPaid} />
         ) : (
-          <FreeReport scanResult={scanResult} />
+          <FreeReport scanResult={scanResult} onRescan={(city) => analyze(scanResult.meta.url, city)} />
         )}
       </div>
     )

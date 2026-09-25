@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeWebsite } from '@/app/lib/scraper'
 import { scrapeEnhanced } from '@/app/lib/enhancedScraper'
-import { findBusinessByUrl, getPlaceDetails } from '@/app/lib/places'
-import type { NearbyCompetitor } from '@/app/lib/places'
+import { findBusinessByUrl, getPlaceDetails, extractCityFromAddress } from '@/app/lib/places'
+import type { NearbyCompetitor, MultipleLocationsInfo } from '@/app/lib/places'
 import { checkSwedishDirectories } from '@/app/lib/directoryChecker'
 import { checkAIMentions } from '@/app/lib/aiMentionChecker'
 import { getCwvMetrics } from '@/app/lib/pageSpeed'
@@ -600,6 +600,13 @@ interface CollectedScan {
   failedAssessments: string[]
   /** Paid: konkurrentsajterna scannas redan här, parallellt med Flash-anropen. Free: []. */
   competitorScansPromise: Promise<CompetitorScanOutcome[]>
+  /**
+   * Satt när findBusinessByUrl hittade flera distinkta kontor för domänen och ingen stad
+   * angavs (bjurfors.se-buggen) — bara i det LEVANDE svaret (meta.multipleLocations),
+   * aldrig lagrad (ortnamnen är Places-innehåll). context.multipleLocationsCount (bara
+   * antalet) är den cachebara delen.
+   */
+  multipleLocations: MultipleLocationsInfo | null
 }
 
 /**
@@ -618,7 +625,14 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
 
   // Get places data — use user-supplied city first, then scraped city
   const cityHint = cityInput || mainPage?.cities?.[0] || undefined
-  const place = await findBusinessByUrl(url, cityHint).catch(() => null)
+  const rawPlace = await findBusinessByUrl(url, cityHint).catch(() => null)
+  // Flera kontor hittades för domänen och användaren angav ingen stad (bjurfors.se-buggen,
+  // Checklist.md juni 2026) — findBusinessByUrl returnerar då INGEN specifik plats (bara
+  // ambiguitetsmetadata). Vi attribuerar aldrig ett slumpmässigt kontors GBP-data i det
+  // läget; se "Flera kontor / ingen stad" i CLAUDE.md.
+  const multipleLocations: MultipleLocationsInfo | null =
+    rawPlace && '_multipleLocations' in rawPlace ? (rawPlace._multipleLocations as MultipleLocationsInfo) : null
+  const place = multipleLocations ? null : rawPlace
   let placeDetails = null
   if (place?.id) {
     placeDetails = await getPlaceDetails(place.id).catch(() => null)
@@ -646,12 +660,7 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
     : undefined
 
   // City priority: 1) user input, 2) Places address, 3) scraped — never use 'Sverige'
-  const cityFromPlace = placeForAnalysis?.formattedAddress
-    ? (() => {
-        const m = placeForAnalysis.formattedAddress.match(/\d{5}\s+([A-ZÅÄÖ][a-zåäö]+)/)
-        return m ? m[1] : null
-      })()
-    : null
+  const cityFromPlace = extractCityFromAddress(placeForAnalysis?.formattedAddress)
   const city = cityInput || cityFromPlace || mainPage?.cities?.[0] || ''
 
   console.log(`[Enhanced Scan] Scraping klar. Startar Flash-anrop + katalog + AI-test...`)
@@ -814,7 +823,13 @@ async function collectScanData(url: string, cityInput: string | undefined, tier:
       placeId: typeof placeForAnalysis?.id === 'string' ? placeForAnalysis.id : null,
       domainMatch: typeof placeForAnalysis?._domainMatch === 'boolean' ? placeForAnalysis._domainMatch : null,
       placeWarning: typeof placeForAnalysis?._warning === 'string' ? placeForAnalysis._warning : null,
+      // Bara antalet cachas (toCachedContext) — ortnamnen är Places-innehåll (andra
+      // kontors adresser) och får inte lagras, se "Google Places-villkoren".
+      multipleLocationsCount: multipleLocations?.count ?? null,
     },
+    // Ortnamnen visas bara i det LEVANDE svaret (meta.multipleLocations.cities i route.ts
+    // nedan) — aldrig lagrade. Se kommentaren ovan.
+    multipleLocations,
     failedAssessments,
     competitorScansPromise,
   }
@@ -836,6 +851,7 @@ function buildChecksFromContext(context: ScanContext): CheckResult[] {
     isHttps: context.isHttps,
     cwvMetrics: context.cwvMetrics,
     competitorList: context.competitorList,
+    multipleLocations: context.multipleLocationsCount ? { count: context.multipleLocationsCount } : null,
   })
 }
 
@@ -968,6 +984,10 @@ export async function POST(req: NextRequest) {
     let checks: CheckResult[]
     let failedAssessments: string[] = []
     let competitorScansPromise: Promise<CompetitorScanOutcome[]>
+    // Flera-kontor-flaggan för det LEVANDE svaret (meta.multipleLocations, med ortnamn).
+    // Vid cacheträff finns bara antalet kvar (context.multipleLocationsCount, se
+    // toCachedContext) — ortnamnen är Places-innehåll och lagras aldrig.
+    let multipleLocations: MultipleLocationsInfo | null = null
 
     if (cached) {
       const fresh = await fetchPlacesForCachedScan(cached.context)
@@ -975,11 +995,13 @@ export async function POST(req: NextRequest) {
       checks = buildChecksFromContext(context)
       logFreshPlacesConsistency(scanCacheKey(context.url, context.city) ?? context.url, cached, checks)
       competitorScansPromise = scanTopCompetitors(context.competitorList, context.url)
+      multipleLocations = context.multipleLocationsCount ? { count: context.multipleLocationsCount, cities: [] } : null
     } else {
       const collected = await collectScanData(url, cityInput, tier)
       context = collected.context
       failedAssessments = collected.failedAssessments
       competitorScansPromise = collected.competitorScansPromise
+      multipleLocations = collected.multipleLocations
 
       console.log(`[Enhanced Scan] Alla anrop klara. Bygger checks...`)
 
@@ -1227,6 +1249,11 @@ export async function POST(req: NextRequest) {
         // Vid cacheträff hämtades datan vid free-scanen — rapporten visar "Data hämtad <scanDate>".
         scanDate: cached ? cached.scanDate : new Date().toISOString(),
         scanId,
+        // Flera distinkta kontor hittades för domänen och ingen stad angavs (bjurfors.se-
+        // buggen) — ingen specifik Googles-profil attribuerades (se findBusinessByUrl).
+        // `cities` är tomt vid en paid-scan byggd från en cachad free-scan (Places-
+        // villkoren — ortnamnen lagras aldrig, bara antalet).
+        multipleLocations,
       },
       scores: {
         free: scores.free,

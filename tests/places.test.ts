@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { toNearbyCompetitor, getCompetitorDetails, findNearbyCompetitors } from '@/app/lib/places'
+import { toNearbyCompetitor, getCompetitorDetails, findNearbyCompetitors, findBusinessByUrl, extractCityFromAddress } from '@/app/lib/places'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -211,5 +211,116 @@ describe('findNearbyCompetitors', () => {
     // Stor radie (100 km) så att testet bara prövar capningen, inte radiefiltret.
     const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 100000, 2, 'Generalentreprenör')
     expect(result.map((c) => c.placeId)).toEqual(['ChIJ-near', 'ChIJ-mid'])
+  })
+})
+
+describe('extractCityFromAddress', () => {
+  it('extraherar ortnamnet efter ett svenskt postnummer (mellanslag mitt i, "NNN NN")', () => {
+    expect(extractCityFromAddress('Sankt Larsgatan 24, 582 24 Linköping, Sverige')).toBe('Linköping')
+    expect(extractCityFromAddress('Klostergatan 9, 553 17 Jönköping, Sverige')).toBe('Jönköping')
+    expect(extractCityFromAddress('731 32 Köping, Sverige')).toBe('Köping')
+  })
+
+  it('null utan igenkännbart postnummer+ort eller utan adress', () => {
+    expect(extractCityFromAddress(null)).toBeNull()
+    expect(extractCityFromAddress(undefined)).toBeNull()
+    expect(extractCityFromAddress('Ingen adress här')).toBeNull()
+  })
+})
+
+// bjurfors.se-buggen (Checklist.md juni 2026, QA-run 2026-06-15): en nationell kedja har
+// EN webbplats men MÅNGA lokalkontor, var och en med en egen Google Business Profile som
+// pekar mot samma domän. Utan stad från användaren valde findBusinessByUrl tidigare
+// godtyckligt det första Google råkade returnera (t.ex. Kungälv/Spanien i stället för
+// HQ Göteborg). Verifierat live 2026-09-25 mot riktiga Places-data (se slutrapporten):
+// sökning på "bjurfors" ensamt matchar 15 distinkta kontor på bjurfors.se.
+describe('findBusinessByUrl', () => {
+  const linkoping = {
+    id: 'ChIJ-linkoping', displayName: { text: 'Bjurfors' },
+    formattedAddress: 'Sankt Larsgatan 24, 582 24 Linköping, Sverige',
+    websiteUri: 'https://www.bjurfors.se/sv/om-oss/vara-kontor/bjurfors-linkoping/',
+    rating: 4.5, userRatingCount: 20, primaryType: 'real_estate_agency', location: { latitude: 1, longitude: 1 },
+  }
+  const goteborg = {
+    id: 'ChIJ-goteborg', displayName: { text: 'Bjurfors Göteborg' },
+    formattedAddress: 'Avenyn 1, 411 36 Göteborg, Sverige',
+    websiteUri: 'https://www.bjurfors.se/sv/om-oss/vara-kontor/goteborg/',
+    rating: 4.7, userRatingCount: 40, primaryType: 'real_estate_agency', location: { latitude: 2, longitude: 2 },
+  }
+  const konkurrent = {
+    id: 'ChIJ-annat', displayName: { text: 'Svensk Fastighetsförmedling' },
+    formattedAddress: 'Drottninggatan 8, 582 25 Linköping, Sverige',
+    websiteUri: 'https://www.svenskfast.se/',
+    rating: 4.2, userRatingCount: 15,
+  }
+
+  function stubSearch(places: unknown[], status = 200) {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ places }), { status }))
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  it('ingen stad + flera distinkta kontor för domänen -> ingen plats attribueras, flaggar ambiguitet', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    stubSearch([linkoping, konkurrent, goteborg])
+
+    const result = await findBusinessByUrl('https://www.bjurfors.se')
+    expect(result).toEqual({
+      _multipleLocations: {
+        count: 2,
+        cities: ['Linköping', 'Göteborg'],
+      },
+    })
+  })
+
+  it('ingen stad + bara ETT distinkt kontor för domänen (flera dubblettträffar i samma ort) -> attribuerar normalt', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    const duplicate = { ...linkoping, id: 'ChIJ-linkoping-2' }
+    stubSearch([linkoping, duplicate, konkurrent])
+
+    const result = await findBusinessByUrl('https://www.bjurfors.se')
+    expect(result?._multipleLocations).toBeUndefined()
+    expect(result?._domainMatch).toBe(true)
+    expect(result?.id).toBe('ChIJ-linkoping')
+  })
+
+  it('ingen stad + enkontors-sajt (t.ex. tvakanten.se) -> oförändrat beteende, ingen ambiguitetsflagga', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    const tvakanten = {
+      id: 'ChIJ-tvakanten', displayName: { text: 'Tvåkanten' },
+      formattedAddress: 'Kungsportsavenyen 1, 411 36 Göteborg, Sverige',
+      websiteUri: 'https://www.tvakanten.se/', rating: 4.6, userRatingCount: 900,
+    }
+    stubSearch([tvakanten])
+
+    const result = await findBusinessByUrl('https://www.tvakanten.se')
+    expect(result?._multipleLocations).toBeUndefined()
+    expect(result?.id).toBe('ChIJ-tvakanten')
+    expect(result?._domainMatch).toBe(true)
+  })
+
+  it('stad angiven -> ingen ambiguitetskontroll, tar första domänträffen på domän+stad-sökningen (Göteborg-fallet)', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    // Sökningen "bjurfors Göteborg" ger bara Göteborgskontoret -- precis som riktig Places-
+    // viktning mot ortsnamnet i frågesträngen gör.
+    stubSearch([goteborg])
+
+    const result = await findBusinessByUrl('https://www.bjurfors.se', 'Göteborg')
+    expect(result?.id).toBe('ChIJ-goteborg')
+    expect(result?._domainMatch).toBe(true)
+    expect(result?._multipleLocations).toBeUndefined()
+  })
+
+  it('ingen domänträff alls -> Strategi 2-fallback flaggad som overifierad (oförändrat)', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [konkurrent] }), { status: 200 })) // domän-sökningen: ingen matchning
+      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [konkurrent] }), { status: 200 })) // Strategi 2-fallbacken
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await findBusinessByUrl('https://www.bjurfors.se')
+    expect(result?._domainMatch).toBe(false)
+    expect(result?._warning).toContain('Kunde inte verifiera')
+    expect(result?._multipleLocations).toBeUndefined()
   })
 })

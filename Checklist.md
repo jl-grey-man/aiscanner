@@ -2,6 +2,79 @@
 
 ---
 
+## 📍 SESSION LOG — 2026-09-25 (Issue 3: national chains with no city no longer pick a random office)
+
+**Issue 3 from the 2026-06-15 session log (below) fixed.** Root cause reproduced live against
+real Places data: Text Search on a bare domain (`"bjurfors"`, no city) returns every office that
+shares the chain's website — 12–15 distinct offices for bjurfors.se in this session's runs
+(Linköping, Jönköping, Bromma, Hallsberg, Solna, Uppsala, Strängnäs, Stockholm×4, Lidingö,
+Västerås, Simrishamn, Enskede — varies per call, Google doesn't guarantee order). The old
+`findBusinessByUrl()` (`app/lib/places.ts`) only ever looked at `data.places[0]` — whichever
+office Google happened to rank first — and attributed that random office's GBP data (rating,
+opening hours, address, nearby "competitors") to the whole report.
+
+**Fix — detect ambiguity, never attribute a guess:**
+- `findBusinessByUrl(url, cityHint)`: when no `cityHint` is given, it now inspects **all**
+  domain-matching results from the plain-domain Text Search (not just the first), dedupes them
+  by city (`extractCityFromAddress()`, new helper — also fixes a pre-existing dead regex in
+  route.ts's `cityFromPlace` fallback that never matched Swedish "NNN NN City" postal codes and
+  so silently never fired). More than one distinct city → returns `{ _multipleLocations: { count,
+  cities } }` and **no place** — `collectScanData()` in `route.ts` nulls out `placeForAnalysis`
+  entirely in that case, so every downstream Places-derived field (companyName, bransch, rating,
+  gbp, competitors, opening hours) falls back to its existing "no GBP found" path instead of a
+  wrong office. Exactly one distinct city among the matches (e.g. duplicate listings of the same
+  office) → attributes normally, unchanged. A city hint is given → unchanged single-query
+  domain+city lookup (Google's own text-relevance ranking narrows it, verified live).
+- `checkBuilder.ts`: `gbpData` (#35), `competitors` (#36) and `openingHours` (#17) get a specific
+  Swedish finding ("Flera kontor hittades … ange stad …") instead of the generic "ingen profil
+  hittades" text when `multipleLocations` is set, so the free report explains *why* those checks
+  are unmeasured instead of implying a technical failure. `buildCompetitorsNotMeasuredFinding()`
+  takes an optional second param for this — the `roranalys.se` "location+primaryType but no
+  match" case (see session log below) still wins first, unaffected.
+- API contract: `ScanResult.meta.multipleLocations: { count, cities } | null` (`scanResult.ts`).
+  The scan still runs and returns 200 with a full report (site-level checks are unaffected) —
+  chose this over a 4xx "need city" response because most of the 29 free checks don't depend on
+  Places data at all, and the existing frontend has no "ask before scanning" step to hook a 4xx
+  into; a flag on the normal response fits the existing single-request report flow.
+- **Places compliance:** `cities` (other offices' addresses) is Places-derived content — shown
+  live in the response and the UI, never persisted. `meta.multipleLocations.cities` added to
+  `PLACES_CONTENT_FIELDS` / `stripPlacesContent()` (stripped to `[]` before a paid report is
+  saved to `checkouts`, `count` kept — same exception as `place_id`/`domainMatch`/`placeWarning`).
+  `scan_cache`'s `CachedScanContext` gets `multipleLocationsCount` (number only, no city names) so
+  a paid scan reusing a cached ambiguous free-scan keeps the specific "ange stad" finding instead
+  of losing it; the check findings' own `${count} st` text was verified to already survive
+  `stripPlacesContent()` unstripped (no `c.data` payload, so the existing per-check strip
+  conditions never trigger) — no change needed there.
+- **Frontend:** `FreeReport.tsx`/`PremiumReport.tsx` show an amber banner ("Flera kontor
+  hittades — ange stad") right under the header when `meta.multipleLocations` is set, naming up
+  to 3 example cities live. `FreeReport` additionally renders a one-step rescan form (city input
+  + "Skanna igen med stad") that calls a new `onRescan` prop, wired in `AppShell.tsx` to
+  `analyze(scanResult.meta.url, city)` — no need to retype the URL. `PremiumReport` shows the
+  same notice without a rescan form (already paid).
+- Tests (23 new, 431/431 passing): `tests/places.test.ts` (`extractCityFromAddress`,
+  `findBusinessByUrl` — ambiguous/single-city/single-location/with-city/no-domain-match cases),
+  `tests/multipleLocations.test.ts` (new — `gbpData`/`competitors`/`openingHours` finding text,
+  `buildCompetitorsNotMeasuredFinding`, `ScanResultSchema` accepts/omits the field),
+  `tests/placesContent.test.ts` (strip keeps count, clears cities), `tests/scanCache.test.ts`
+  (`toCachedContext`/`restoreScanContext` carry `multipleLocationsCount`).
+- **Live-verified against `deploy/pi-staging.sh` (all 5 smoke checks PASS) + real browser flow
+  (Playwright against `http://127.0.0.1:8010`, screenshots taken):**
+  - `bjurfors.se`, no city → `meta.multipleLocations = { count: 12, cities: [...] }`, `gbpData`/
+    `competitors`/`openingHours` all `notMeasured` with the "ange stad" finding, `scores.google`
+    null. Banner + rescan form render correctly (desktop 1440px and mobile 390px).
+  - `bjurfors.se`, city "Göteborg" → normal scan, real Göteborg office (`gbpData` "betyg 3/5 (32
+    recensioner)", 5 real nearby competitors, real opening hours), `multipleLocations: null`.
+  - `tvakanten.se`, no city → unchanged: single office, `multipleLocations: null`, normal
+    `ok` gbpData/competitors/openingHours (4.2★/944 reviews).
+  - Clicking "Skanna igen med stad" with "Göteborg" in the live report re-triggers a scan of the
+    same URL with the city filled in (`analyze()` reused, no new UI state needed).
+- **Not addressed (out of scope for this fix):** a stored premium report re-opened later
+  (`/api/checkout/status`) shows the ambiguity count but no example cities (Places content isn't
+  re-derivable from a stored report with no `placeId` — see comments in `placesContent.ts`). Rare
+  edge case (would require an ambiguous free scan to reach checkout without a city); not blocking.
+
+---
+
 ## 📍 SESSION LOG — 2026-09-25 (three diagnosed bugs: competitors 400, contactInfo false positive, hreflang notApplicable)
 
 Three pre-diagnosed bugs fixed, one commit each, TDD (failing test first):
@@ -144,7 +217,7 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 ### NEXT SESSION — start here
 - [ ] Issue 1: bump PSI timeout 12s→30s in `app/lib/pageSpeed.ts:45`
 - [x] Issue 2: recalibrate Flash verdict thresholds (eatSignals/faqSchema/contentDepth); re-scan 4 QA sites — done 2026-09-25, see session log above
-- [ ] Issue 3: multi-office "ange stad" flag (no-city chains)
+- [x] Issue 3: multi-office "ange stad" flag (no-city chains) — done 2026-09-25, see session log above
 - [ ] Issue 4: diagnose roranalys competitors / bjurfors contactInfo / tvakanten hreflang
 - (separate, NOT this project) `~/scan-mac.log` cron job points at missing `~/.local/bin/python3`;
   real python3 is `/opt/homebrew/bin/python3` — one-line crontab fix if wanted.

@@ -156,6 +156,25 @@ export function PremiumReport({ scanResult }: { scanResult: ScanResult }): React
           </div>
         </div>
 
+        {/* ==================== 1b. FLERA KONTOR ====================
+            bjurfors.se-buggen (Checklist.md juni 2026) — se samma sektion i FreeReport.tsx.
+            Ingen rescan-knapp här (rapporten är redan betald); kontakta support för att
+            få en ny mätning mot rätt kontor. */}
+        {meta.multipleLocations && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8">
+            <p className="text-amber-900 font-semibold mb-1">Flera kontor hittades för den här webbplatsen</p>
+            <p className="text-amber-800 text-sm">
+              Vi hittade {meta.multipleLocations.count} olika kontor
+              {meta.multipleLocations.cities.length > 0
+                ? <> (t.ex. {meta.multipleLocations.cities.slice(0, 3).join(', ')})</>
+                : null}
+              {' '}och ingen stad angavs vid analysen, så Google Business Profile-baserade
+              kontroller — öppettider, betyg, konkurrenter — visas som &quot;ej mätbara&quot;
+              i stället för att gissa fel kontor. Kontakta oss för en ny analys av rätt stad.
+            </p>
+          </div>
+        )}
+
         {/* ==================== 2. SAMMANFATTNING (Pro-genererad, företagsspecifik) ==================== */}
         {synthesis.summary && (
           <div className="bg-white border border-amber-200 rounded-xl shadow-sm p-6 mb-8">

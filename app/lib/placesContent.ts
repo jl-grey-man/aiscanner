@@ -179,6 +179,7 @@ export function buildGbpData(place: PlaceData | null | undefined): GBPData | nul
 export const PLACES_CONTENT_FIELDS = [
   'meta.companyName',
   'meta.bransch',
+  'meta.multipleLocations.cities',
   'scores.google',
   'scores.googleCount',
   'gbp',
@@ -282,6 +283,13 @@ export function stripPlacesContent(result: ScanResult): StoredReport {
   if (isRecord(out.meta)) {
     if ('companyName' in out.meta) out.meta.companyName = ''
     if ('bransch' in out.meta) out.meta.bransch = ''
+    // meta.multipleLocations.cities är andra kontors ortnamn (Places-innehåll) —
+    // bara antalet får lagras (samma undantag som place_id/domainMatch/placeWarning).
+    // rehydratePlacesContent() kör inte om Text Search-sökningen, så en senare visning
+    // av en lagrad rapport visar antalet men inga exempelorter.
+    if (isRecord(out.meta.multipleLocations) && Array.isArray(out.meta.multipleLocations.cities)) {
+      out.meta.multipleLocations.cities = []
+    }
   }
   if (isRecord(out.scores)) {
     if ('google' in out.scores) out.scores.google = null

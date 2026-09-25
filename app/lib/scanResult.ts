@@ -116,6 +116,14 @@ const MetaSchema = z.object({
   companyName: z.string(),
   scanDate: z.string(),
   scanId: z.string(),
+  // Flera distinkta kontor hittades för domänen och ingen stad angavs (bjurfors.se-
+  // buggen, Checklist.md juni 2026) — se findBusinessByUrl (places.ts). `cities` är
+  // Places-innehåll och strippas till [] innan lagring i checkouts (placesContent.ts).
+  // Optional: äldre ScanResult-payloads utan fältet ska fortsätta validera.
+  multipleLocations: z.object({
+    count: z.number().int().min(2),
+    cities: z.array(z.string()),
+  }).nullable().optional(),
 })
 
 const ScoresSchema = z.object({

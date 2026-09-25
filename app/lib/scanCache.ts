@@ -58,6 +58,14 @@ export interface CachedScanContext {
   domainMatch: boolean | null
   /** Vår varningstext när domänen inte kunde verifieras. */
   placeWarning: string | null
+  /**
+   * Antal distinkta kontor findBusinessByUrl hittade för domänen när ingen stad angavs
+   * (bjurfors.se-buggen), null = inte tvetydigt. Bara ANTALET cachas — ortnamnen är
+   * Places-innehåll (andra kontors adresser) och visas bara i det levande svaret
+   * (route.ts bygger om meta.multipleLocations.cities[] från en färsk sökning finns
+   * inte vid cacheträff, så en paid-rapport byggd från cache visar bara antalet).
+   */
+  multipleLocationsCount: number | null
 }
 
 /**
@@ -145,6 +153,7 @@ export function toCachedContext(context: ScanContext): CachedScanContext {
     placeId: context.placeId,
     domainMatch: context.domainMatch,
     placeWarning: context.placeWarning,
+    multipleLocationsCount: context.multipleLocationsCount,
   }
 }
 

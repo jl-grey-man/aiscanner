@@ -46,6 +46,14 @@ export interface BuildCheckResultsParams {
   isHttps: boolean
   cwvMetrics?: CwvMetrics | null
   competitorList?: Array<{ name: string; rating: number | null; userRatingCount: number | null; distanceMeters: number }> | null
+  /**
+   * Satt när findBusinessByUrl (places.ts) hittade flera distinkta kontor för domänen
+   * och ingen stad angavs (bjurfors.se-buggen) — `placeData` är då alltid null (ingen
+   * specifik profil attribuerad). GBP-beroende checks (gbpData, competitors,
+   * openingHours) får en finding som ber användaren ange stad i stället för den
+   * generiska "ingen GBP hittades"-texten.
+   */
+  multipleLocations?: { count: number } | null
 }
 
 // ---------------------------------------------------------------------------
@@ -287,11 +295,18 @@ export function formatCompetitorsFinding(
  * Places-sökningen faktiskt misslyckas — []  betyder inte längre automatiskt att
  * profilen saknas, så texten ska aldrig påstå det när location+primaryType finns.
  */
-export function buildCompetitorsNotMeasuredFinding(placeData: Record<string, unknown> | null): string {
+export function buildCompetitorsNotMeasuredFinding(
+  placeData: Record<string, unknown> | null,
+  multipleLocations?: { count: number } | null,
+): string {
   const hasPositionAndType = !!(placeData && placeData.location && placeData.primaryType)
-  return hasPositionAndType
-    ? 'Närliggande konkurrenter kunde inte hämtas — hittade inga företag av samma typ i närheten (eller sökningen mot Google Places misslyckades just nu).'
-    : 'Närliggande konkurrenter kunde inte hämtas — Google Business Profile eller positionsdata saknas.'
+  if (hasPositionAndType) {
+    return 'Närliggande konkurrenter kunde inte hämtas — hittade inga företag av samma typ i närheten (eller sökningen mot Google Places misslyckades just nu).'
+  }
+  if (multipleLocations) {
+    return `Konkurrentanalys kräver en specifik Google Business Profile — vi hittade ${multipleLocations.count} kontor för den här webbplatsen. Ange stad och skanna igen.`
+  }
+  return 'Närliggande konkurrenter kunde inte hämtas — Google Business Profile eller positionsdata saknas.'
 }
 
 /** Build a single CheckResult from registry entry + computed fields. */
@@ -340,6 +355,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     isHttps,
     cwvMetrics,
     competitorList,
+    multipleLocations,
   } = params
 
   const page: PageSummary | undefined = scraperData.pages[0]
@@ -626,7 +642,17 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       ?.regularOpeningHours as Record<string, unknown> | undefined
     const descriptions = weekdays?.weekdayDescriptions as string[] | undefined
     const oh = buildOpeningHoursCheck(descriptions, enhancedData.openingHoursFromSchema)
-    checks.push(makeCheck('openingHours', oh.status, oh.source, oh.finding, oh.fix, oh.data))
+    const ambiguous = oh.status === 'notMeasured' && !!multipleLocations
+    checks.push(makeCheck(
+      'openingHours',
+      oh.status,
+      oh.source,
+      ambiguous
+        ? `Flera kontor hittades för den här webbplatsen (${multipleLocations!.count} st) — ange stad för att mäta öppettider från rätt Google Business Profile.`
+        : oh.finding,
+      ambiguous ? 'Ange stad i sökrutan och skanna igen.' : oh.fix,
+      oh.data,
+    ))
   }
 
   // #18 schemaAny (scraper)
@@ -1105,8 +1131,12 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
         'gbpData',
         'notMeasured',
         'api',
-        'Google Business Profile-data kunde inte hämtas.',
-        'Skapa en Google Business Profile pa business.google.com.',
+        multipleLocations
+          ? `Flera kontor hittades för den här webbplatsen (${multipleLocations.count} st) — ange stad för att mäta rätt Google Business Profile.`
+          : 'Google Business Profile-data kunde inte hämtas.',
+        multipleLocations
+          ? 'Ange stad i sökrutan och skanna igen.'
+          : 'Skapa en Google Business Profile på business.google.com.',
       ))
     } else {
       const gbp = buildGbpDataCheck(placeData)
@@ -1130,8 +1160,8 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       'competitors',
       'notMeasured',
       'api',
-      buildCompetitorsNotMeasuredFinding(placeData),
-      null,
+      buildCompetitorsNotMeasuredFinding(placeData, multipleLocations),
+      multipleLocations ? 'Ange stad i sökrutan och skanna igen.' : null,
     ))
   }
 

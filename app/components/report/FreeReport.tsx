@@ -120,7 +120,13 @@ function renderStars(rating: number): string {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JSX.Element {
+interface FreeReportProps {
+  scanResult: ScanResult
+  /** Skannar samma URL igen med en angiven stad — bara satt av AppShell (kan skanna om). */
+  onRescan?: (city: string) => void
+}
+
+export function FreeReport({ scanResult, onRescan }: FreeReportProps): React.JSX.Element {
   const { meta, scores, checks, synthesis } = scanResult
   const { measured: checksMeasured, total: checksTotal } = calculateScores(checks)
   const freeChecks = getFreeChecks(checks)
@@ -131,6 +137,16 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
   // namn/betyg (de är låsta bakom fullständig rapport). Räknas ur check #36
   // (Google Places Nearby Search), som mäts i båda tiers.
   const competitorCount = competitorCountFromChecks(checks)
+
+  // bjurfors.se-buggen (Checklist.md juni 2026): flera kontor hittades för domänen och
+  // ingen stad angavs — se findBusinessByUrl (places.ts). Rescan-fältet nedan låter
+  // användaren ange stad och skanna om i ett steg i stället för att börja om från noll.
+  const { multipleLocations } = meta
+  const [rescanCity, setRescanCity] = useState('')
+  const handleRescan = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (rescanCity.trim()) onRescan?.(rescanCity.trim())
+  }
 
   // Stripe checkout handler — POST:ar url+city till /api/checkout, redirectar till Stripe
   const [checkoutLoading, setCheckoutLoading] = useState(false)
@@ -184,6 +200,48 @@ export function FreeReport({ scanResult }: { scanResult: ScanResult }): React.JS
             Gratisanalys
           </div>
         </div>
+
+        {/* ==================== 1b. FLERA KONTOR — ANGE STAD ====================
+            bjurfors.se-buggen (Checklist.md juni 2026): domänen matchar flera olika
+            kontor och ingen stad angavs, så vi kunde inte veta vilket som är rätt —
+            Google Business Profile-beroende kontroller (öppettider, konkurrenter,
+            recensioner) visas som "ej mätbara" i stället för att gissa. */}
+        {multipleLocations && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8">
+            <p className="text-amber-900 font-semibold mb-1">
+              Flera kontor hittades — ange stad
+            </p>
+            <p className="text-amber-800 text-sm mb-4">
+              Vi hittade {multipleLocations.count} olika kontor för den här webbplatsen
+              {multipleLocations.cities.length > 0
+                ? <> (t.ex. {multipleLocations.cities.slice(0, 3).join(', ')})</>
+                : null}
+              . Google Business Profile-baserade kontroller — öppettider, betyg,
+              konkurrenter — visas därför som &quot;ej mätbara&quot; nedan. Ange vilken
+              stad ni vill analysera för en korrekt mätning.
+            </p>
+            {onRescan && (
+              <form onSubmit={handleRescan} className="flex flex-col sm:flex-row gap-2">
+                <label htmlFor="rescan-city" className="sr-only">Stad</label>
+                <input
+                  id="rescan-city"
+                  type="text"
+                  value={rescanCity}
+                  onChange={(e) => setRescanCity(e.target.value)}
+                  placeholder="Stad (t.ex. Göteborg)"
+                  className="flex-1 bg-white border border-amber-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={!rescanCity.trim()}
+                  className="bg-accent hover:bg-accent-glow text-white font-semibold px-5 py-2.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  Skanna igen med stad
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* ==================== 2. SCORE CIRCLES ==================== */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">

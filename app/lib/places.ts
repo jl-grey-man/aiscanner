@@ -1,73 +1,108 @@
+/** Fältmasken för Text Search-anropen i findBusinessByUrl (Strategi 1). */
+const FIND_BUSINESS_FIELD_MASK = 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.regularOpeningHours,places.photos,places.editorialSummary,places.types,places.primaryType,places.location'
+
+export interface MultipleLocationsInfo {
+  count: number
+  cities: string[]
+}
+
+/**
+ * Extraherar ortnamnet ur en Places `formattedAddress` (t.ex. "Sankt Larsgatan 24,
+ * 582 24 Linköping, Sverige" -> "Linköping"). Svenskt postnummerformat "NNN NN"
+ * (mellanslag mitt i) — samma format som placeFacts() i placesContent.ts, men den
+ * funktionen fångar bara adress + postnummer, inte ortnamnet efteråt. Returnerar
+ * null om adressen saknar ett igenkännbart postnummer+ort-mönster.
+ */
+export function extractCityFromAddress(formattedAddress: string | null | undefined): string | null {
+  if (!formattedAddress) return null
+  const m = formattedAddress.match(/\d{3}\s?\d{2}\s+([A-ZÅÄÖ][^,]*)/)
+  return m ? m[1].trim() : null
+}
+
+async function searchTextPlaces(query: string, apiKey: string, fieldMask: string): Promise<any[]> {
+  const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': fieldMask,
+    },
+    body: JSON.stringify({
+      textQuery: query,
+      languageCode: 'sv',
+    }),
+  })
+  if (!res.ok) return []
+  const data = await res.json()
+  return Array.isArray(data.places) ? data.places : []
+}
+
+function matchesDomain(place: any, ourDomain: string): boolean {
+  if (!place?.websiteUri) return false
+  try {
+    return new URL(place.websiteUri).hostname.replace(/^www\./, '') === ourDomain
+  } catch {
+    return false
+  }
+}
+
 export async function findBusinessByUrl(url: string, cityHint?: string) {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY!
   const domain = new URL(url).hostname.replace(/^www\./, '').replace(/\.(se|com|nu|net|org)$/, '')
+  const ourDomain = new URL(url).hostname.replace(/^www\./, '')
 
-  // Strategi 1: Sök på domännamn + ort
-  const searchQueries = [
-    `${domain} ${cityHint || ''}`.trim(),
-    `${domain}`.trim(),
-  ]
+  if (!cityHint) {
+    // Strategi 1 utan stad: sök bara på domännamnet och undersök ALLA träffar (inte
+    // bara den första). En nationell kedja (t.ex. bjurfors.se) har EN webbplats men
+    // MÅNGA lokalkontor, var och en med en egen Google Business Profile som pekar mot
+    // samma webbplats — utan en stad från användaren kan vi inte veta vilket kontor
+    // som är rätt. bjurfors.se-buggen (QA juni 2026, Checklist.md): valde godtyckligt
+    // det kontor Google råkade returnera först (Kungälv/Spanien i stället för HQ
+    // Göteborg). Fix: räkna DISTINKTA orter bland domänträffarna — fler än en =
+    // tvetydigt, ingen attribuering (se collectScanData i route.ts).
+    const places = await searchTextPlaces(domain, apiKey, FIND_BUSINESS_FIELD_MASK)
+    const matches = places.filter((p) => matchesDomain(p, ourDomain))
 
-  for (const query of searchQueries) {
-    if (!query) continue
-
-    const res = await fetch(
-      `https://places.googleapis.com/v1/places:searchText`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': apiKey!,
-          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.regularOpeningHours,places.photos,places.editorialSummary,places.types,places.primaryType,places.location',
-        },
-        body: JSON.stringify({
-          textQuery: query,
-          languageCode: 'sv',
-        }),
+    if (matches.length > 0) {
+      const byCity = new Map<string, any>()
+      for (const place of matches) {
+        const city = extractCityFromAddress(place.formattedAddress) || place.formattedAddress || 'Okänd ort'
+        if (!byCity.has(city)) byCity.set(city, place)
       }
-    )
 
-    if (!res.ok) continue
-    const data = await res.json()
-    const place = data.places?.[0]
-
-    if (!place) continue
-
-    // VALIDERING: Kolla om websiteUri matchar vår domän
-    if (place.websiteUri) {
-      try {
-        const placeDomain = new URL(place.websiteUri).hostname.replace(/^www\./, '')
-        const ourDomain = new URL(url).hostname.replace(/^www\./, '')
-
-        if (placeDomain === ourDomain) {
-          return { ...place, _domainMatch: true, _searchQuery: query }
+      if (byCity.size > 1) {
+        return {
+          _multipleLocations: {
+            count: byCity.size,
+            cities: [...byCity.keys()],
+          } satisfies MultipleLocationsInfo,
         }
-      } catch {
-        // Ogiltig URL, fortsätt
+      }
+
+      const [[, place]] = byCity
+      return { ...place, _domainMatch: true, _searchQuery: domain }
+    }
+  } else {
+    // Strategi 1 med stad: domän + ort i samma sökning brukar räcka för att träffa
+    // rätt kontor direkt (Google Text Search viktar mot ortsnamnet i frågesträngen).
+    const searchQueries = [`${domain} ${cityHint}`.trim(), domain]
+
+    for (const query of searchQueries) {
+      const places = await searchTextPlaces(query, apiKey, FIND_BUSINESS_FIELD_MASK)
+      const place = places[0]
+      if (place && matchesDomain(place, ourDomain)) {
+        return { ...place, _domainMatch: true, _searchQuery: query }
       }
     }
   }
 
   // Strategi 2: Om ingen matchade domänen, returnera ändå första resultatet men flagga
-  const fallbackRes = await fetch(
-    `https://places.googleapis.com/v1/places:searchText`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey!,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.regularOpeningHours,places.photos,places.editorialSummary,places.types',
-      },
-      body: JSON.stringify({
-        textQuery: domain,
-        languageCode: 'sv',
-      }),
-    }
+  const fallbackPlaces = await searchTextPlaces(
+    domain,
+    apiKey,
+    'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.regularOpeningHours,places.photos,places.editorialSummary,places.types',
   )
-
-  if (!fallbackRes.ok) return null
-  const fallbackData = await fallbackRes.json()
-  const fallbackPlace = fallbackData.places?.[0]
+  const fallbackPlace = fallbackPlaces[0]
 
   if (!fallbackPlace) return null
 

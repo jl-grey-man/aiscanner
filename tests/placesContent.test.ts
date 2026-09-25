@@ -137,6 +137,24 @@ describe('stripPlacesContent — den riktiga paid-rapportens form', () => {
     expect(stored.competitorComparison!.competitors.map(c => c.placeId)).toEqual(['ChIJtest-alfa', 'ChIJtest-beta', 'ChIJtest-gamma'])
     expect(JSON.stringify(stored)).not.toContain('Konkurrent Alfa')
   })
+
+  // bjurfors.se-buggen (Checklist.md juni 2026): meta.multipleLocations.cities är andra
+  // kontors ortnamn (Places-innehåll) och får inte hamna i checkouts-DB:n — bara antalet.
+  it('meta.multipleLocations.cities strippas, count behålls', () => {
+    const report = buildPaidReport()
+    report.meta.multipleLocations = { count: 15, cities: ['Kungälv', 'Madrid'] }
+    const stored = stripPlacesContent(report)
+    expect(stored.meta.multipleLocations).toEqual({ count: 15, cities: [] })
+    expect(JSON.stringify(stored)).not.toContain('Kungälv')
+    expect(JSON.stringify(stored)).not.toContain('Madrid')
+  })
+
+  it('meta.multipleLocations null (normalfallet) lämnas orört', () => {
+    const report = buildPaidReport()
+    report.meta.multipleLocations = null
+    const stored = stripPlacesContent(report)
+    expect(stored.meta.multipleLocations).toBeNull()
+  })
 })
 
 describe('rehydratePlacesContent', () => {
