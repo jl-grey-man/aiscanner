@@ -46,6 +46,25 @@ function matchesDomain(place: any, ourDomain: string): boolean {
   }
 }
 
+/** Grupperar domänträffar per ort (första träffen per ort behålls, i Googles ordning). */
+function groupByCity(matches: any[]): Map<string, any> {
+  const byCity = new Map<string, any>()
+  for (const place of matches) {
+    const city = extractCityFromAddress(place.formattedAddress) || place.formattedAddress || 'Okänd ort'
+    if (!byCity.has(city)) byCity.set(city, place)
+  }
+  return byCity
+}
+
+function multipleLocationsResult(byCity: Map<string, any>) {
+  return {
+    _multipleLocations: {
+      count: byCity.size,
+      cities: [...byCity.keys()],
+    } satisfies MultipleLocationsInfo,
+  }
+}
+
 export async function findBusinessByUrl(url: string, cityHint?: string) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY!
   const domain = new URL(url).hostname.replace(/^www\./, '').replace(/\.(se|com|nu|net|org)$/, '')
@@ -64,35 +83,40 @@ export async function findBusinessByUrl(url: string, cityHint?: string) {
     const matches = places.filter((p) => matchesDomain(p, ourDomain))
 
     if (matches.length > 0) {
-      const byCity = new Map<string, any>()
-      for (const place of matches) {
-        const city = extractCityFromAddress(place.formattedAddress) || place.formattedAddress || 'Okänd ort'
-        if (!byCity.has(city)) byCity.set(city, place)
-      }
-
-      if (byCity.size > 1) {
-        return {
-          _multipleLocations: {
-            count: byCity.size,
-            cities: [...byCity.keys()],
-          } satisfies MultipleLocationsInfo,
-        }
-      }
+      const byCity = groupByCity(matches)
+      if (byCity.size > 1) return multipleLocationsResult(byCity)
 
       const [[, place]] = byCity
       return { ...place, _domainMatch: true, _searchQuery: domain }
     }
   } else {
-    // Strategi 1 med stad: domän + ort i samma sökning brukar räcka för att träffa
-    // rätt kontor direkt (Google Text Search viktar mot ortsnamnet i frågesträngen).
-    const searchQueries = [`${domain} ${cityHint}`.trim(), domain]
-
-    for (const query of searchQueries) {
+    // Strategi 1 med stad: domän + ort först (Google Text Search viktar mot ortsnamnet),
+    // sedan bara domän. Samla ALLA domänträffar från båda sökningarna och välj kontoret
+    // i den angivna staden — inte bara Googles första träff. Annars kunde en kedja utan
+    // kontor i den angivna staden (t.ex. "bjurfors" + Umeå) ge ett godtyckligt kontor
+    // från den andra sökningen, dvs. samma bugg som utan stad.
+    const wantedCity = cityHint.trim().toLowerCase()
+    const matches: any[] = []
+    const seen = new Set<string>()
+    for (const query of [`${domain} ${cityHint}`.trim(), domain]) {
       const places = await searchTextPlaces(query, apiKey, FIND_BUSINESS_FIELD_MASK)
-      const place = places[0]
-      if (place && matchesDomain(place, ourDomain)) {
-        return { ...place, _domainMatch: true, _searchQuery: query }
+      for (const place of places) {
+        if (!matchesDomain(place, ourDomain) || seen.has(place.id)) continue
+        seen.add(place.id)
+        matches.push(place)
+        if (extractCityFromAddress(place.formattedAddress)?.toLowerCase() === wantedCity) {
+          return { ...place, _domainMatch: true, _searchQuery: query }
+        }
       }
+    }
+
+    if (matches.length > 0) {
+      const byCity = groupByCity(matches)
+      // Flera kontor men inget i den angivna staden -> fråga i stället för att gissa.
+      if (byCity.size > 1) return multipleLocationsResult(byCity)
+      // Ett enda kontor (användaren angav t.ex. en grannort) -> det kontoret.
+      const [[, place]] = byCity
+      return { ...place, _domainMatch: true, _searchQuery: domain }
     }
   }
 

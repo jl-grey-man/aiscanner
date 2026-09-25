@@ -273,6 +273,32 @@ describe('findBusinessByUrl', () => {
     })
   })
 
+  it('stad angiven + kontor finns i den staden -> det kontoret, även om Google listar ett annat först', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    stubSearch([linkoping, goteborg])
+
+    const result = await findBusinessByUrl('https://www.bjurfors.se', 'göteborg')
+    expect(result?.id).toBe('ChIJ-goteborg')
+  })
+
+  it('stad angiven + inget kontor i den staden men flera andra -> ingen godtycklig attribuering, flaggar ambiguitet', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    stubSearch([linkoping, konkurrent, goteborg])
+
+    const result = await findBusinessByUrl('https://www.bjurfors.se', 'Umeå')
+    expect(result).toEqual({
+      _multipleLocations: { count: 2, cities: ['Linköping', 'Göteborg'] },
+    })
+  })
+
+  it('stad angiven + enkontorsföretag i en grannort -> attribuerar det enda kontoret', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    stubSearch([linkoping, konkurrent])
+
+    const result = await findBusinessByUrl('https://www.bjurfors.se', 'Norrköping')
+    expect(result?.id).toBe('ChIJ-linkoping')
+  })
+
   it('ingen stad + bara ETT distinkt kontor för domänen (flera dubblettträffar i samma ort) -> attribuerar normalt', async () => {
     vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
     const duplicate = { ...linkoping, id: 'ChIJ-linkoping-2' }
