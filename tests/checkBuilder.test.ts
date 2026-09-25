@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   computeWeightedPriorities,
   buildOpeningHoursCheck,
+  buildCompetitorsNotMeasuredFinding,
   MAX_CRITICAL_CHECKS,
 } from '@/app/lib/checkBuilder'
 import type { CheckKey, CheckResult } from '@/app/lib/scanResult'
@@ -133,5 +134,28 @@ describe('buildOpeningHoursCheck (Task 18 Steg 2)', () => {
     const res = buildOpeningHoursCheck(['måndag 10–18'], schemaHours)
     expect(res.source).toBe('api')
     expect(res.finding).toContain('Google Business Profile')
+  })
+})
+
+// roranalys.se-buggen (sep 2026): Google avvisade includedPrimaryTypes med HTTP 400,
+// findNearbyCompetitors returnerade [] och den gamla texten påstod felaktigt att GBP/
+// position saknades trots att företaget hade en fullständig profil.
+describe('buildCompetitorsNotMeasuredFinding', () => {
+  it('säger att GBP/position saknas när det inte finns någon platsdata alls', () => {
+    expect(buildCompetitorsNotMeasuredFinding(null)).toContain('Google Business Profile eller positionsdata saknas')
+  })
+
+  it('säger att GBP/position saknas när platsdata saknar location eller primaryType', () => {
+    expect(buildCompetitorsNotMeasuredFinding({ primaryType: 'general_contractor' })).toContain('Google Business Profile eller positionsdata saknas')
+    expect(buildCompetitorsNotMeasuredFinding({ location: { latitude: 1, longitude: 2 } })).toContain('Google Business Profile eller positionsdata saknas')
+  })
+
+  it('säger att sökningen misslyckades när både location och primaryType finns (roranalys-fallet)', () => {
+    const finding = buildCompetitorsNotMeasuredFinding({
+      location: { latitude: 57.7, longitude: 11.97 },
+      primaryType: 'general_contractor',
+    })
+    expect(finding).toContain('sökningen mot Google Places misslyckades')
+    expect(finding).not.toContain('Google Business Profile eller positionsdata saknas')
   })
 })

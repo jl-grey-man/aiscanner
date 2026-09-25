@@ -235,6 +235,21 @@ export function formatCompetitorsFinding(
   return `Närliggande konkurrenter (Google Places, ≤1,5 km): ${summary}.`
 }
 
+/**
+ * #36 competitors notMeasured-text — skiljer på "sökningen misslyckades" (GBP +
+ * position finns, men Nearby Search gav ändå inga resultat) och "ingen GBP/position"
+ * (findet saknar det som krävs för att söka alls). roranalys.se-buggen sep 2026: Google
+ * avvisade söktypen (`includedPrimaryTypes`) med HTTP 400 "Unsupported types", vilket
+ * fick den gamla texten att felaktigt påstå att GBP/position saknades trots att
+ * företaget hade en fullständig profil — se places.ts findNearbyCompetitors.
+ */
+export function buildCompetitorsNotMeasuredFinding(placeData: Record<string, unknown> | null): string {
+  const hasPositionAndType = !!(placeData && placeData.location && placeData.primaryType)
+  return hasPositionAndType
+    ? 'Närliggande konkurrenter kunde inte hämtas just nu — sökningen mot Google Places misslyckades eller gav inga träffar.'
+    : 'Närliggande konkurrenter kunde inte hämtas — Google Business Profile eller positionsdata saknas.'
+}
+
 /** Build a single CheckResult from registry entry + computed fields. */
 function makeCheck(
   key: CheckKey,
@@ -1075,7 +1090,7 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       'competitors',
       'notMeasured',
       'api',
-      'Närliggande konkurrenter kunde inte hämtas — Google Business Profile eller positionsdata saknas.',
+      buildCompetitorsNotMeasuredFinding(placeData),
       null,
     ))
   }

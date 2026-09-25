@@ -2,6 +2,24 @@
 
 ---
 
+## 📍 SESSION LOG — 2026-09-25 (three diagnosed bugs: competitors 400, contactInfo false positive, hreflang notApplicable)
+
+Three pre-diagnosed bugs fixed, one commit each, TDD (failing test first):
+
+1. **`competitors` (#36) notMeasured on roranalys.se** — `findNearbyCompetitors()` (`app/lib/places.ts`)
+   passed the business's `primaryType` (`general_contractor`) as Nearby Search's `includedPrimaryTypes`
+   filter; Google rejects it with HTTP 400 `"Unsupported types: general_contractor."`, and the old
+   `!res.ok` branch silently returned `[]`. Fix: on that specific 400, retry without the type filter and
+   post-filter results by the returned `primaryType`/`types` (added `places.types` to the field mask);
+   fall back to the unfiltered list if post-filtering leaves nothing. `checkBuilder.ts`'s notMeasured
+   finding text now also distinguishes "search failed" (place has location+primaryType) from "no GBP/
+   position" (`buildCompetitorsNotMeasuredFinding()`). Tests: `tests/places.test.ts` (7 new cases),
+   `tests/checkBuilder.test.ts` (3 new cases). See CLAUDE.md "Competitors check #36".
+2. *(next commit)* `contactInfo` (#30) false-positive `ok` on bjurfors.se.
+3. *(next commit)* `hreflang` (#9) false `notApplicable` on tvakanten.se.
+
+---
+
 ## 📍 SESSION LOG — 2026-09-25 (Issue 2 fixed — eatSignals/faqSchema calibration)
 
 Picked up Issue 2 from the 2026-06-15 session log. Read `docs/qa-run-2026-06/RESULTS.md`,

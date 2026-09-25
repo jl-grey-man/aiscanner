@@ -110,6 +110,63 @@ export interface NearbyCompetitor {
  * Uses Places API (New) Nearby Search — same Google Cloud project as
  * findBusinessByUrl, billed under the SKU "Nearby Search (New)".
  */
+const NEARBY_FIELD_MASK = 'places.id,places.displayName,places.rating,places.userRatingCount,places.primaryType,places.types,places.location,places.websiteUri'
+
+type NearbySearchResult = { ok: true; places: any[] } | { ok: false; status: number; body: string }
+
+async function searchNearby(
+  apiKey: string,
+  lat: number,
+  lng: number,
+  radiusMeters: number,
+  maxResultCount: number,
+  primaryType: string | null,
+): Promise<NearbySearchResult> {
+  const res = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': NEARBY_FIELD_MASK,
+    },
+    body: JSON.stringify({
+      ...(primaryType ? { includedPrimaryTypes: [primaryType] } : {}),
+      maxResultCount,
+      rankPreference: 'DISTANCE',
+      locationRestriction: {
+        circle: {
+          center: { latitude: lat, longitude: lng },
+          radius: radiusMeters,
+        },
+      },
+      languageCode: 'sv',
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    return { ok: false, status: res.status, body }
+  }
+  const data = await res.json()
+  return { ok: true, places: data.places ?? [] }
+}
+
+/**
+ * Find up to N nearest businesses with the same primaryType, excluding the
+ * business itself. Returns [] if Places API doesn't have lat/lng or fails.
+ *
+ * Uses Places API (New) Nearby Search — same Google Cloud project as
+ * findBusinessByUrl, billed under the SKU "Nearby Search (New)".
+ *
+ * Google's `includedPrimaryTypes` filter rejects some legitimate Place types
+ * with HTTP 400 "Unsupported types: X" (verified for e.g. "general_contractor",
+ * even though Place Details happily returns it as `primaryType`). When that
+ * happens we retry the same search WITHOUT the type filter and post-filter the
+ * results ourselves against the returned `primaryType`/`types` fields. If that
+ * post-filter leaves nothing (Google genuinely has no exact-type match nearby),
+ * we fall back to the unfiltered nearby list rather than reporting notMeasured —
+ * broader "other local businesses" is still useful competitor context.
+ */
 export async function findNearbyCompetitors(
   lat: number,
   lng: number,
@@ -122,40 +179,40 @@ export async function findNearbyCompetitors(
   if (!apiKey || !primaryType || typeof lat !== 'number' || typeof lng !== 'number') return []
 
   try {
-    const res = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.userRatingCount,places.primaryType,places.location,places.websiteUri',
-      },
-      body: JSON.stringify({
-        includedPrimaryTypes: [primaryType],
-        maxResultCount,
-        rankPreference: 'DISTANCE',
-        locationRestriction: {
-          circle: {
-            center: { latitude: lat, longitude: lng },
-            radius: radiusMeters,
-          },
-        },
-        languageCode: 'sv',
-      }),
-    })
+    let result = await searchNearby(apiKey, lat, lng, radiusMeters, maxResultCount, primaryType)
+    let typeFilterApplied = true
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      console.warn(`[Places Nearby] ${res.status}: ${body.slice(0, 200)}`)
-      return []
+    if (!result.ok) {
+      console.warn(`[Places Nearby] ${result.status}: ${result.body.slice(0, 200)}`)
+      if (result.status === 400 && /Unsupported types/i.test(result.body)) {
+        const retry = await searchNearby(apiKey, lat, lng, radiusMeters, maxResultCount, null)
+        if (!retry.ok) {
+          console.warn(`[Places Nearby] retry (unfiltered) ${retry.status}: ${retry.body.slice(0, 200)}`)
+          return []
+        }
+        result = retry
+        typeFilterApplied = false
+      } else {
+        return []
+      }
     }
 
-    const data = await res.json()
-    const places: any[] = data.places ?? []
+    let places = result.places.filter((p) => p.id && p.id !== excludePlaceId)
+
+    if (!typeFilterApplied) {
+      // Google rejected the type filter — post-filter ourselves against the
+      // returned per-place type fields.
+      const wantedType = primaryType.toLowerCase()
+      const sameType = places.filter((p) =>
+        p.primaryType?.toLowerCase() === wantedType ||
+        (Array.isArray(p.types) && p.types.some((t: string) => t?.toLowerCase() === wantedType))
+      )
+      places = sameType.length > 0 ? sameType : places
+    }
 
     const competitors: NearbyCompetitor[] = []
     const seenNames = new Set<string>()
     for (const p of places) {
-      if (!p.id || p.id === excludePlaceId) continue
       const competitor = toNearbyCompetitor(p, { latitude: lat, longitude: lng })
       // Dedupe on normalized name (Google often lists the same business with multiple Place IDs)
       const normName = competitor.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ´`'']/g, '').trim()
