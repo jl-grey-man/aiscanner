@@ -269,8 +269,14 @@ describe('fetchPlacesForCachedScan / competitorsForPlace', () => {
     const fresh = await fetchPlacesForCachedScan({ placeId: 'ChIJtest-krogen', domainMatch: false, placeWarning: 'Kunde inte verifiera' }, fetchers)
     expect(fresh.place!._domainMatch).toBe(false)
     expect(fresh.place!._warning).toBe('Kunde inte verifiera')
-    expect(fetchers.findNearbyCompetitors).toHaveBeenCalledWith(57.7001, 11.9701, 'bar', 'ChIJtest-krogen')
+    expect(fetchers.findNearbyCompetitors).toHaveBeenCalledWith(57.7001, 11.9701, 'bar', 'ChIJtest-krogen', undefined, undefined, null)
     expect(fresh.competitorList).toHaveLength(5)
+  })
+
+  it('trådar primaryTypeDisplayName.text vidare till findNearbyCompetitors (Text Search-fallbacken i places.ts)', async () => {
+    const fetchers = fakeFetchers()
+    await competitorsForPlace({ id: 'x', primaryType: 'general_contractor', location: { latitude: 1, longitude: 2 }, primaryTypeDisplayName: { text: 'Generalentreprenör', languageCode: 'sv' } }, fetchers)
+    expect(fetchers.findNearbyCompetitors).toHaveBeenCalledWith(1, 2, 'general_contractor', 'x', undefined, undefined, 'Generalentreprenör')
   })
 
   it('misslyckad Place Details → ingen plats och ingen Nearby Search', async () => {

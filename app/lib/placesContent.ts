@@ -550,7 +550,15 @@ export interface PlacesFetchers {
   getPlaceDetails: (placeId: string) => Promise<PlaceData | null>
   getCompetitorDetails: (placeId: string, origin: { latitude?: number; longitude?: number } | null) => Promise<NearbyCompetitor | null>
   findBusinessByUrl: (url: string, cityHint?: string) => Promise<PlaceData | null>
-  findNearbyCompetitors: (lat: number, lng: number, primaryType: string | null, excludePlaceId: string) => Promise<NearbyCompetitor[]>
+  findNearbyCompetitors: (
+    lat: number,
+    lng: number,
+    primaryType: string | null,
+    excludePlaceId: string,
+    radiusMeters?: number,
+    maxResultCount?: number,
+    primaryTypeDisplayName?: string | null,
+  ) => Promise<NearbyCompetitor[]>
 }
 
 export const defaultPlacesFetchers: PlacesFetchers = {
@@ -568,8 +576,13 @@ export async function competitorsForPlace(
   const lat = place?.location?.latitude
   const lng = place?.location?.longitude
   const ptype = place?.primaryType
+  // Svensk visningstext för platsens typ (t.ex. "Generalentreprenör") — används bara
+  // som Text Search-fallback när Nearby Search avvisar typfiltret, se places.ts.
+  const ptypeDisplayName = typeof place?.primaryTypeDisplayName?.text === 'string'
+    ? place.primaryTypeDisplayName.text
+    : null
   if (typeof lat !== 'number' || typeof lng !== 'number' || !ptype || !place?.id) return []
-  return fetchers.findNearbyCompetitors(lat, lng, ptype, place.id).catch((err: Error) => {
+  return fetchers.findNearbyCompetitors(lat, lng, ptype, place.id, undefined, undefined, ptypeDisplayName).catch((err: Error) => {
     console.error('[Places] Nearby competitors failed:', err?.message)
     return []
   })

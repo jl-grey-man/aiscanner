@@ -87,81 +87,114 @@ describe('findNearbyCompetitors', () => {
     const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me')
     expect(result.map((c) => c.placeId)).toEqual(['ChIJ-a'])
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://places.googleapis.com/v1/places:searchNearby')
     const body = JSON.parse(init.body as string)
     expect(body.includedPrimaryTypes).toEqual(['general_contractor'])
   })
 
-  it('HTTP 400 "Unsupported types" -> pratar om igen utan typfilter och post-filtrerar på returnerad primaryType/types (roranalys-fallet)', async () => {
+  it('HTTP 400 "Unsupported types" -> Text Search på primaryTypeDisplayName, post-filtrerar på types, sorterar på avstånd (roranalys-fallet)', async () => {
     vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    // Längre bort men står först i Googles svar -- ska hamna sist efter avståndssortering.
+    const langreBort = { ...konkurrentA, id: 'ChIJ-far', displayName: { text: 'Fjärran Bygg' }, location: { latitude: 58.0, longitude: 12.5 } }
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response('Unsupported types: general_contractor.', { status: 400 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [konkurrentA, konkurrentB] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [langreBort, konkurrentA, konkurrentB] }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 6, 'Generalentreprenör')
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    const [textUrl, textInit] = fetchMock.mock.calls[1] as unknown as [string, RequestInit]
+    expect(textUrl).toBe('https://places.googleapis.com/v1/places:searchText')
+    const textBody = JSON.parse(textInit.body as string)
+    expect(textBody.textQuery).toBe('Generalentreprenör')
+    expect(textBody.includedType).toBeUndefined()
+    expect(textBody.includedPrimaryTypes).toBeUndefined()
+    expect(textBody.locationBias.circle.center).toEqual({ latitude: 57.7, longitude: 11.97 })
+
+    // Post-filtrerad på types.includes('general_contractor') -> bara Alfa/Fjärran, inte Beta
+    // (electrician), och sorterad på avstånd -> Alfa (nära) före Fjärran (långt bort).
+    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-a', 'ChIJ-far'])
+  })
+
+  it('HTTP 400 "Unsupported types" utan primaryTypeDisplayName -> ingen Text Search, returnerar []', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    const fetchMock = vi.fn(async () => new Response('Unsupported types: general_contractor.', { status: 400 }))
     vi.stubGlobal('fetch', fetchMock)
 
     const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me')
-
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-    const [, retryInit] = fetchMock.mock.calls[1] as unknown as [string, RequestInit]
-    const retryBody = JSON.parse(retryInit.body as string)
-    expect(retryBody.includedPrimaryTypes).toBeUndefined()
-
-    // Post-filtrerad på primaryType === 'general_contractor' -> bara Alfa, inte Beta.
-    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-a'])
+    expect(result).toEqual([])
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('HTTP 400 "Unsupported types" + post-filter ger inga träffar -> fallback till hela ofiltrerade listan', async () => {
+  it('HTTP 400 "Unsupported types" + Text Search post-filter ger inga träffar -> returnerar [] (INGEN fallback till ofiltrerad lista)', async () => {
     vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response('Unsupported types: general_contractor.', { status: 400 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ places: [konkurrentB] }), { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    // Ingen träff matchar general_contractor exakt -> fallback till ofiltrerad lista (Beta).
-    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me')
-    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-b'])
+    // Ingen träff matchar general_contractor exakt -> [] (irrelevanta träffar är värre
+    // än notMeasured -- ingen fallback till en ofiltrerad lista längre).
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 6, 'Generalentreprenör')
+    expect(result).toEqual([])
   })
 
-  it('HTTP 400 utan "Unsupported types" -> ingen retry, returnerar []', async () => {
+  it('HTTP 400 utan "Unsupported types" -> ingen Text Search, returnerar []', async () => {
     vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
     const fetchMock = vi.fn(async () => new Response('Invalid request', { status: 400 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me')
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 6, 'Generalentreprenör')
     expect(result).toEqual([])
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('övrig HTTP-status (t.ex. 403) -> ingen retry, returnerar []', async () => {
+  it('övrig HTTP-status (t.ex. 403) -> ingen Text Search, returnerar []', async () => {
     vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
     const fetchMock = vi.fn(async () => new Response('Forbidden', { status: 403 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me')
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 6, 'Generalentreprenör')
     expect(result).toEqual([])
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('retry (ofiltrerad) misslyckas också -> returnerar []', async () => {
+  it('Text Search-fallbacken misslyckas också -> returnerar []', async () => {
     vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response('Unsupported types: general_contractor.', { status: 400 }))
       .mockResolvedValueOnce(new Response('nope', { status: 500 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me')
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 6, 'Generalentreprenör')
     expect(result).toEqual([])
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
-  it('exkluderar det egna företaget även efter fallback till ofiltrerad lista', async () => {
+  it('exkluderar det egna företaget ur Text Search-resultatet', async () => {
     vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response('Unsupported types: general_contractor.', { status: 400 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [{ ...konkurrentB, id: 'exclude-me' }, konkurrentB] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [{ ...konkurrentA, id: 'exclude-me' }, konkurrentA] }), { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me')
-    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-b'])
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 6, 'Generalentreprenör')
+    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-a'])
+  })
+
+  it('capar Text Search-fallbacken vid maxResultCount efter avståndssortering', async () => {
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'test-nyckel')
+    const near = { ...konkurrentA, id: 'ChIJ-near', displayName: { text: 'Nära Bygg' }, location: { latitude: 57.701, longitude: 11.971 } }
+    const mid = { ...konkurrentA, id: 'ChIJ-mid', displayName: { text: 'Mellan Bygg' }, location: { latitude: 57.72, longitude: 12.0 } }
+    const far = { ...konkurrentA, id: 'ChIJ-far2', displayName: { text: 'Fjärran Bygg' }, location: { latitude: 58.0, longitude: 12.5 } }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('Unsupported types: general_contractor.', { status: 400 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ places: [far, near, mid] }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await findNearbyCompetitors(57.7, 11.97, 'general_contractor', 'exclude-me', 1500, 2, 'Generalentreprenör')
+    expect(result.map((c) => c.placeId)).toEqual(['ChIJ-near', 'ChIJ-mid'])
   })
 })

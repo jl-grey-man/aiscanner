@@ -9,12 +9,23 @@ Three pre-diagnosed bugs fixed, one commit each, TDD (failing test first):
 1. **`competitors` (#36) notMeasured on roranalys.se** — `findNearbyCompetitors()` (`app/lib/places.ts`)
    passed the business's `primaryType` (`general_contractor`) as Nearby Search's `includedPrimaryTypes`
    filter; Google rejects it with HTTP 400 `"Unsupported types: general_contractor."`, and the old
-   `!res.ok` branch silently returned `[]`. Fix: on that specific 400, retry without the type filter and
-   post-filter results by the returned `primaryType`/`types` (added `places.types` to the field mask);
-   fall back to the unfiltered list if post-filtering leaves nothing. `checkBuilder.ts`'s notMeasured
-   finding text now also distinguishes "search failed" (place has location+primaryType) from "no GBP/
-   position" (`buildCompetitorsNotMeasuredFinding()`). Tests: `tests/places.test.ts` (7 new cases),
-   `tests/checkBuilder.test.ts` (3 new cases). See CLAUDE.md "Competitors check #36".
+   `!res.ok` branch silently returned `[]`. First fix attempt (commit `c68a56c`) retried without the
+   type filter and, if post-filtering left nothing, fell back to the unfiltered nearby list — **code
+   review caught that this produced arbitrary unrelated neighbouring businesses labelled as
+   "competitors" and fed them into the PAID competitor comparison** (irrelevant results are worse
+   than notMeasured). Corrected same day (separate commit, history not rewritten): on the 400,
+   run a **Text Search** for the business's own Swedish `primaryTypeDisplayName` (e.g.
+   "Generalentreprenör" — new field, threaded from `getPlaceDetails()` through
+   `placesContent.ts`'s `competitorsForPlace()`), biased to the same location, NO `includedType`
+   (Google rejects that too — verified live), post-filtered by returned `types`, sorted by distance,
+   capped. **The unfiltered-list fallback is removed entirely** — if nothing matches the exact type,
+   returns `[]` and the check stays `notMeasured` with an accurate "hittade inga företag av samma
+   typ i närheten" finding (`buildCompetitorsNotMeasuredFinding()`, distinct from "GBP/positionsdata
+   saknas"). Text Search is a different Places billing SKU than Nearby Search. Tests:
+   `tests/places.test.ts`, `tests/placesContent.test.ts`, `tests/checkBuilder.test.ts`. See CLAUDE.md
+   "Competitors check #36". Live-verified: roranalys.se `competitors` now lists real
+   `general_contractor` businesses near 59.3265,18.0193 (Norrmalm Byggare, SVEA gruppen, DEKÅ
+   Entreprenad, ...), not arbitrary neighbours.
 2. **`contactInfo` (#30) false-positive `ok` on bjurfors.se** — `hasContactInfo` (`app/lib/scraper.ts`)
    had a bare-keyword fallback (`/kontakt|contact|telefon|\btel\b/i.test(bodyText)`) that passed on the
    nav link "Kontakta mäklare"; bjurfors.se has no `<nav>`/`<header>` so that link is never stripped,

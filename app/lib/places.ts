@@ -81,7 +81,7 @@ export async function getPlaceDetails(placeId: string) {
   const res = await fetch(url, {
     headers: {
       'X-Goog-Api-Key': apiKey!,
-      'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,rating,userRatingCount,regularOpeningHours,photos,editorialSummary,types,primaryType,location,reviews',
+      'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,rating,userRatingCount,regularOpeningHours,photos,editorialSummary,types,primaryType,primaryTypeDisplayName,location,reviews',
     },
   })
   if (!res.ok) return null
@@ -152,6 +152,65 @@ async function searchNearby(
 }
 
 /**
+ * Places API (New) Text Search — used ONLY as a fallback when Nearby Search's
+ * `includedPrimaryTypes` filter rejects the type (see findNearbyCompetitors).
+ * Different billing SKU than Nearby Search ("Text Search (New)" vs "Nearby
+ * Search (New)") — see CLAUDE.md "Competitors check #36".
+ */
+async function searchTextNearby(
+  apiKey: string,
+  textQuery: string,
+  lat: number,
+  lng: number,
+  radiusMeters: number,
+  maxResultCount: number,
+): Promise<NearbySearchResult> {
+  const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': NEARBY_FIELD_MASK,
+    },
+    body: JSON.stringify({
+      textQuery,
+      languageCode: 'sv',
+      maxResultCount,
+      locationBias: {
+        circle: {
+          center: { latitude: lat, longitude: lng },
+          radius: radiusMeters,
+        },
+      },
+      // Deliberately no includedType — Google rejects the same types there too
+      // (verified live: "Invalid included_type" for "general_contractor").
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    return { ok: false, status: res.status, body }
+  }
+  const data = await res.json()
+  return { ok: true, places: data.places ?? [] }
+}
+
+/** Rå Places-plats (Nearby/Text Search) -> NearbyCompetitor-lista, deduplicerad på normaliserat namn. */
+function toCompetitorsList(places: any[], lat: number, lng: number): NearbyCompetitor[] {
+  const competitors: NearbyCompetitor[] = []
+  const seenNames = new Set<string>()
+  for (const p of places) {
+    const competitor = toNearbyCompetitor(p, { latitude: lat, longitude: lng })
+    // Dedupe on normalized name (Google often lists the same business with multiple Place IDs)
+    const normName = competitor.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ´`'']/g, '').trim()
+    if (seenNames.has(normName)) continue
+    seenNames.add(normName)
+    competitors.push(competitor)
+  }
+  return competitors
+}
+
+/**
  * Find up to N nearest businesses with the same primaryType, excluding the
  * business itself. Returns [] if Places API doesn't have lat/lng or fails.
  *
@@ -160,12 +219,21 @@ async function searchNearby(
  *
  * Google's `includedPrimaryTypes` filter rejects some legitimate Place types
  * with HTTP 400 "Unsupported types: X" (verified for e.g. "general_contractor",
- * even though Place Details happily returns it as `primaryType`). When that
- * happens we retry the same search WITHOUT the type filter and post-filter the
- * results ourselves against the returned `primaryType`/`types` fields. If that
- * post-filter leaves nothing (Google genuinely has no exact-type match nearby),
- * we fall back to the unfiltered nearby list rather than reporting notMeasured —
- * broader "other local businesses" is still useful competitor context.
+ * even though Place Details happily returns it as `primaryType`). `includedType`
+ * on Text Search rejects the same types too ("Invalid included_type" — verified
+ * live), so there is no type-filtered request that works for these businesses.
+ *
+ * Fallback (fix sep 2026, roranalys.se): on that specific 400, run a Text Search
+ * for the business's own Swedish `primaryTypeDisplayName` (e.g. "Generalentreprenör")
+ * biased to the same location, with NO type filter, then post-filter the results
+ * ourselves against the returned `types` field, exclude the business itself, sort
+ * by distance and cap at `maxResultCount`. An earlier version of this fix fell back
+ * to the unfiltered nearby list when the post-filter matched nothing — that produced
+ * arbitrary unrelated neighbouring businesses labelled as "competitors" and fed them
+ * into the paid competitor comparison (irrelevant results are worse than notMeasured).
+ * That fallback has been removed: if nothing matches the exact type, this returns []
+ * and the check stays `notMeasured` with an accurate "no same-type business nearby"
+ * finding (see checkBuilder.ts `buildCompetitorsNotMeasuredFinding`).
  */
 export async function findNearbyCompetitors(
   lat: number,
@@ -173,54 +241,53 @@ export async function findNearbyCompetitors(
   primaryType: string | null,
   excludePlaceId: string,
   radiusMeters = 1500,
-  maxResultCount = 6
+  maxResultCount = 6,
+  primaryTypeDisplayName: string | null = null,
 ): Promise<NearbyCompetitor[]> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY
   if (!apiKey || !primaryType || typeof lat !== 'number' || typeof lng !== 'number') return []
 
   try {
-    let result = await searchNearby(apiKey, lat, lng, radiusMeters, maxResultCount, primaryType)
-    let typeFilterApplied = true
+    const result = await searchNearby(apiKey, lat, lng, radiusMeters, maxResultCount, primaryType)
 
-    if (!result.ok) {
-      console.warn(`[Places Nearby] ${result.status}: ${result.body.slice(0, 200)}`)
-      if (result.status === 400 && /Unsupported types/i.test(result.body)) {
-        const retry = await searchNearby(apiKey, lat, lng, radiusMeters, maxResultCount, null)
-        if (!retry.ok) {
-          console.warn(`[Places Nearby] retry (unfiltered) ${retry.status}: ${retry.body.slice(0, 200)}`)
-          return []
-        }
-        result = retry
-        typeFilterApplied = false
-      } else {
-        return []
-      }
+    if (result.ok) {
+      const places = result.places.filter((p) => p.id && p.id !== excludePlaceId)
+      return toCompetitorsList(places, lat, lng).slice(0, 5)
     }
 
-    let places = result.places.filter((p) => p.id && p.id !== excludePlaceId)
+    console.warn(`[Places Nearby] ${result.status}: ${result.body.slice(0, 200)}`)
+    if (result.status !== 400 || !/Unsupported types/i.test(result.body)) return []
 
-    if (!typeFilterApplied) {
-      // Google rejected the type filter — post-filter ourselves against the
-      // returned per-place type fields.
-      const wantedType = primaryType.toLowerCase()
-      const sameType = places.filter((p) =>
-        p.primaryType?.toLowerCase() === wantedType ||
-        (Array.isArray(p.types) && p.types.some((t: string) => t?.toLowerCase() === wantedType))
-      )
-      places = sameType.length > 0 ? sameType : places
+    // Google rejected includedPrimaryTypes for this type — fall back to Text Search
+    // by the business's own type name, then post-filter/sort/cap ourselves.
+    if (!primaryTypeDisplayName) {
+      console.warn('[Places Nearby] no primaryTypeDisplayName available for Text Search fallback')
+      return []
     }
 
-    const competitors: NearbyCompetitor[] = []
-    const seenNames = new Set<string>()
-    for (const p of places) {
-      const competitor = toNearbyCompetitor(p, { latitude: lat, longitude: lng })
-      // Dedupe on normalized name (Google often lists the same business with multiple Place IDs)
-      const normName = competitor.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ´`'']/g, '').trim()
-      if (seenNames.has(normName)) continue
-      seenNames.add(normName)
-      competitors.push(competitor)
+    const textResult = await searchTextNearby(apiKey, primaryTypeDisplayName, lat, lng, radiusMeters, 10)
+    if (!textResult.ok) {
+      console.warn(`[Places Nearby] Text Search fallback ${textResult.status}: ${textResult.body.slice(0, 200)}`)
+      return []
     }
-    return competitors.slice(0, 5)
+
+    const wantedType = primaryType.toLowerCase()
+    const sameType = textResult.places.filter((p) =>
+      p.id && p.id !== excludePlaceId &&
+      Array.isArray(p.types) && p.types.some((t: string) => t?.toLowerCase() === wantedType)
+    )
+    if (sameType.length === 0) return []
+
+    const withDistance = sameType.map((p) => ({
+      place: p,
+      distance: typeof p.location?.latitude === 'number' && typeof p.location?.longitude === 'number'
+        ? haversineMeters(lat, lng, p.location.latitude, p.location.longitude)
+        : Infinity,
+    }))
+    withDistance.sort((a, b) => a.distance - b.distance)
+    const capped = withDistance.slice(0, maxResultCount).map((x) => x.place)
+
+    return toCompetitorsList(capped, lat, lng).slice(0, 5)
   } catch (err: any) {
     console.warn(`[Places Nearby] failed: ${err.message}`)
     return []

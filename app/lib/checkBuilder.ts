@@ -275,17 +275,22 @@ export function formatCompetitorsFinding(
 }
 
 /**
- * #36 competitors notMeasured-text — skiljer på "sökningen misslyckades" (GBP +
- * position finns, men Nearby Search gav ändå inga resultat) och "ingen GBP/position"
- * (findet saknar det som krävs för att söka alls). roranalys.se-buggen sep 2026: Google
- * avvisade söktypen (`includedPrimaryTypes`) med HTTP 400 "Unsupported types", vilket
- * fick den gamla texten att felaktigt påstå att GBP/position saknades trots att
- * företaget hade en fullständig profil — se places.ts findNearbyCompetitors.
+ * #36 competitors notMeasured-text — skiljer på "hittade inga företag av samma typ i
+ * närheten" (GBP + position finns, sökningen kördes, men gav inget resultat — det
+ * normala fallet efter places.ts-fixen nedan) och "ingen GBP/position" (findet saknar
+ * det som krävs för att söka alls). roranalys.se-buggen sep 2026: Google avvisade
+ * söktypen (`includedPrimaryTypes`) med HTTP 400 "Unsupported types", vilket fick den
+ * gamla texten att felaktigt påstå att GBP/position saknades trots att företaget hade
+ * en fullständig profil. Fixen (Text Search-fallback på `primaryTypeDisplayName`,
+ * se places.ts findNearbyCompetitors) kan fortfarande legitimt ge [] — t.ex. om det
+ * verkligen inte finns någon annan verksamhet av exakt samma typ inom radien, eller om
+ * Places-sökningen faktiskt misslyckas — []  betyder inte längre automatiskt att
+ * profilen saknas, så texten ska aldrig påstå det när location+primaryType finns.
  */
 export function buildCompetitorsNotMeasuredFinding(placeData: Record<string, unknown> | null): string {
   const hasPositionAndType = !!(placeData && placeData.location && placeData.primaryType)
   return hasPositionAndType
-    ? 'Närliggande konkurrenter kunde inte hämtas just nu — sökningen mot Google Places misslyckades eller gav inga träffar.'
+    ? 'Närliggande konkurrenter kunde inte hämtas — hittade inga företag av samma typ i närheten (eller sökningen mot Google Places misslyckades just nu).'
     : 'Närliggande konkurrenter kunde inte hämtas — Google Business Profile eller positionsdata saknas.'
 }
 

@@ -151,12 +151,12 @@ describe('buildCompetitorsNotMeasuredFinding', () => {
     expect(buildCompetitorsNotMeasuredFinding({ location: { latitude: 1, longitude: 2 } })).toContain('Google Business Profile eller positionsdata saknas')
   })
 
-  it('säger att sökningen misslyckades när både location och primaryType finns (roranalys-fallet)', () => {
+  it('säger att inga företag av samma typ hittades i närheten när både location och primaryType finns (roranalys-fallet)', () => {
     const finding = buildCompetitorsNotMeasuredFinding({
       location: { latitude: 57.7, longitude: 11.97 },
       primaryType: 'general_contractor',
     })
-    expect(finding).toContain('sökningen mot Google Places misslyckades')
+    expect(finding).toContain('hittade inga företag av samma typ i närheten')
     expect(finding).not.toContain('Google Business Profile eller positionsdata saknas')
   })
 })
