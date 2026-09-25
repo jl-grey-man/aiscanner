@@ -414,6 +414,8 @@ railway deployment redeploy     # trigger redeploy
 
 **`npm run dev` bygger numera in i `.next-dev`, inte `.next`** (`next.config.ts`, `PHASE_DEVELOPMENT_SERVER` — se commit `fix(dev): build next dev into .next-dev`). Bakgrund: `next dev` körd i det här repot delade tidigare `.next/` med produktionsbygget, skrev över det och raderade `.next/standalone` — staging-tjänsten kraschade vid nästa omstart eftersom `ExecStart` pekar på `.next/standalone/server.js`. `next dev` kan alltså aldrig mer röra produktionsbygget. `.next-dev/` är gitignorerad.
 
+`next-env.d.ts` genereras av Next vid varje `next dev`/`next build` (pekar på `.next-dev/types` resp. `.next/types`) och är därför gitignorerad, inte incheckad. `tsconfig.json` är incheckad i exakt det format Next själv skriver, med både `.next/types/**/*.ts` och `.next-dev/types/**/*.ts` i `include` — annars skriver `next dev` om den och git-trädet blir smutsigt efter varje dev-körning.
+
 **Doc-guard:** ett globalt pre-commit-hook (`/mnt/storage/doc-guard`, se `/home/jens/CLAUDE.md`) kräver att CLAUDE.md **och** Checklist.md uppdateras i samma commit som en kodändring i det här repot.
 
 ## Overseer-regler för implementationsplaner
