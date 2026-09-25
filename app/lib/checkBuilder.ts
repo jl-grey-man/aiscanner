@@ -710,11 +710,21 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
     ))
   }
 
-  // #25 eatSignals (AI, corrected with scraper facts)
+  // #25 eatSignals (finding/fix from AI, status decided deterministically from scraper facts)
   // AI sometimes claims "Om oss saknas" when it exists on a subpage.
   // An AI search engine crawls all pages — correct with what scraper found.
+  //
+  // QA juni 2026 (docs/qa-run-2026-06/RESULTS.md, "Flash-bedömning för hård"): Flash gav "bad"
+  // för tvakanten/roranalys/bjurfors trots att VERIFICATION-PROTOCOL.md's trekravsräkning
+  // (Om oss-sida + organisationsnummer + minst en certifiering/namngiven person, "warning" vid
+  // 1-2 av tre saknade, "bad" bara om alla tre saknas) ger "warning" för alla tre. Att bara
+  // skärpa prompttexten (se buildEATPrompt i route.ts) räckte inte ensamt — Flash visade sig
+  // nondeterministiskt: två identiska anrop mot tvakanten.se kunde ge samma korrekt hopslagna
+  // found/missing-lista (cert+person som EN post) men ändå olika status ("warning" resp. "bad").
+  // Status beräknas därför ALLTID deterministiskt från de tre verifierade scraper-signalerna
+  // nedan — aldrig från hur Flash själv råkar räkna/gruppera sin egna found/missing-lista.
+  // Flash bidrar bara med den svenska finding/fix-texten.
   {
-    let eatStatus = eatEatSignals.status
     let eatFinding = eatEatSignals.finding
     let eatFix = eatEatSignals.fix
     const eatData = (eatEatSignals.data ?? {}) as Record<string, unknown>
@@ -750,20 +760,20 @@ export function buildCheckResults(params: BuildCheckResultsParams): CheckResult[
       corrected = true
     }
 
+    // VERIFICATION-PROTOCOL.md's tre krav — beräknade direkt ur samma scraper-fakta som
+    // skickades till Flash (buildEATPrompt i route.ts), inte ur AI-svaret.
+    const hasAboutSignal = anyPageHasAbout || enhancedData.hasAboutPage
+    const hasOrgNumberSignal = !!enhancedData.orgNumberFound
+    const hasCertOrPersonSignal =
+      enhancedData.certificationKeywords.length > 0 || anyPageHasPersonSchema || enhancedData.hasPersonSchema
+    const missingReqCount = [hasAboutSignal, hasOrgNumberSignal, hasCertOrPersonSignal].filter(v => !v).length
+    const eatStatus: CheckStatus = missingReqCount === 0 ? 'ok' : missingReqCount === 3 ? 'bad' : 'warning'
+
     if (corrected) {
-      // Re-evaluate status based on corrected signals
-      if (aiMissing.length === 0) {
-        eatStatus = 'ok'
-        eatFinding = `Starka E-A-T-signaler: ${aiFound.join(', ')}.`
-        eatFix = null
-      } else if (aiMissing.length <= 2) {
-        eatStatus = 'warning'
-        eatFinding = `E-A-T-signaler: ${aiFound.join(', ')} hittades. Saknas: ${aiMissing.join(', ')}.`
-        eatFix = eatEatSignals.fix
-      } else {
-        // Still many missing — keep AI's status but update found/missing lists
-        eatFinding = `E-A-T-signaler: ${aiFound.join(', ')} hittades. Saknas: ${aiMissing.join(', ')}.`
-      }
+      eatFinding = missingReqCount === 0
+        ? `Starka E-A-T-signaler: ${aiFound.join(', ')}.`
+        : `E-A-T-signaler: ${aiFound.join(', ')} hittades. Saknas: ${aiMissing.join(', ')}.`
+      eatFix = missingReqCount === 0 ? null : eatEatSignals.fix
     }
 
     checks.push(makeCheck(

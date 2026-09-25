@@ -369,7 +369,15 @@ Returnera exakt detta JSON-format:
 }
 
 REGLER:
-- eatSignals: "ok" = Om oss-sida + org.nr + minst en certifiering/person, "warning" = delvis, "bad" = mycket svaga signaler
+- eatSignals bedöms mot EXAKT TRE krav, enligt VERIFICATION-PROTOCOL.md: (1) Om oss-sida finns,
+  (2) organisationsnummer finns, (3) minst EN av {certifieringsord, Person-/Organization-schema
+  med namngiven person} finns. Certifieringsord och Person-schema/namngivna personer räknas
+  ALDRIG som två separata saknade krav — de är EN gemensam tredje signal, uppfylld så fort
+  NÅGON av dem finns.
+- eatSignals: "ok" = alla tre krav uppfyllda (0 av 3 saknas). "warning" = 1–2 av de tre kraven
+  saknas. "bad" = alla tre kraven saknas (0 av 3 uppfyllda — mycket svaga signaler). Statusen
+  följer ALLTID denna trekravsräkning, aldrig hur många enskilda poster som råkar stå i
+  "found"/"missing"-listorna (de är bara för läsbarhet i rapporten).
 - orgNumber: "ok" = hittat och korrekt format (XXXXXX-XXXX), "warning" = inte synligt men kan finnas på undersida, "bad" = saknas helt
 - orgNumber: "ok" bara om formatet XXXXXX-XXXX bekräftats, aldrig gissa
 - certifications: "ok" = relevanta certifieringar för branschen visas, "warning" = generiska, "bad" = inga alls

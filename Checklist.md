@@ -2,6 +2,55 @@
 
 ---
 
+## 📍 SESSION LOG — 2026-09-25 (Issue 2 fixed — eatSignals/faqSchema calibration)
+
+Picked up Issue 2 from the 2026-06-15 session log. Read `docs/qa-run-2026-06/RESULTS.md`,
+the 4 sites' `*.truth.*.json` files and `VERIFICATION-PROTOCOL.md`, then re-scanned the 4 QA
+sites (free tier, `npm run dev -- -p 8012`, 2× per site to cover Flash's non-determinism) as a
+BEFORE baseline. Result: `contentDepth` was already correct on current code (page-count
+threshold alone gives the right verdict now) — 4 of the original 5 mismatches remained:
+`eatSignals` bad on tvakanten/roranalys/bjurfors (truth: warning), `faqSchema` bad on roranalys
+(truth: warning).
+
+**Root causes (not just "Flash being harsh"):**
+1. `eatSignals`'s prompt REGLER text said "ok/warning/delvis/mycket svaga" with no numbers —
+   Flash counted certification and Person-schema/named-person as TWO separate missing signals
+   instead of the ONE combined signal the protocol's own "good" definition implies (3 real
+   requirements, not 4), so 2-of-3 real requirements missing looked like "3-4 missing" → `bad`.
+2. `faqSchema`: `extractFAQContent()` in `enhancedScraper.ts` required the literal word "faq"
+   inside the accordion element's own text. roranalys.se's `<h3>FAQ</h3>` heading is in a
+   SIBLING div, not inside `<div class="module accordion">`, so the 4 real FAQ questions in
+   the accordion were never detected.
+
+**Fixes (see CLAUDE.md "eatSignals/faqSchema-kalibrering..." for full detail):**
+- `app/api/enhanced-scan/route.ts` `buildEATPrompt()` — REGLER rewritten with an explicit
+  three-requirement count (Om oss + org.nr + cert-OR-person as one signal; warning=1-2
+  missing, bad=all 3 missing).
+- `app/lib/checkBuilder.ts` #25 `eatSignals` — status is now decided **deterministically** from
+  the same three scraper facts (never from Flash's own status field), because even after the
+  prompt fix Flash proved nondeterministic (two identical scans of tvakanten.se, same correctly
+  grouped found/missing list, different status). Flash still supplies the finding/fix text.
+- `app/lib/enhancedScraper.ts` `extractFAQContent()` — dropped the `.includes('faq')`
+  requirement on the accordion check, matching `VERIFICATION-PROTOCOL.md`'s own wording
+  ("accordion" is an independent pattern, not conditional on the word "faq").
+- New tests: `tests/eatSignalsDeterministic.test.ts` (6 cases incl. the sprej.nu control case —
+  all 3 signals missing must stay `bad`), `tests/enhancedScraper.test.ts` (5 cases incl. the
+  roranalys.se accordion regression + a sprej.nu no-FAQ control), `tests/eatPromptThresholds.test.ts`
+  (grep-lock on the prompt text). Full suite: 378/378 passing (was 372 before this session).
+
+**AFTER verification** (2× per site, free tier): tvakanten/roranalys/bjurfors `eatSignals` →
+`warning` (matches truth) on every run, roranalys `faqSchema` → `warning` (matches truth) on
+every run, sprej `eatSignals`/`faqSchema`/`contentDepth` unchanged at `bad` (control case —
+protocol requires `bad`, confirmed NOT softened). No Pro escalation was needed — recalibrating
+the prompt + a deterministic status computation was sufficient. bjurfors `faqSchema` stays
+`bad` vs. truth `warning`, but that's the separately-classified BUG4 cascade (`/sv/faq/` not
+scanned), not part of Issue 2.
+
+**Not touched:** Issue 1 (PSI timeout), Issue 3 (multi-office UX), Issue 4 (3 investigations) —
+still open, see below.
+
+---
+
 ## 📍 SESSION LOG — 2026-06-15 (overseer planning; no code changed)
 
 Context: returned to the project after the June-10 QA run (`docs/qa-run-2026-06/RESULTS.md`,
@@ -45,7 +94,7 @@ Commit + push each (Mac ↔ PiPod sync via GitHub).
 
 ### NEXT SESSION — start here
 - [ ] Issue 1: bump PSI timeout 12s→30s in `app/lib/pageSpeed.ts:45`
-- [ ] Issue 2: recalibrate Flash verdict thresholds (eatSignals/faqSchema/contentDepth); re-scan 4 QA sites
+- [x] Issue 2: recalibrate Flash verdict thresholds (eatSignals/faqSchema/contentDepth); re-scan 4 QA sites — done 2026-09-25, see session log above
 - [ ] Issue 3: multi-office "ange stad" flag (no-city chains)
 - [ ] Issue 4: diagnose roranalys competitors / bjurfors contactInfo / tvakanten hreflang
 - (separate, NOT this project) `~/scan-mac.log` cron job points at missing `~/.local/bin/python3`;

@@ -365,7 +365,7 @@ function extractSchemaInfo($: cheerio.CheerioAPI): {
   }
 }
 
-function extractFAQContent($: cheerio.CheerioAPI): boolean {
+export function extractFAQContent($: cheerio.CheerioAPI): boolean {
   // Check for dl/dt/dd with FAQ-like content
   const hasDlFaq = $('dl dt').length > 2
 
@@ -375,8 +375,14 @@ function extractFAQContent($: cheerio.CheerioAPI): boolean {
   // Check for elements with class/id containing "faq"
   const hasFaqClass = $('[class*="faq"], [id*="faq"], [class*="FAQ"], [id*="FAQ"]').length > 0
 
-  // Check for accordion-style FAQ
-  const hasAccordion = $('[class*="accordion"]').length > 0 && $('[class*="accordion"]').text().toLowerCase().includes('faq')
+  // Check for accordion-style FAQ. VERIFICATION-PROTOCOL.md lists "accordion" as its own
+  // independent HTML pattern (alongside dl/dt, details/summary, class/id "faq") — it does NOT
+  // require the literal word "faq" to also appear. Real Swedish accordion FAQs (e.g. roranalys.se:
+  // <div class="module accordion"> with a <h3>FAQ</h3> heading in a SIBLING div, not a descendant)
+  // almost never contain that English abbreviation inside the accordion's own text, so the old
+  // `.text().includes('faq')` requirement produced false negatives on real FAQ content (QA June 2026,
+  // roranalys.se faqSchema: truth=warning, scanner=bad because hasFAQContent was wrongly false).
+  const hasAccordion = $('[class*="accordion"]').length > 0
 
   return hasDlFaq || hasDetails || hasFaqClass || hasAccordion
 }

@@ -341,6 +341,42 @@ The scraper extracts these fields per page:
 - Free tier: 29 checks (scores.free), Premium: 36 scoreable + synthesis = 37 total (scores.full)
 - Synthesis rules: no preamble, no timeframes, starts directly with `## Prioriterad åtgärdsplan`
 
+### eatSignals/faqSchema-kalibrering mot VERIFICATION-PROTOCOL.md (sep 2026, QA juni 2026 Issue 2)
+QA-körningen juni 2026 (`docs/qa-run-2026-06/RESULTS.md`, "Flash-bedömning för hård") hittade 5 fall
+där Flash satte `bad` för `eatSignals`/`faqSchema`/`contentDepth` där `VERIFICATION-PROTOCOL.md`
+säger `warning` (tvakanten/roranalys/bjurfors `eatSignals`, roranalys `faqSchema`/`contentDepth`).
+Beslut: inga Anthropic/OpenAI-modeller för detta (kostnad) — first kalibrera Flash-prompten, eskalera
+bara vid behov till `google/gemini-2.5-pro` (redan i `PRO_MODELS`). Omscanning på nuvarande kod visade
+`contentDepth` redan fixad (sidantal-tröskeln gav rätt svar); de andra 4 kvarstod och är nu fixade utan
+Pro-eskalering:
+- **`eatSignals` (`checkBuilder.ts` #25) — status beräknas nu deterministiskt, inte av Flash.**
+  Protokollets "fyra signaler" är i praktiken TRE krav (Om oss-sida + organisationsnummer + minst EN
+  av {certifieringsord, Person-/Organization-schema med namngiven person} — de två sistnämnda är EN
+  gemensam signal, inte två). Den gamla prompten ("delvis"/"mycket svaga signaler", inga siffror) fick
+  Flash att räkna cert och person som två separata saknade krav och landa på `bad` redan vid 2 av 3
+  verkliga krav uppfyllda. `buildEATPrompt()` (route.ts) fick en explicit trekravsräkning i REGLER, MEN
+  Flash visade sig ändå nondeterministiskt efter fixet — två identiska scans av tvakanten.se kunde ge
+  samma korrekt hopslagna found/missing-lista men olika `status`. Lösning: `checkBuilder.ts` räknar nu
+  ALLTID `missingReqCount` från de tre scraper-fakta-signalerna (`enhancedData.hasAboutPage`/
+  `orgNumberFound`/`certificationKeywords`/`hasPersonSchema` + `anyPageHasAbout`/`anyPageHasPersonSchema`)
+  och sätter status därefter (0 saknas→ok, 1–2→warning, 3→bad) — Flash bidrar bara med finding/fix-texten,
+  aldrig med statusfältet. Regressionstest: `tests/eatSignalsDeterministic.test.ts` (inkl. kontrollfallet
+  sprej.nu: alla tre krav saknas → måste förbli `bad`, inte mjukas upp) + `tests/eatPromptThresholds.test.ts`
+  (grep-lås på prompttexten).
+- **`faqSchema` — `extractFAQContent()` (`enhancedScraper.ts`) missade riktiga accordion-FAQ:er.**
+  `hasAccordion` krävde tidigare att ordet "faq" fanns i ACKORDIONENS EGEN text
+  (`.text().includes('faq')`). roranalys.se har en `<h3>FAQ</h3>`-rubrik i en SYSKON-div, inte i
+  ackordion-elementet, så `.text()` innehöll aldrig "faq" trots 4 riktiga frågor i ackordion. Protokollet
+  listar "accordion" som eget, självständigt HTML-mönster utan textkrav — kravet togs bort. Regressionstest:
+  `tests/enhancedScraper.test.ts` (inkl. kontrollfallet sprej.nu: ingen FAQ-struktur alls → måste förbli
+  `bad`).
+- **Verifierat på riktiga sajter** (free-tier scans mot `npm run dev -- -p 8012`, 2× per sajt för att
+  täcka Flash:s icke-determinism): tvakanten/roranalys/bjurfors `eatSignals` → `warning` (var `bad`),
+  roranalys `faqSchema` → `warning` (var `bad`), sprej `eatSignals`/`faqSchema`/`contentDepth` oförändrat
+  `bad` (kontrollfall — protokollet kräver `bad` här, mjukades inte upp). bjurfors `faqSchema` kvarstår
+  `bad` mot truth `warning` — det är ett separat, redan klassificerat fel (BUG4-kaskad, `/sv/faq/`
+  skannas inte), inte del av Issue 2.
+
 ### Legacy scan (unused by UI)
 - **23 checks** across 4 phases: `technical` (6), `local` (6), `aireadiness` (5), `content` (6)
 - Fallback chain: Gemini 2.5 Flash → Flash Lite → Mistral Small
